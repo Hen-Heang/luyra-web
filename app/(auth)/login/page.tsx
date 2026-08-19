@@ -1,36 +1,15 @@
 "use client";
 
 import { Suspense, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { HengoGoogleSignIn } from "@/components/auth/hengo-google-sign-in";
 
 type Mode = "login" | "signup";
-
-function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" {...props}>
-      <path
-        fill="#4285F4"
-        d="M23.52 12.27c0-.79-.07-1.54-.2-2.27H12v4.3h6.47c-.28 1.5-1.13 2.77-2.4 3.62v3.01h3.86c2.26-2.08 3.59-5.15 3.59-8.66Z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 24c3.24 0 5.95-1.07 7.93-2.9l-3.86-3.01c-1.07.72-2.44 1.14-4.07 1.14-3.13 0-5.78-2.11-6.73-4.96H1.27v3.11C3.24 21.3 7.29 24 12 24Z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.27 14.27a7.2 7.2 0 0 1 0-4.54V6.62H1.27a11.98 11.98 0 0 0 0 10.76l4-3.11Z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 4.75c1.76 0 3.34.61 4.58 1.79l3.43-3.43C17.94 1.17 15.24 0 12 0 7.29 0 3.24 2.7 1.27 6.62l4 3.11C6.22 6.86 8.87 4.75 12 4.75Z"
-      />
-    </svg>
-  );
-}
 
 export default function LoginPage() {
   return (
@@ -48,6 +27,10 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const requestedNext = searchParams.get("next");
+  const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
+    ? requestedNext
+    : "/today";
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -67,22 +50,8 @@ function LoginForm() {
       return;
     }
 
-    const next = searchParams.get("next") ?? "/today";
     router.push(next);
     router.refresh();
-  }
-
-  async function handleGoogleSignIn() {
-    setError(null);
-    const next = searchParams.get("next") ?? "/today";
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    });
-    if (authError) setError(authError.message);
   }
 
   return (
@@ -95,15 +64,11 @@ function LoginForm() {
           </p>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={handleGoogleSignIn}
-        >
-          <GoogleIcon className="size-4" />
-          Continue with Google
-        </Button>
+        <HengoGoogleSignIn
+          redirectTo={next}
+          onError={setError}
+          onPendingChange={setPending}
+        />
 
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
@@ -125,7 +90,17 @@ function LoginForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="password">Password</Label>
+              {mode === "login" && (
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Forgot password?
+                </Link>
+              )}
+            </div>
             <Input
               id="password"
               type="password"
@@ -137,7 +112,11 @@ function LoginForm() {
             />
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          )}
 
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? "Please wait…" : mode === "login" ? "Login" : "Sign up"}
