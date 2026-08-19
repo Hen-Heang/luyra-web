@@ -2,7 +2,9 @@ import { ensureAppUser } from "@/lib/auth/ensure-app-user";
 import { getTodaySummary } from "@/lib/services/today-service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuickAddTask } from "@/components/today/quick-add-task";
+import { QuickAddGoal } from "@/components/today/quick-add-goal";
 import { TaskRow } from "@/components/today/task-row";
+import { GoalRow } from "@/components/today/goal-row";
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -52,6 +54,27 @@ export default async function TodayPage() {
             <div className="divide-y divide-border">
               {today.tasks.items.map((task) => (
                 <TaskRow key={task.id} task={task} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex-row items-center justify-between">
+          <div>
+            <CardTitle>Goals</CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">{today.goals.active} active</p>
+          </div>
+          <QuickAddGoal />
+        </CardHeader>
+        <CardContent>
+          {today.goals.items.length === 0 ? (
+            <p className="py-4 text-sm text-muted-foreground">No active goals yet.</p>
+          ) : (
+            <div className="divide-y divide-border">
+              {today.goals.items.map((goal) => (
+                <GoalRow key={goal.id} goal={goal} />
               ))}
             </div>
           )}

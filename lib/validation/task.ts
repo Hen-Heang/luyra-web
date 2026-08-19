@@ -12,6 +12,20 @@ export const createTaskSchema = z.object({
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
+export const updateTaskSchema = z
+  .object({
+    title: z.string().trim().min(1, "Title is required").max(200).optional(),
+    description: z.string().trim().max(2000).nullable().optional(),
+    status: taskStatusSchema.optional(),
+    priority: taskPrioritySchema.nullable().optional(),
+    dueDate: z.string().datetime().nullable().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided",
+  });
+
+export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+
 export const taskFiltersSchema = z.object({
   status: taskStatusSchema.optional(),
   priority: taskPrioritySchema.optional(),

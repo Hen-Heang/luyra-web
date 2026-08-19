@@ -4,11 +4,10 @@
 
 - [x] Auth (Supabase, login/logout, protected routes)
 - [x] User sync (`ensureAppUser`, Neon `users` table)
-- [x] Tasks (create, list, shown on Today)
-- [ ] Tasks (edit, complete, delete, dedicated /tasks page with filters)
-- [ ] Goals (API + page)
-- [x] Today dashboard (tasks summary — vertical slice)
-- [ ] Today dashboard (goals section)
+- [x] Tasks CRUD (create, list, edit, complete/reopen, delete; `/tasks` with status + priority filters)
+- [x] Goals CRUD (create, list, edit, progress, pause/resume/complete, delete; `/goals` with status filter)
+- [x] Today Tasks (remaining/overdue counts, quick add)
+- [x] Today Goals (active goals with progress, quick add)
 
 ## Phase 2
 
