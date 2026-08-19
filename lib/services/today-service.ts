@@ -1,12 +1,16 @@
 import "server-only";
 import { countTasksCompletedToday, findTodayTasksByUser } from "@/lib/repositories/task-repository";
+import { countActiveGoals, listActiveGoalsForToday } from "@/lib/services/goal-service";
 import type { TodaySummary } from "@/types/today";
 
-// Goals will join this summary once the Goals milestone lands.
+const TODAY_GOALS_LIMIT = 5;
+
 export async function getTodaySummary(userId: string): Promise<TodaySummary> {
-  const [items, completed] = await Promise.all([
+  const [items, completed, goalItems, activeGoalCount] = await Promise.all([
     findTodayTasksByUser(userId),
     countTasksCompletedToday(userId),
+    listActiveGoalsForToday(userId, TODAY_GOALS_LIMIT),
+    countActiveGoals(userId),
   ]);
 
   return {
@@ -15,6 +19,10 @@ export async function getTodaySummary(userId: string): Promise<TodaySummary> {
       total: items.length,
       completed,
       items,
+    },
+    goals: {
+      active: activeGoalCount,
+      items: goalItems,
     },
   };
 }
