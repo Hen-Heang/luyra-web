@@ -1,8 +1,12 @@
 import Link from "next/link";
-import { Home } from "lucide-react";
+import { Goal, Home, ListTodo } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 
-const NAV_ITEMS = [{ href: "/today", label: "Today", icon: Home }];
+const NAV_ITEMS = [
+  { href: "/today", label: "Today", icon: Home },
+  { href: "/tasks", label: "Tasks", icon: ListTodo },
+  { href: "/goals", label: "Goals", icon: Goal },
+];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
