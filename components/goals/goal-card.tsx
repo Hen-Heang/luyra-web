@@ -2,18 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2 } from "lucide-react";
-import { deleteGoal, updateGoal } from "@/lib/api/goals";
+import { CheckCircle2, MoreHorizontal, Pause, Pencil, Play, RotateCcw, Trash2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { GoalForm } from "@/components/goals/goal-form";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { deleteGoal, updateGoal } from "@/lib/api/goals";
+import { calculateGoalDeadlineInfo } from "@/lib/goal-deadline";
+import { computeGoalHealth } from "@/lib/goal-health";
 import type { Goal, GoalStatus } from "@/types/goal";
 
-const STATUS_VARIANT: Record<GoalStatus, "default" | "outline" | "success"> = {
-  active: "default",
-  paused: "outline",
-  completed: "success",
-};
+import { DeadlineStatusBadge } from "./deadline-status-badge";
+import { DeleteConfirmDialog } from "./delete-confirm-dialog";
+import { GoalFormSheet } from "./goal-form-sheet";
+import { HealthBadge } from "./health-badge";
 
 const CATEGORY_LABEL: Record<string, string> = {
   personal: "Personal",
@@ -24,12 +31,22 @@ const CATEGORY_LABEL: Record<string, string> = {
   other: "Other",
 };
 
+const progressGradient = (progress: number) =>
+  progress >= 75
+    ? "linear-gradient(90deg, #10b981, #059669)"
+    : progress >= 40
+      ? "linear-gradient(90deg, #3b82f6, #2563eb)"
+      : "linear-gradient(90deg, #f59e0b, #ef4444)";
+
 export function GoalCard({ goal }: { goal: Goal }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [progressInput, setProgressInput] = useState(String(goal.progress));
+  const [deleting, setDeleting] = useState(false);
   const [pending, setPending] = useState(false);
+
+  const deadline = calculateGoalDeadlineInfo(goal);
+  const health = computeGoalHealth(goal, deadline);
 
   async function setStatus(status: GoalStatus) {
     setPending(true);
@@ -41,133 +58,95 @@ export function GoalCard({ goal }: { goal: Goal }) {
     }
   }
 
-  async function saveProgress() {
-    const value = Math.min(100, Math.max(0, Math.round(Number(progressInput)) || 0));
-    setPending(true);
-    try {
-      await updateGoal(goal.id, { progress: value });
-      router.refresh();
-    } finally {
-      setPending(false);
-    }
-  }
-
   async function handleDelete() {
-    setPending(true);
+    setDeleting(true);
     try {
       await deleteGoal(goal.id);
       router.refresh();
     } finally {
-      setPending(false);
+      setDeleting(false);
+      setConfirmingDelete(false);
     }
   }
 
-  if (editing) {
-    return (
-      <div className="rounded-lg border border-border p-4">
-        <GoalForm mode="edit" goal={goal} onDone={() => setEditing(false)} />
-      </div>
-    );
-  }
-
   return (
-    <div className="rounded-lg border border-border p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="truncate text-sm font-semibold">{goal.title}</h3>
-            <Badge variant={STATUS_VARIANT[goal.status]}>{goal.status}</Badge>
-          </div>
-          {goal.category && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{CATEGORY_LABEL[goal.category]}</p>
-          )}
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => setEditing(true)} aria-label="Edit goal">
-            <Pencil className="size-4" />
-          </Button>
-          {confirmingDelete ? (
-            <div className="flex items-center gap-1">
-              <Button variant="destructive" size="sm" onClick={handleDelete} disabled={pending}>
-                Confirm
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setConfirmingDelete(false)}>
-                Cancel
-              </Button>
+    <>
+      <div className="rounded-lg border border-border/60 bg-card/40 p-4 transition-colors hover:border-border">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-sm font-semibold text-foreground">{goal.title}</h3>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {goal.category && <span className="shrink-0">{CATEGORY_LABEL[goal.category]}</span>}
+              <HealthBadge status={health} />
             </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setConfirmingDelete(true)}
-              aria-label="Delete goal"
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          )}
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Goal actions" className="shrink-0">
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {goal.status === "active" && (
+                <>
+                  <DropdownMenuItem onClick={() => setStatus("paused")} disabled={pending}>
+                    <Pause className="size-4" /> Pause
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatus("completed")} disabled={pending}>
+                    <CheckCircle2 className="size-4" /> Mark complete
+                  </DropdownMenuItem>
+                </>
+              )}
+              {goal.status === "paused" && (
+                <>
+                  <DropdownMenuItem onClick={() => setStatus("active")} disabled={pending}>
+                    <Play className="size-4" /> Resume
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatus("completed")} disabled={pending}>
+                    <CheckCircle2 className="size-4" /> Mark complete
+                  </DropdownMenuItem>
+                </>
+              )}
+              {goal.status === "completed" && (
+                <DropdownMenuItem onClick={() => setStatus("active")} disabled={pending}>
+                  <RotateCcw className="size-4" /> Reopen
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setEditing(true)}>
+                <Pencil className="size-4" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={() => setConfirmingDelete(true)}>
+                <Trash2 className="size-4" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="mt-3 space-y-1.5">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/8">
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${goal.progress}%`, background: progressGradient(goal.progress) }}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold tabular-nums text-foreground">{goal.progress}%</span>
+            <DeadlineStatusBadge deadlineInfo={deadline} />
+          </div>
         </div>
       </div>
 
-      <div className="mt-3">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-          <div className="h-full rounded-full bg-primary" style={{ width: `${goal.progress}%` }} />
-        </div>
-        <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-          <span>{goal.progress}%</span>
-          {goal.targetDate && (
-            <span>
-              Target:{" "}
-              {new Date(goal.targetDate).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1">
-          <input
-            type="number"
-            min={0}
-            max={100}
-            value={progressInput}
-            onChange={(e) => setProgressInput(e.target.value)}
-            className="h-8 w-16 rounded-md border border-input bg-transparent px-2 text-sm"
-          />
-          <Button size="sm" variant="outline" onClick={saveProgress} disabled={pending}>
-            Update progress
-          </Button>
-        </div>
-
-        {goal.status === "active" && (
-          <>
-            <Button size="sm" variant="outline" onClick={() => setStatus("paused")} disabled={pending}>
-              Pause
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setStatus("completed")} disabled={pending}>
-              Complete
-            </Button>
-          </>
-        )}
-        {goal.status === "paused" && (
-          <>
-            <Button size="sm" variant="outline" onClick={() => setStatus("active")} disabled={pending}>
-              Resume
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setStatus("completed")} disabled={pending}>
-              Complete
-            </Button>
-          </>
-        )}
-        {goal.status === "completed" && (
-          <Button size="sm" variant="outline" onClick={() => setStatus("active")} disabled={pending}>
-            Reopen
-          </Button>
-        )}
-      </div>
-    </div>
+      <GoalFormSheet mode="edit" goal={goal} open={editing} onOpenChange={setEditing} />
+      <DeleteConfirmDialog
+        isOpen={confirmingDelete}
+        isDeleting={deleting}
+        goalTitle={goal.title}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }

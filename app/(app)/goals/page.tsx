@@ -5,6 +5,7 @@ import { listGoals } from "@/lib/services/goal-service";
 import { goalFiltersSchema } from "@/lib/validation/goal";
 import type { GoalStatus } from "@/types/goal";
 import { GoalList } from "@/components/goals/goal-list";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const STATUS_TABS: { label: string; value: GoalStatus | undefined }[] = [
   { label: "All", value: undefined },
@@ -26,7 +27,7 @@ export default async function GoalsPage({
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Goals</h1>
+      <PageHeader title="Goals" className="pb-0" />
 
       <div className="flex flex-wrap gap-1">
         {STATUS_TABS.map((tab) => (
