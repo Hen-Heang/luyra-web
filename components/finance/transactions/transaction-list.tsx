@@ -2,28 +2,22 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { MoneyFlowGate } from "@/components/finance/money-flow-session";
-import { monthBounds, monthLabel } from "@/lib/integrations/money-flow/month";
+import { monthBounds, monthLabel } from "@/lib/finance-month";
 import {
   createTransaction,
   deleteTransaction,
+  listCategories,
+  listPaymentMethods,
   listTransactions,
   updateTransaction,
-} from "@/lib/integrations/money-flow/transactions";
-import { listCategories, listPaymentMethods } from "@/lib/integrations/money-flow/categories";
+} from "@/lib/api/finance";
 import { TransactionForm } from "@/components/finance/transactions/transaction-form";
 import { TransactionItem } from "@/components/finance/transactions/transaction-item";
-import type {
-  Category,
-  PaymentMethod,
-  Transaction,
-  TransactionInput,
-  TransactionType,
-} from "@/lib/integrations/money-flow/types";
+import type { CreateTransactionInput } from "@/lib/validation/finance";
+import type { Category, PaymentMethod, Transaction, TransactionType } from "@/types/finance";
 
 const TYPE_TABS: { label: string; value: TransactionType | undefined }[] = [
   { label: "All", value: undefined },
@@ -31,7 +25,7 @@ const TYPE_TABS: { label: string; value: TransactionType | undefined }[] = [
   { label: "Expense", value: "expense" },
 ];
 
-function TransactionsContent({ client, userId }: { client: SupabaseClient; userId: string }) {
+export function TransactionList() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [typeFilter, setTypeFilter] = useState<TransactionType | undefined>(undefined);
   const [search, setSearch] = useState("");
@@ -49,7 +43,7 @@ function TransactionsContent({ client, userId }: { client: SupabaseClient; userI
       setLoading(true);
       try {
         const { start, end } = monthBounds(monthOffset);
-        const result = await listTransactions(client, {
+        const result = await listTransactions({
           start,
           end,
           type: typeFilter,
@@ -66,7 +60,7 @@ function TransactionsContent({ client, userId }: { client: SupabaseClient; userI
         setLoading(false);
       }
     },
-    [client, monthOffset, typeFilter, search]
+    [monthOffset, typeFilter, search]
   );
 
   useEffect(() => {
@@ -79,7 +73,7 @@ function TransactionsContent({ client, userId }: { client: SupabaseClient; userI
     let active = true;
     async function loadLookups() {
       try {
-        const [cats, methods] = await Promise.all([listCategories(client), listPaymentMethods(client)]);
+        const [cats, methods] = await Promise.all([listCategories(), listPaymentMethods()]);
         if (!active) return;
         setCategories(cats);
         setPaymentMethods(methods);
@@ -91,21 +85,21 @@ function TransactionsContent({ client, userId }: { client: SupabaseClient; userI
     return () => {
       active = false;
     };
-  }, [client]);
+  }, []);
 
-  async function handleCreate(input: TransactionInput) {
-    await createTransaction(client, userId, input);
+  async function handleCreate(input: CreateTransactionInput) {
+    await createTransaction(input);
     setCreating(false);
     await load(0);
   }
 
-  async function handleUpdate(id: string, input: TransactionInput) {
-    await updateTransaction(client, id, input);
+  async function handleUpdate(id: string, input: CreateTransactionInput) {
+    await updateTransaction(id, input);
     await load(0);
   }
 
   async function handleDelete(id: string) {
-    await deleteTransaction(client, id);
+    await deleteTransaction(id);
     await load(0);
   }
 
@@ -203,8 +197,4 @@ function TransactionsContent({ client, userId }: { client: SupabaseClient; userI
       )}
     </div>
   );
-}
-
-export function TransactionList() {
-  return <MoneyFlowGate>{({ client, userId }) => <TransactionsContent client={client} userId={userId} />}</MoneyFlowGate>;
 }

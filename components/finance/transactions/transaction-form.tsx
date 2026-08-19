@@ -3,13 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type {
-  Category,
-  PaymentMethod,
-  Transaction,
-  TransactionInput,
-  TransactionType,
-} from "@/lib/integrations/money-flow/types";
+import type { CreateTransactionInput } from "@/lib/validation/finance";
+import type { Category, PaymentMethod, Transaction, TransactionType } from "@/types/finance";
 
 export function TransactionForm({
   mode,
@@ -25,15 +20,15 @@ export function TransactionForm({
   categories: Category[];
   paymentMethods: PaymentMethod[];
   defaultDate: string;
-  onSave: (input: TransactionInput) => Promise<void>;
+  onSave: (input: CreateTransactionInput) => Promise<void>;
   onCancel: () => void;
 }) {
   const [type, setType] = useState<TransactionType>(transaction?.type ?? "expense");
   const [date, setDate] = useState(transaction?.date ?? defaultDate);
-  const [amount, setAmount] = useState(transaction ? String(transaction.amount_krw) : "");
+  const [amount, setAmount] = useState(transaction ? String(transaction.amountKrw) : "");
   const [description, setDescription] = useState(transaction?.description ?? "");
-  const [categoryId, setCategoryId] = useState(transaction?.category_id ?? "");
-  const [paymentMethodId, setPaymentMethodId] = useState(transaction?.payment_method_id ?? "");
+  const [categoryId, setCategoryId] = useState(transaction?.categoryId ?? "");
+  const [paymentMethodId, setPaymentMethodId] = useState(transaction?.paymentMethodId ?? "");
   const [note, setNote] = useState(transaction?.note ?? "");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,10 +53,10 @@ export function TransactionForm({
       await onSave({
         date,
         type,
-        amount_krw: parsedAmount,
+        amountKrw: parsedAmount,
         description: description.trim(),
-        category_id: categoryId || null,
-        payment_method_id: paymentMethodId || null,
+        categoryId: categoryId || null,
+        paymentMethodId: paymentMethodId || null,
         note: note.trim() || null,
       });
     } catch {
