@@ -2,8 +2,8 @@
 
 Personal life and productivity operating system.
 
-Phase 1 covers: authentication, a Today dashboard, and task management, on
-top of Supabase (auth) and Neon (application data). See
+Phase 1 covers: authentication, a Today dashboard, and task and goal
+management, on top of Supabase (auth) and Neon (application data). See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit together
 and [docs/ROADMAP.md](docs/ROADMAP.md) for what's done vs. planned.
 
