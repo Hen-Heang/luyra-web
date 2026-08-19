@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { formatDueDate } from "@/lib/utils";
 import type { Task } from "@/types/task";
 
 const PRIORITY_VARIANT = {
@@ -6,16 +7,6 @@ const PRIORITY_VARIANT = {
   medium: "warning",
   low: "outline",
 } as const;
-
-function formatDueDate(dueDate: string | null): string | null {
-  if (!dueDate) return null;
-
-  const date = new Date(dueDate);
-  const isOverdue = date < new Date(new Date().toDateString());
-
-  const label = date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  return isOverdue ? `Overdue · ${label}` : label;
-}
 
 export function TaskRow({ task }: { task: Task }) {
   const dueLabel = formatDueDate(task.dueDate);

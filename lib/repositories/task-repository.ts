@@ -1,7 +1,7 @@
 import "server-only";
 import { sql } from "@/lib/db";
 import type { Task } from "@/types/task";
-import type { CreateTaskInput, TaskFilters } from "@/lib/validation/task";
+import type { CreateTaskInput, TaskFilters, UpdateTaskInput } from "@/lib/validation/task";
 
 interface TaskRow {
   id: string;
@@ -95,4 +95,47 @@ export async function createTask(userId: string, input: CreateTaskInput): Promis
   `) as TaskRow[];
 
   return toTask(rows[0]);
+}
+
+// Returns null when no row matched id + user_id (not found or not owned) —
+// the caller (task-service) is responsible for turning that into a 404.
+export async function updateTask(
+  id: string,
+  userId: string,
+  input: UpdateTaskInput
+): Promise<Task | null> {
+  const sets: string[] = [];
+  const params: unknown[] = [id, userId];
+
+  const set = (column: string, value: unknown) => {
+    params.push(value);
+    sets.push(`${column} = $${params.length}`);
+  };
+
+  if (input.title !== undefined) set("title", input.title);
+  if (input.description !== undefined) set("description", input.description);
+  if (input.priority !== undefined) set("priority", input.priority);
+  if (input.dueDate !== undefined) set("due_date", input.dueDate);
+  if (input.status !== undefined) {
+    set("status", input.status);
+    set("completed_at", input.status === "done" ? new Date().toISOString() : null);
+  }
+  sets.push("updated_at = now()");
+
+  const rows = (await sql.query(
+    `update tasks set ${sets.join(", ")}
+     where id = $1 and user_id = $2
+     returning ${TASK_COLUMNS}`,
+    params
+  )) as TaskRow[];
+
+  return rows[0] ? toTask(rows[0]) : null;
+}
+
+export async function deleteTask(id: string, userId: string): Promise<boolean> {
+  const rows = (await sql`
+    delete from tasks where id = ${id} and user_id = ${userId} returning id
+  `) as { id: string }[];
+
+  return rows.length > 0;
 }
