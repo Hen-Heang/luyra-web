@@ -11,13 +11,17 @@
 
 ## Phase 2
 
-- Finance integration
+- [x] Finance integration foundation (isolated Money Flow Supabase session)
+- [x] Read-only Finance dashboard test slice
+- [ ] Money Flow transactions, budgets, savings, analytics, and settings
 - Habits
 - Reminders
 
 ## Phase 3
 
-- Learning
+- [x] Learning integration foundation (shared Hengo/HeangOS session)
+- [x] Read-only Learning dashboard test slice
+- [ ] Hengo vocabulary, daily study, interview, and progress routes
 - Notion
 - AI assistant
 
