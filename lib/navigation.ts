@@ -53,7 +53,6 @@ export const habitsItem: NavItem = {
   label: "Habits",
   icon: Repeat,
   color: "text-emerald-500",
-  soon: true,
 };
 
 export const financeItem: NavItem = {

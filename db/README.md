@@ -11,6 +11,9 @@ Using `psql` against your Neon connection string:
 psql "$DATABASE_URL" -f db/migrations/001_users.sql
 psql "$DATABASE_URL" -f db/migrations/002_tasks.sql
 psql "$DATABASE_URL" -f db/migrations/003_goals.sql
+psql "$DATABASE_URL" -f db/migrations/004_finance.sql
+psql "$DATABASE_URL" -f db/migrations/005_learning.sql
+psql "$DATABASE_URL" -f db/migrations/006_habits.sql
 ```
 
 Or paste the file contents into the Neon SQL Editor in the Neon console.
