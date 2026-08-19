@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/auth/callback"];
 
 // Refreshes the Supabase session cookie on every request and gates access to
 // protected routes. Runs in the Next.js proxy (formerly "middleware"), before
