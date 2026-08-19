@@ -1,0 +1,40 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+
+import { getActiveNavItem, isDetailRoute } from "@/lib/navigation";
+
+import { useMobileHeaderTitleValue } from "./mobile-header-title";
+
+/**
+ * Contextual mobile header. Root pages get just a title; detail pages get
+ * `Back | Title`.
+ */
+export function MobileHeader({ pathname }: { pathname: string }) {
+  const router = useRouter();
+  const publishedTitle = useMobileHeaderTitleValue();
+  const detail = isDetailRoute(pathname);
+
+  const navLabel = getActiveNavItem(pathname)?.label;
+  const title = publishedTitle ?? navLabel ?? "HeangOS";
+
+  return (
+    <header className="sticky top-0 z-30 flex items-center gap-1 border-b border-border bg-background/95 px-2 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-sm">
+      {detail && (
+        <button
+          type="button"
+          onClick={() => router.back()}
+          aria-label="Go back"
+          className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ArrowLeft size={20} />
+        </button>
+      )}
+
+      <h1 className={`min-w-0 flex-1 truncate text-[17px] font-semibold tracking-tight text-foreground ${detail ? "" : "pl-2"}`}>
+        {title}
+      </h1>
+    </header>
+  );
+}

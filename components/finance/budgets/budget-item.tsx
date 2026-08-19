@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { krw, toAmount } from "@/lib/integrations/money-flow/format";
-import type { Category } from "@/lib/integrations/money-flow/types";
+import { krw } from "@/lib/finance-format";
+import type { Category } from "@/types/finance";
 
 export function BudgetItem({
   category,
@@ -15,8 +15,8 @@ export function BudgetItem({
   onRemove,
 }: {
   category: Category;
-  budgetAmount: number | string | null;
-  spent: number | string;
+  budgetAmount: number | null;
+  spent: number;
   onSave: (amount: number) => Promise<void>;
   onRemove: () => Promise<void>;
 }) {
@@ -25,11 +25,9 @@ export function BudgetItem({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const budgetValue = toAmount(budgetAmount);
-  const spentValue = toAmount(spent);
-  const hasBudget = budgetAmount != null && budgetValue > 0;
-  const percent = hasBudget ? Math.min(100, Math.round((spentValue / budgetValue) * 100)) : 0;
-  const overBudget = hasBudget && spentValue > budgetValue;
+  const hasBudget = budgetAmount != null && budgetAmount > 0;
+  const percent = hasBudget ? Math.min(100, Math.round((spent / budgetAmount) * 100)) : 0;
+  const overBudget = hasBudget && spent > budgetAmount;
 
   async function handleSave() {
     const parsed = Number(amount);
@@ -83,7 +81,7 @@ export function BudgetItem({
         ) : (
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              {krw.format(spentValue)} {hasBudget ? `/ ${krw.format(budgetValue)}` : "· no budget set"}
+              {krw.format(spent)} {hasBudget ? `/ ${krw.format(budgetAmount)}` : "· no budget set"}
             </span>
             <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
               {hasBudget ? "Edit" : "Set budget"}
@@ -99,10 +97,7 @@ export function BudgetItem({
 
       {hasBudget && (
         <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className={cn("h-full rounded-full", overBudget ? "bg-destructive" : "bg-primary")}
-            style={{ width: `${percent}%` }}
-          />
+          <div className={cn("h-full rounded-full", overBudget ? "bg-destructive" : "bg-primary")} style={{ width: `${percent}%` }} />
         </div>
       )}
 

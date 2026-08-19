@@ -1,0 +1,89 @@
+"use client";
+
+import Link from "next/link";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+
+import { NavIconRow, NavRow } from "@/components/layout/NavItem";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { accountItem, isNavigationItemActive, primaryNavItems, todayItem } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
+
+import { ProfileMenu } from "./ProfileMenu";
+
+export const SIDEBAR_EXPANDED_WIDTH = 232;
+export const SIDEBAR_COLLAPSED_WIDTH = 72;
+
+export function DesktopSidebar({
+  pathname,
+  collapsed,
+  onToggleCollapsed,
+}: {
+  pathname: string;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+}) {
+  return (
+    <aside
+      aria-label="Main navigation"
+      style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH }}
+      className="sticky top-0 flex h-dvh shrink-0 flex-col border-r border-border bg-sidebar"
+    >
+      {/* Brand + collapse toggle. Branding lives here only — never also in the top bar. */}
+      <div className={cn("flex items-center gap-2 px-3 py-4", collapsed && "flex-col gap-3")}>
+        <Link
+          href={todayItem.href}
+          aria-label="HeangOS home"
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+            H
+          </span>
+          {!collapsed && (
+            <span className="min-w-0">
+              <span className="block truncate text-[15px] font-semibold leading-tight text-foreground">HeangOS</span>
+              <span className="block truncate text-xs leading-tight text-muted-foreground">
+                Plan, learn, grow.
+              </span>
+            </span>
+          )}
+        </Link>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={onToggleCollapsed}
+              aria-expanded={!collapsed}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">{collapsed ? "Expand sidebar" : "Collapse sidebar"}</TooltipContent>
+        </Tooltip>
+      </div>
+
+      <div className="mx-3 h-px bg-border" />
+
+      <nav aria-label="Primary" className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
+        {primaryNavItems.map((item) =>
+          collapsed ? (
+            <NavIconRow key={item.id} item={item} active={isNavigationItemActive({ pathname, item })} />
+          ) : (
+            <NavRow key={item.id} item={item} active={isNavigationItemActive({ pathname, item })} />
+          )
+        )}
+      </nav>
+
+      {/* Account + profile menu */}
+      <div className="space-y-1 border-t border-border px-3 py-3">
+        {collapsed ? (
+          <NavIconRow item={accountItem} active={isNavigationItemActive({ pathname, item: accountItem })} />
+        ) : (
+          <NavRow item={accountItem} active={isNavigationItemActive({ pathname, item: accountItem })} />
+        )}
+        <ProfileMenu collapsed={collapsed} />
+      </div>
+    </aside>
+  );
+}

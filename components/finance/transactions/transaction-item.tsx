@@ -4,13 +4,9 @@ import { useState } from "react";
 import { ArrowDownRight, ArrowUpRight, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TransactionForm } from "@/components/finance/transactions/transaction-form";
-import { krw, toAmount } from "@/lib/integrations/money-flow/format";
-import type {
-  Category,
-  PaymentMethod,
-  Transaction,
-  TransactionInput,
-} from "@/lib/integrations/money-flow/types";
+import { krw } from "@/lib/finance-format";
+import type { CreateTransactionInput } from "@/lib/validation/finance";
+import type { Category, PaymentMethod, Transaction } from "@/types/finance";
 
 export function TransactionItem({
   transaction,
@@ -22,7 +18,7 @@ export function TransactionItem({
   transaction: Transaction;
   categories: Category[];
   paymentMethods: PaymentMethod[];
-  onUpdate: (id: string, input: TransactionInput) => Promise<void>;
+  onUpdate: (id: string, input: CreateTransactionInput) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
@@ -68,7 +64,7 @@ export function TransactionItem({
           <p className="truncate text-sm font-medium">{transaction.description}</p>
           <p className="truncate text-xs text-muted-foreground">
             {transaction.date}
-            {transaction.categories?.name ? ` · ${transaction.categories.name}` : ""}
+            {transaction.categoryName ? ` · ${transaction.categoryName}` : ""}
           </p>
         </div>
       </div>
@@ -76,7 +72,7 @@ export function TransactionItem({
       <div className="flex shrink-0 items-center gap-2">
         <span className="text-sm font-medium">
           {isIncome ? "+" : "−"}
-          {krw.format(toAmount(transaction.amount_krw))}
+          {krw.format(transaction.amountKrw)}
         </span>
         <Button variant="ghost" size="icon" onClick={() => setEditing(true)} aria-label="Edit transaction">
           <Pencil className="size-4" />

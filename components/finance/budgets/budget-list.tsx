@@ -1,17 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { MoneyFlowGate } from "@/components/finance/money-flow-session";
-import { monthBounds, monthLabel } from "@/lib/integrations/money-flow/month";
-import { listCategories } from "@/lib/integrations/money-flow/categories";
-import { deleteBudget, listBudgets, upsertBudget } from "@/lib/integrations/money-flow/budgets";
-import { toAmount } from "@/lib/integrations/money-flow/format";
+import { monthBounds, monthLabel } from "@/lib/finance-month";
+import { deleteBudget, listBudgets, upsertBudget } from "@/lib/api/finance";
 import { BudgetItem } from "@/components/finance/budgets/budget-item";
-import type { Budget, Category } from "@/lib/integrations/money-flow/types";
+import type { Budget, Category } from "@/types/finance";
 
-function BudgetsContent({ client, userId }: { client: SupabaseClient; userId: string }) {
+export function BudgetList() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -23,35 +19,17 @@ function BudgetsContent({ client, userId }: { client: SupabaseClient; userId: st
     setLoading(true);
     try {
       const { start, end } = monthBounds(monthOffset);
-      const [cats, budgetRows, spendResult] = await Promise.all([
-        listCategories(client),
-        listBudgets(client),
-        client
-          .from("transactions")
-          .select("category_id, amount_krw")
-          .eq("type", "expense")
-          .gte("date", start)
-          .lt("date", end),
-      ]);
-
-      if (spendResult.error) throw new Error(spendResult.error.message);
-
-      const totals: Record<string, number> = {};
-      for (const row of spendResult.data ?? []) {
-        if (!row.category_id) continue;
-        totals[row.category_id] = (totals[row.category_id] ?? 0) + toAmount(row.amount_krw);
-      }
-
-      setCategories(cats.filter((c) => c.type === "expense" || c.type === "both"));
-      setBudgets(budgetRows);
-      setSpendByCategory(totals);
+      const result = await listBudgets(start, end);
+      setCategories(result.categories);
+      setBudgets(result.budgets);
+      setSpendByCategory(result.spendByCategory);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't load budgets.");
     } finally {
       setLoading(false);
     }
-  }, [client, monthOffset]);
+  }, [monthOffset]);
 
   useEffect(() => {
     void (async () => {
@@ -60,12 +38,12 @@ function BudgetsContent({ client, userId }: { client: SupabaseClient; userId: st
   }, [load]);
 
   async function handleSave(categoryId: string, amount: number) {
-    await upsertBudget(client, userId, { category_id: categoryId, amount_krw: amount });
+    await upsertBudget({ categoryId, amountKrw: amount });
     await load();
   }
 
   async function handleRemove(categoryId: string) {
-    await deleteBudget(client, categoryId);
+    await deleteBudget(categoryId);
     await load();
   }
 
@@ -103,12 +81,12 @@ function BudgetsContent({ client, userId }: { client: SupabaseClient; userId: st
       ) : (
         <div className="divide-y divide-border rounded-lg border border-border">
           {categories.map((category) => {
-            const budget = budgets.find((b) => b.category_id === category.id);
+            const budget = budgets.find((b) => b.categoryId === category.id);
             return (
               <BudgetItem
                 key={category.id}
                 category={category}
-                budgetAmount={budget ? budget.amount_krw : null}
+                budgetAmount={budget ? budget.amountKrw : null}
                 spent={spendByCategory[category.id] ?? 0}
                 onSave={(amount) => handleSave(category.id, amount)}
                 onRemove={() => handleRemove(category.id)}
@@ -119,8 +97,4 @@ function BudgetsContent({ client, userId }: { client: SupabaseClient; userId: st
       )}
     </div>
   );
-}
-
-export function BudgetList() {
-  return <MoneyFlowGate>{({ client, userId }) => <BudgetsContent client={client} userId={userId} />}</MoneyFlowGate>;
 }
