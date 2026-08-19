@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { Goal, Home, ListTodo } from "lucide-react";
+import { Goal, GraduationCap, Home, ListTodo, ShieldCheck, WalletCards } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 
 const NAV_ITEMS = [
   { href: "/today", label: "Today", icon: Home },
   { href: "/tasks", label: "Tasks", icon: ListTodo },
   { href: "/goals", label: "Goals", icon: Goal },
+  { href: "/finance", label: "Finance", icon: WalletCards },
+  { href: "/learning", label: "Learning", icon: GraduationCap },
+  { href: "/account/security", label: "Account", icon: ShieldCheck },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -33,6 +36,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="text-sm font-semibold tracking-tight">HeangOS</span>
           <LogoutButton />
         </header>
+        <nav className="flex gap-1 overflow-x-auto border-b border-border px-3 py-2 md:hidden">
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-foreground hover:bg-secondary"
+            >
+              <Icon className="size-3.5" />
+              {label}
+            </Link>
+          ))}
+        </nav>
 
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
       </div>

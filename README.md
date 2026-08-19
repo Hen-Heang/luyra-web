@@ -2,10 +2,11 @@
 
 Personal life and productivity operating system.
 
-Phase 1 covers: authentication, a Today dashboard, and task and goal
-management, on top of Supabase (auth) and Neon (application data). See
+Phase 1 covers authentication, a Today dashboard, and task and goal
+management. The first Money Flow and Hengo migration slices are available at
+`/finance` and `/learning`. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit together
-and [docs/ROADMAP.md](docs/ROADMAP.md) for what's done vs. planned.
+and [docs/APP-MIGRATION.md](docs/APP-MIGRATION.md) for the staged product migration.
 
 ## Tech stack
 
@@ -47,6 +48,9 @@ Copy `.env.example` to `.env.local` and fill in real values. Never commit
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | browser + server | safe to expose |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | browser + server | safe to expose |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Hengo/HeangOS Google Identity Services | safe to expose |
+| `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_URL` | Finance browser integration | safe to expose |
+| `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_PUBLISHABLE_KEY` | Finance browser integration | safe to expose |
 | `DATABASE_URL` | server only | Neon connection string — never prefix with `NEXT_PUBLIC_` |
 
 ## Supabase Auth setup
@@ -54,8 +58,9 @@ Copy `.env.example` to `.env.local` and fill in real values. Never commit
 1. Use your existing Supabase project.
 2. Copy the project URL and publishable (anon) key from Project Settings →
    API into `.env.local`.
-3. Supabase only handles authentication here — no application tables
-   (tasks, goals, etc.) are created in Supabase.
+3. The primary project handles HeangOS authentication and the migrated Hengo
+   learning data. Money Flow remains in its separate Supabase project during
+   the test migration.
 
 ## Neon setup
 

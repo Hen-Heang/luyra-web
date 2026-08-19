@@ -1,6 +1,6 @@
 # Architecture
 
-## Current (Phase 1)
+## Current
 
 ```
 Browser
@@ -16,9 +16,14 @@ Next.js
              Neon Postgres
 ```
 
-Supabase is responsible for authentication only — session management,
-login/logout, and identity (JWT `claims.sub`). It never stores application
-data. Tasks, goals, and the `users` mirror table live in Neon.
+For native HeangOS domains, Supabase provides session management, login/logout,
+and identity (JWT `claims.sub`). Tasks, goals, and the `users` mirror table live
+in Neon.
+
+That boundary applies to native HeangOS domains. Migrated product domains keep
+their existing stores during the test migration: Hengo Learning uses the
+primary Supabase project and Money Flow Finance uses its own Supabase project.
+See [APP-MIGRATION.md](./APP-MIGRATION.md) for the session and data boundaries.
 
 ## Request flow
 
