@@ -9,6 +9,8 @@ interface TransactionRow {
   type: string;
   category_id: string | null;
   category_name: string | null;
+  category_icon: string | null;
+  category_color: string | null;
   description: string;
   amount_krw: string;
   payment_method_id: string | null;
@@ -25,6 +27,8 @@ function toTransaction(row: TransactionRow): Transaction {
     type: row.type as TransactionType,
     categoryId: row.category_id,
     categoryName: row.category_name,
+    categoryIcon: row.category_icon,
+    categoryColor: row.category_color,
     description: row.description,
     amountKrw: Number(row.amount_krw),
     paymentMethodId: row.payment_method_id,
@@ -40,7 +44,8 @@ function toTransaction(row: TransactionRow): Transaction {
 // instant, shifting the calendar date outside UTC.
 const TRANSACTION_SELECT = `
   t.id, to_char(t.date, 'YYYY-MM-DD') as date, t.type, t.category_id,
-  c.name as category_name, t.description, t.amount_krw,
+  c.name as category_name, c.icon as category_icon, c.color as category_color,
+  t.description, t.amount_krw,
   t.payment_method_id, pm.name as payment_method_name, t.note,
   t.created_at, t.updated_at
 `;
@@ -56,6 +61,7 @@ export interface TransactionQuery {
   start: string;
   end: string;
   type?: TransactionType;
+  categoryId?: string;
   search?: string;
   page: number;
 }
@@ -70,6 +76,10 @@ export async function findTransactionsByUser(
   if (query.type) {
     params.push(query.type);
     conditions.push(`t.type = $${params.length}`);
+  }
+  if (query.categoryId) {
+    params.push(query.categoryId);
+    conditions.push(`t.category_id = $${params.length}`);
   }
   if (query.search) {
     params.push(`%${query.search}%`);
@@ -97,6 +107,23 @@ export async function findTransactionById(id: string, userId: string): Promise<T
   `) as TransactionRow[];
 
   return rows[0] ? toTransaction(rows[0]) : null;
+}
+
+export async function findRecentTransactionsByUser(
+  userId: string,
+  start: string,
+  end: string,
+  limit = 6
+): Promise<Transaction[]> {
+  const rows = (await sql.query(
+    `select ${TRANSACTION_SELECT} ${TRANSACTION_FROM}
+     where t.user_id = $1 and t.date >= $2 and t.date < $3
+     order by t.date desc, t.created_at desc
+     limit $4`,
+    [userId, start, end, limit]
+  )) as TransactionRow[];
+
+  return rows.map(toTransaction);
 }
 
 export async function createTransaction(userId: string, input: CreateTransactionInput): Promise<Transaction> {
@@ -165,15 +192,45 @@ export async function sumTotalsForRange(
 
 export async function sumExpenseByCategoryForRange(userId: string, start: string, end: string): Promise<CategoryAmount[]> {
   const rows = (await sql`
-    select t.category_id, coalesce(c.name, 'Uncategorized') as category_name, sum(t.amount_krw)::numeric as amount_krw
+    select t.category_id, coalesce(c.name, 'Uncategorized') as category_name,
+      c.icon as category_icon, c.color as category_color,
+      sum(t.amount_krw)::numeric as amount_krw
     from finance_transactions t
     left join finance_categories c on c.id = t.category_id
     where t.user_id = ${userId} and t.type = 'expense' and t.date >= ${start} and t.date < ${end}
-    group by t.category_id, c.name
+    group by t.category_id, c.name, c.icon, c.color
     order by amount_krw desc
-  `) as { category_id: string | null; category_name: string; amount_krw: string }[];
+  `) as {
+    category_id: string | null;
+    category_name: string;
+    category_icon: string | null;
+    category_color: string | null;
+    amount_krw: string;
+  }[];
 
-  return rows.map((r) => ({ categoryId: r.category_id, categoryName: r.category_name, amountKrw: Number(r.amount_krw) }));
+  return rows.map((r) => ({
+    categoryId: r.category_id,
+    categoryName: r.category_name,
+    categoryIcon: r.category_icon,
+    categoryColor: r.category_color,
+    amountKrw: Number(r.amount_krw),
+  }));
+}
+
+export async function sumExpenseByDayForRange(
+  userId: string,
+  start: string,
+  end: string
+): Promise<{ date: string; amountKrw: number }[]> {
+  const rows = (await sql`
+    select to_char(date, 'YYYY-MM-DD') as date, sum(amount_krw)::numeric as amount_krw
+    from finance_transactions
+    where user_id = ${userId} and type = 'expense' and date >= ${start} and date < ${end}
+    group by date
+    order by date
+  `) as { date: string; amount_krw: string }[];
+
+  return rows.map((row) => ({ date: row.date, amountKrw: Number(row.amount_krw) }));
 }
 
 export interface RecurringExpenseGroup {

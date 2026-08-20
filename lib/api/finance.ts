@@ -15,6 +15,7 @@ import type {
   Category,
   DetectedSubscription,
   FinancePreferences,
+  FinanceOverviewSummary,
   PaymentMethod,
   ReviewSummary,
   SavingsContribution,
@@ -35,11 +36,13 @@ export function listTransactions(params: {
   start: string;
   end: string;
   type?: TransactionType;
+  categoryId?: string;
   search?: string;
   page?: number;
 }): Promise<{ transactions: Transaction[]; hasMore: boolean }> {
   const query = new URLSearchParams({ start: params.start, end: params.end });
   if (params.type) query.set("type", params.type);
+  if (params.categoryId) query.set("categoryId", params.categoryId);
   if (params.search) query.set("search", params.search);
   if (params.page) query.set("page", String(params.page));
   return apiFetch(`/api/finance/transactions?${query.toString()}`);
@@ -117,6 +120,10 @@ export function updatePreferences(input: UpdatePreferencesInput): Promise<Financ
 
 export function getAnalyticsSummary(month: string): Promise<AnalyticsSummary> {
   return apiFetch<AnalyticsSummary>(`/api/finance/analytics?month=${month}`);
+}
+
+export function getFinanceOverview(month: string): Promise<FinanceOverviewSummary> {
+  return apiFetch<FinanceOverviewSummary>(`/api/finance/overview?month=${month}`);
 }
 
 export function getReviewSummary(month: string): Promise<ReviewSummary> {

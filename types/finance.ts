@@ -22,6 +22,8 @@ export interface Transaction {
   type: TransactionType;
   categoryId: string | null;
   categoryName: string | null;
+  categoryIcon: string | null;
+  categoryColor: string | null;
   description: string;
   amountKrw: number;
   paymentMethodId: string | null;
@@ -34,6 +36,8 @@ export interface Transaction {
 export interface Budget {
   categoryId: string;
   categoryName: string;
+  categoryIcon: string | null;
+  categoryColor: string | null;
   amountKrw: number;
 }
 
@@ -87,6 +91,8 @@ export interface MonthTotals {
 export interface CategoryAmount {
   categoryId: string | null;
   categoryName: string;
+  categoryIcon: string | null;
+  categoryColor: string | null;
   amountKrw: number;
 }
 
@@ -101,17 +107,41 @@ export interface CategoryComparison {
 export interface BudgetPerformance {
   categoryId: string;
   categoryName: string;
+  categoryIcon: string | null;
+  categoryColor: string | null;
   budgetKrw: number;
   spentKrw: number;
   remainingKrw: number;
   usagePct: number;
   overBudget: boolean;
+  status: "ok" | "watch" | "near_limit" | "exceeded";
 }
 
 export interface AnalyticsSummary {
   month: string;
   totals: MonthTotals;
   categories: CategoryAmount[];
+}
+
+export interface DailySpendingPoint {
+  date: string;
+  amountKrw: number;
+}
+
+export interface DailyBudgetGuide {
+  totalBudgetKrw: number;
+  spentTodayKrw: number;
+  availablePerDayKrw: number;
+  monthlyRemainingKrw: number;
+  daysRemaining: number;
+  status: "healthy" | "watch" | "over";
+}
+
+export interface FinanceOverviewSummary extends AnalyticsSummary {
+  dailySpending: DailySpendingPoint[];
+  dailyBudget: DailyBudgetGuide | null;
+  budgetPerformance: BudgetPerformance[];
+  recentTransactions: Transaction[];
 }
 
 export interface ReviewSummary {

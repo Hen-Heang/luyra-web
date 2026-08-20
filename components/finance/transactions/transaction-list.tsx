@@ -1,11 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, ReceiptText, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { FinanceEmptyState, FinanceErrorState, MonthSelector } from "@/components/finance/ui/finance-primitives";
+import { TransactionRow } from "@/components/finance/transactions/transaction-row";
+import { TransactionSheet } from "@/components/finance/transactions/transaction-sheet";
+import { DeleteTransactionDialog } from "@/components/finance/transactions/delete-transaction-dialog";
 import { cn } from "@/lib/utils";
 import { monthBounds, monthLabel } from "@/lib/finance-month";
+import { krw } from "@/lib/finance-format";
 import {
   createTransaction,
   deleteTransaction,
@@ -14,8 +18,6 @@ import {
   listTransactions,
   updateTransaction,
 } from "@/lib/api/finance";
-import { TransactionForm } from "@/components/finance/transactions/transaction-form";
-import { TransactionItem } from "@/components/finance/transactions/transaction-item";
 import type { CreateTransactionInput } from "@/lib/validation/finance";
 import type { Category, PaymentMethod, Transaction, TransactionType } from "@/types/finance";
 
@@ -25,53 +27,120 @@ const TYPE_TABS: { label: string; value: TransactionType | undefined }[] = [
   { label: "Expense", value: "expense" },
 ];
 
+function groupByDate(
+  transactions: Transaction[]
+): { date: string; items: Transaction[]; incomeKrw: number; expenseKrw: number }[] {
+  const order: string[] = [];
+  const groups = new Map<string, { items: Transaction[]; incomeKrw: number; expenseKrw: number }>();
+  for (const transaction of transactions) {
+    if (!groups.has(transaction.date)) {
+      order.push(transaction.date);
+      groups.set(transaction.date, { items: [], incomeKrw: 0, expenseKrw: 0 });
+    }
+    const group = groups.get(transaction.date)!;
+    group.items.push(transaction);
+    if (transaction.type === "income") group.incomeKrw += transaction.amountKrw;
+    else group.expenseKrw += transaction.amountKrw;
+  }
+  return order.map((date) => ({ date, ...groups.get(date)! }));
+}
+
+function dateHeading(date: string): string {
+  const today = new Date().toLocaleDateString("en-CA");
+  const yesterday = new Date(Date.now() - 86_400_000).toLocaleDateString("en-CA");
+  if (date === today) return "Today";
+  if (date === yesterday) return "Yesterday";
+  return new Date(`${date}T00:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+}
+
+function ListSkeleton() {
+  return (
+    <div className="space-y-4" aria-busy="true" aria-label="Loading transactions">
+      {[0, 1].map((group) => (
+        <div key={group} className="space-y-2">
+          <div className="h-4 w-32 rounded bg-secondary motion-safe:animate-pulse" />
+          <div className="overflow-hidden rounded-2xl border bg-card">
+            {[0, 1, 2].map((row) => (
+              <div key={row} className="flex items-center gap-3 border-b border-border p-4 last:border-b-0">
+                <div className="size-10 shrink-0 rounded-xl bg-secondary motion-safe:animate-pulse" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="h-3.5 w-1/3 rounded bg-secondary motion-safe:animate-pulse" />
+                  <div className="h-3 w-1/4 rounded bg-secondary motion-safe:animate-pulse" />
+                </div>
+                <div className="h-3.5 w-16 shrink-0 rounded bg-secondary motion-safe:animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function TransactionList() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [typeFilter, setTypeFilter] = useState<TransactionType | undefined>(undefined);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(0);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [hasMore, setHasMore] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [sheet, setSheet] = useState<{ mode: "create" | "edit"; transaction?: Transaction } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const load = useCallback(
-    async (targetPage: number) => {
-      setLoading(true);
-      try {
-        const { start, end } = monthBounds(monthOffset);
-        const result = await listTransactions({
-          start,
-          end,
-          type: typeFilter,
-          search: search.trim() || undefined,
-          page: targetPage,
-        });
-        setTransactions((prev) => (targetPage === 0 ? result.transactions : [...prev, ...result.transactions]));
-        setHasMore(result.hasMore);
-        setPage(targetPage);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Couldn't load transactions.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [monthOffset, typeFilter, search]
-  );
+  const requestKey = `${monthOffset}:${typeFilter ?? ""}:${categoryFilter}:${search}:${reloadToken}`;
+  const [result, setResult] = useState<{
+    key: string;
+    transactions: Transaction[];
+    hasMore: boolean;
+    pagesLoaded: number;
+    error: string | null;
+  }>({ key: "", transactions: [], hasMore: false, pagesLoaded: 0, error: null });
+  const loading = result.key !== requestKey;
 
   useEffect(() => {
-    void (async () => {
-      await load(0);
-    })();
-  }, [load]);
+    const timeout = setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
 
   useEffect(() => {
     let active = true;
-    async function loadLookups() {
+    const { start, end } = monthBounds(monthOffset);
+    listTransactions({
+      start,
+      end,
+      type: typeFilter,
+      categoryId: categoryFilter || undefined,
+      search: search || undefined,
+      page: 0,
+    })
+      .then((data) => {
+        if (active) {
+          setResult({ key: requestKey, transactions: data.transactions, hasMore: data.hasMore, pagesLoaded: 1, error: null });
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setResult({
+            key: requestKey,
+            transactions: [],
+            hasMore: false,
+            pagesLoaded: 0,
+            error: "We couldn't load your transactions. Try again in a moment.",
+          });
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [requestKey, monthOffset, typeFilter, categoryFilter, search]);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
       try {
         const [cats, methods] = await Promise.all([listCategories(), listPaymentMethods()]);
         if (!active) return;
@@ -80,121 +149,210 @@ export function TransactionList() {
       } catch {
         // Category/payment-method pickers stay empty; the transaction list above still works.
       }
-    }
-    void loadLookups();
+    })();
     return () => {
       active = false;
     };
   }, []);
 
-  async function handleCreate(input: CreateTransactionInput) {
-    await createTransaction(input);
-    setCreating(false);
-    await load(0);
-  }
-
-  async function handleUpdate(id: string, input: CreateTransactionInput) {
-    await updateTransaction(id, input);
-    await load(0);
-  }
-
-  async function handleDelete(id: string) {
-    await deleteTransaction(id);
-    await load(0);
-  }
-
+  const grouped = useMemo(() => groupByDate(result.transactions), [result.transactions]);
   const { start } = monthBounds(monthOffset);
+  const isFiltered = Boolean(search || typeFilter || categoryFilter);
+
+  async function handleLoadMore() {
+    setLoadingMore(true);
+    try {
+      const { start: rangeStart, end } = monthBounds(monthOffset);
+      const data = await listTransactions({
+        start: rangeStart,
+        end,
+        type: typeFilter,
+        categoryId: categoryFilter || undefined,
+        search: search || undefined,
+        page: result.pagesLoaded,
+      });
+      setResult((prev) => ({
+        ...prev,
+        transactions: [...prev.transactions, ...data.transactions],
+        hasMore: data.hasMore,
+        pagesLoaded: prev.pagesLoaded + 1,
+      }));
+    } catch {
+      setResult((prev) => ({ ...prev, error: "Couldn't load more transactions." }));
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  async function handleSave(input: CreateTransactionInput) {
+    if (sheet?.mode === "edit" && sheet.transaction) {
+      await updateTransaction(sheet.transaction.id, input);
+    } else {
+      await createTransaction(input);
+    }
+    setReloadToken((token) => token + 1);
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteTransaction(deleteTarget.id);
+      setDeleteTarget(null);
+      setReloadToken((token) => token + 1);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setMonthOffset((o) => o - 1)} aria-label="Previous month">
-            ←
-          </Button>
-          <span className="text-sm font-medium">{monthLabel(monthOffset)}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setMonthOffset((o) => o + 1)}
-            disabled={monthOffset >= 0}
-            aria-label="Next month"
-          >
-            →
-          </Button>
-        </div>
-        <div className="flex gap-1">
-          {TYPE_TABS.map((tab) => (
-            <button
-              key={tab.label}
-              type="button"
-              onClick={() => setTypeFilter(tab.value)}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-sm",
-                typeFilter === tab.value ? "bg-secondary font-medium" : "text-muted-foreground hover:bg-secondary"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <Input placeholder="Search description…" value={search} onChange={(e) => setSearch(e.target.value)} />
-
-      {creating ? (
-        <TransactionForm
-          mode="create"
-          categories={categories}
-          paymentMethods={paymentMethods}
-          defaultDate={start}
-          onSave={handleCreate}
-          onCancel={() => setCreating(false)}
+        <MonthSelector
+          label={monthLabel(monthOffset)}
+          onPrevious={() => setMonthOffset((offset) => offset - 1)}
+          onNext={() => setMonthOffset((offset) => offset + 1)}
+          nextDisabled={monthOffset >= 0}
+          ariaLabel="Transactions month selector"
+          size="sm"
         />
-      ) : (
-        <Button variant="outline" size="sm" onClick={() => setCreating(true)} className="self-start">
+        <Button size="sm" className="min-h-11" onClick={() => setSheet({ mode: "create" })}>
           <Plus />
           Add transaction
         </Button>
-      )}
+      </div>
 
-      {error && (
-        <p
-          className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
-          role="alert"
+      <div className="flex flex-wrap gap-2">
+        <div className="relative min-w-48 flex-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search description…"
+            aria-label="Search transactions"
+            className="h-11 w-full rounded-xl border bg-card pl-9 pr-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={() => setSearchInput("")}
+              className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
+              aria-label="Clear search"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
+        <select
+          value={categoryFilter}
+          onChange={(event) => setCategoryFilter(event.target.value)}
+          aria-label="Filter by category"
+          className="h-11 rounded-xl border bg-card px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {error}
-        </p>
-      )}
-
-      {transactions.length === 0 && !loading ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">No transactions this month.</p>
-      ) : (
-        <div className="divide-y divide-border rounded-lg border border-border">
-          {transactions.map((transaction) => (
-            <TransactionItem
-              key={transaction.id}
-              transaction={transaction}
-              categories={categories}
-              paymentMethods={paymentMethods}
-              onUpdate={handleUpdate}
-              onDelete={handleDelete}
-            />
+          <option value="">All categories</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.icon ? `${category.icon} ` : ""}
+              {category.name}
+            </option>
           ))}
+        </select>
+      </div>
+
+      <div className="flex gap-1 rounded-xl border bg-card p-1">
+        {TYPE_TABS.map((tab) => (
+          <button
+            key={tab.label}
+            type="button"
+            onClick={() => setTypeFilter(tab.value)}
+            className={cn(
+              "min-h-9 flex-1 rounded-lg text-sm font-medium transition-colors",
+              typeFilter === tab.value ? "bg-secondary font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {result.error ? (
+        <FinanceErrorState
+          title="Transactions unavailable"
+          description={result.error}
+          onRetry={() => setReloadToken((token) => token + 1)}
+        />
+      ) : loading ? (
+        <ListSkeleton />
+      ) : result.transactions.length === 0 ? (
+        <FinanceEmptyState
+          icon={ReceiptText}
+          title={isFiltered ? "No matching transactions" : "No transactions yet"}
+          description={
+            isFiltered
+              ? "Try a different search, category, or date range."
+              : "Add your first income or expense to start tracking this month."
+          }
+          action={
+            isFiltered ? undefined : (
+              <Button variant="outline" size="sm" onClick={() => setSheet({ mode: "create" })}>
+                <Plus />
+                Add transaction
+              </Button>
+            )
+          }
+        />
+      ) : (
+        <div className="space-y-4">
+          {grouped.map(({ date, items, incomeKrw, expenseKrw }) => (
+            <div key={date}>
+              <div className="flex items-center justify-between px-1 py-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{dateHeading(date)}</p>
+                <div className="flex gap-3 text-xs font-semibold tabular-nums">
+                  {incomeKrw > 0 && <span className="text-success">+{krw.format(incomeKrw)}</span>}
+                  {expenseKrw > 0 && <span className="text-foreground">−{krw.format(expenseKrw)}</span>}
+                </div>
+              </div>
+              <div className="overflow-hidden rounded-2xl border bg-card">
+                <div className="divide-y divide-border">
+                  {items.map((transaction) => (
+                    <TransactionRow
+                      key={transaction.id}
+                      transaction={transaction}
+                      onEdit={(t) => setSheet({ mode: "edit", transaction: t })}
+                      onDeleteRequest={setDeleteTarget}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {result.hasMore && (
+            <Button variant="outline" size="sm" onClick={handleLoadMore} disabled={loadingMore} className="min-h-11 w-full">
+              {loadingMore ? "Loading…" : "Load more"}
+            </Button>
+          )}
         </div>
       )}
 
-      {hasMore && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => load(page + 1)}
-          disabled={loading}
-          className="self-center"
-        >
-          Load more
-        </Button>
-      )}
+      <TransactionSheet
+        mode={sheet?.mode ?? "create"}
+        transaction={sheet?.transaction}
+        categories={categories}
+        paymentMethods={paymentMethods}
+        defaultDate={start}
+        open={sheet !== null}
+        onOpenChange={(open) => !open && setSheet(null)}
+        onSave={handleSave}
+      />
+
+      <DeleteTransactionDialog
+        isOpen={deleteTarget !== null}
+        isDeleting={deleting}
+        description={deleteTarget?.description ?? ""}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

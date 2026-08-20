@@ -1,0 +1,16 @@
+import { type NextRequest } from "next/server";
+import { ensureAppUser } from "@/lib/auth/ensure-app-user";
+import { apiError, apiSuccess } from "@/lib/http";
+import { getFinanceOverviewSummary } from "@/lib/services/finance-analytics-service";
+import { monthQuerySchema } from "@/lib/validation/finance";
+
+export async function GET(request: NextRequest) {
+  try {
+    const appUser = await ensureAppUser();
+    const month = monthQuerySchema.parse(request.nextUrl.searchParams.get("month"));
+    const overview = await getFinanceOverviewSummary(appUser.id, month);
+    return apiSuccess(overview);
+  } catch (error) {
+    return apiError(error);
+  }
+}

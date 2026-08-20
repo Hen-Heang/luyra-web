@@ -6,7 +6,7 @@ import {
 } from "@/lib/repositories/finance-budget-repository";
 import { findCategoriesByUser } from "@/lib/repositories/finance-lookup-repository";
 import { sumExpenseByCategoryForRange } from "@/lib/repositories/finance-transaction-repository";
-import type { Budget, BudgetPerformance, Category } from "@/types/finance";
+import type { Budget, BudgetPerformance, Category, CategoryAmount } from "@/types/finance";
 
 export async function listBudgetsForMonth(
   userId: string,
@@ -36,9 +36,15 @@ export async function deleteBudget(userId: string, categoryId: string): Promise<
   await deleteBudgetRepo(userId, categoryId);
 }
 
-export async function computeBudgetPerformance(userId: string, start: string, end: string): Promise<BudgetPerformance[]> {
-  const [budgets, spend] = await Promise.all([findBudgetsByUser(userId), sumExpenseByCategoryForRange(userId, start, end)]);
-  const spendByCategory = new Map(spend.map((s) => [s.categoryId, s.amountKrw]));
+function budgetUsageStatus(usagePct: number): BudgetPerformance["status"] {
+  if (usagePct >= 100) return "exceeded";
+  if (usagePct >= 90) return "near_limit";
+  if (usagePct >= 80) return "watch";
+  return "ok";
+}
+
+export function toBudgetPerformance(budgets: Budget[], categorySpend: CategoryAmount[]): BudgetPerformance[] {
+  const spendByCategory = new Map(categorySpend.map((s) => [s.categoryId, s.amountKrw]));
 
   return budgets
     .filter((b) => b.amountKrw > 0)
@@ -48,12 +54,20 @@ export async function computeBudgetPerformance(userId: string, start: string, en
       return {
         categoryId: b.categoryId,
         categoryName: b.categoryName,
+        categoryIcon: b.categoryIcon,
+        categoryColor: b.categoryColor,
         budgetKrw: b.amountKrw,
         spentKrw,
         remainingKrw: b.amountKrw - spentKrw,
         usagePct,
         overBudget: spentKrw > b.amountKrw,
+        status: budgetUsageStatus(usagePct),
       };
     })
     .sort((a, b) => b.usagePct - a.usagePct);
+}
+
+export async function computeBudgetPerformance(userId: string, start: string, end: string): Promise<BudgetPerformance[]> {
+  const [budgets, spend] = await Promise.all([findBudgetsByUser(userId), sumExpenseByCategoryForRange(userId, start, end)]);
+  return toBudgetPerformance(budgets, spend);
 }

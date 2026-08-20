@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
       start: searchParams.get("start"),
       end: searchParams.get("end"),
       type: searchParams.get("type") ?? undefined,
+      categoryId: searchParams.get("categoryId") ?? undefined,
       search: searchParams.get("search") ?? undefined,
       page: searchParams.get("page") ?? undefined,
     });

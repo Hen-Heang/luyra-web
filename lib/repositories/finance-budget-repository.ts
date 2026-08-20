@@ -4,13 +4,26 @@ import type { Budget } from "@/types/finance";
 
 export async function findBudgetsByUser(userId: string): Promise<Budget[]> {
   const rows = (await sql`
-    select b.category_id, c.name as category_name, b.amount_krw
+    select b.category_id, c.name as category_name, c.icon as category_icon,
+      c.color as category_color, b.amount_krw
     from finance_budgets b
     join finance_categories c on c.id = b.category_id
     where b.user_id = ${userId}
-  `) as { category_id: string; category_name: string; amount_krw: string }[];
+  `) as {
+    category_id: string;
+    category_name: string;
+    category_icon: string | null;
+    category_color: string | null;
+    amount_krw: string;
+  }[];
 
-  return rows.map((r) => ({ categoryId: r.category_id, categoryName: r.category_name, amountKrw: Number(r.amount_krw) }));
+  return rows.map((r) => ({
+    categoryId: r.category_id,
+    categoryName: r.category_name,
+    categoryIcon: r.category_icon,
+    categoryColor: r.category_color,
+    amountKrw: Number(r.amount_krw),
+  }));
 }
 
 // No unique(user_id, category_id) constraint is declared in

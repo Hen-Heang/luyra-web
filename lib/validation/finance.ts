@@ -21,6 +21,7 @@ export const transactionFiltersSchema = z.object({
   start: z.string().date(),
   end: z.string().date(),
   type: transactionTypeSchema.optional(),
+  categoryId: z.string().uuid().optional(),
   search: z.string().trim().max(200).optional(),
   page: z.coerce.number().int().min(0).default(0),
 });
