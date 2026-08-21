@@ -1,7 +1,7 @@
 // Luyra service worker. Scope stays deliberately modest: app-shell
 // precache + read-only recent data via cache fallback. Mutations are never
 // intercepted, cached, or queued — an offline write simply fails normally.
-const CACHE_NAME = "luyra-v1";
+const CACHE_NAME = "luyra-v2";
 
 const PRECACHE_URLS = [
   "/finance",
@@ -9,8 +9,8 @@ const PRECACHE_URLS = [
   "/finance/budgets",
   "/finance/savings",
   "/login",
-  "/icons/icon-192",
-  "/icons/icon-512",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
   "/manifest.webmanifest",
 ];
 

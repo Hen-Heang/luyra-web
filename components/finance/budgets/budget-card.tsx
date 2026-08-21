@@ -28,16 +28,7 @@ export function BudgetCard({
     <div className="rounded-2xl border bg-card p-4">
       <div className="flex items-center gap-3">
         <CategoryIcon icon={budget.categoryIcon} color={budget.categoryColor} />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{budget.categoryName}</p>
-          <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground tabular-nums">
-            {krw.format(budget.spentKrw)} of {krw.format(budget.budgetKrw)}
-          </p>
-        </div>
-        <span className={`flex shrink-0 items-center gap-1 text-xs font-semibold ${BUDGET_STATUS_TEXT_CLASS[budget.status]}`}>
-          <StatusIcon className="size-3.5" aria-hidden="true" />
-          {status.label}
-        </span>
+        <p className="min-w-0 flex-1 truncate text-sm font-semibold">{budget.categoryName}</p>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -60,6 +51,16 @@ export function BudgetCard({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <p className="min-w-0 truncate font-mono text-xs text-muted-foreground tabular-nums">
+          {krw.format(budget.spentKrw)} of {krw.format(budget.budgetKrw)}
+        </p>
+        <span className={`flex shrink-0 items-center gap-1 text-xs font-semibold ${BUDGET_STATUS_TEXT_CLASS[budget.status]}`}>
+          <StatusIcon className="size-3.5" aria-hidden="true" />
+          {status.label}
+        </span>
       </div>
 
       <div className="mt-3">

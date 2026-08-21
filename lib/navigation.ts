@@ -1,11 +1,18 @@
 import {
+  BarChart3,
   Bell,
+  ClipboardCheck,
   Goal,
   GraduationCap,
   Home,
+  LayoutDashboard,
   ListTodo,
+  PiggyBank,
+  Receipt,
   Repeat,
+  Settings,
   ShieldCheck,
+  Wallet,
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
@@ -88,15 +95,40 @@ export const accountItem: NavItem = {
   color: "text-zinc-500",
 };
 
-/** Luyra is the active product. Hengo destinations stay defined for an easy future resume. */
-export const primaryNavItems: NavItem[] = [financeItem];
+/** Luyra feature navigation. Desktop and tablet render this in the app shell;
+ * mobile renders the same destinations as a compact tab strip. */
+export const financeNavItems: NavItem[] = [
+  { id: "finance-overview", href: "/finance", label: "Overview", icon: LayoutDashboard, color: "text-sky-500" },
+  { id: "finance-transactions", href: "/finance/transactions", label: "Transactions", shortLabel: "Activity", icon: Receipt, color: "text-teal-500" },
+  { id: "finance-budgets", href: "/finance/budgets", label: "Budgets", icon: Wallet, color: "text-orange-500" },
+  { id: "finance-savings", href: "/finance/savings", label: "Savings", icon: PiggyBank, color: "text-amber-500" },
+  { id: "finance-analytics", href: "/finance/analytics", label: "Analytics", icon: BarChart3, color: "text-fuchsia-500" },
+  { id: "finance-review", href: "/finance/review", label: "Review", icon: ClipboardCheck, color: "text-indigo-500" },
+  { id: "finance-subscriptions", href: "/finance/subscriptions", label: "Subscriptions", icon: Repeat, color: "text-violet-500" },
+  { id: "finance-settings", href: "/finance/settings", label: "Settings", icon: Settings, color: "text-zinc-500" },
+];
+
+/** Luyra is the active product. Its features are the primary app destinations. */
+export const primaryNavItems: NavItem[] = financeNavItems;
 
 export const allNavItems: NavItem[] = [...primaryNavItems, accountItem];
 
-/** Mobile bottom bar: Luyra is the only active product destination. */
-export const bottomTabs: NavItem[] = [financeItem];
+/** Mobile bottom bar: the core money-flow destinations, Telegram-tab style.
+ * Everything else lives in the "More" sheet. */
+export const bottomTabs: NavItem[] = [
+  financeNavItems[0], // Overview
+  financeNavItems[1], // Transactions
+  financeNavItems[2], // Budgets
+  financeNavItems[3], // Savings
+  financeNavItems[4], // Analytics
+];
 
-export const moreItems: NavItem[] = [accountItem];
+export const moreItems: NavItem[] = [
+  financeNavItems[5], // Review
+  financeNavItems[6], // Subscriptions
+  financeNavItems[7], // Settings
+  accountItem,
+];
 
 export function linkPath(href: string): string {
   const qIndex = href.indexOf("?");
@@ -116,7 +148,11 @@ export function isNavigationItemActive({
 }
 
 export function getActiveNavItem(pathname: string): NavItem | undefined {
-  return allNavItems.find((item) => isNavigationItemActive({ pathname, item }));
+  // Prefer the most specific path. Without this, `/finance` would also win
+  // for every nested finance destination.
+  return allNavItems
+    .filter((item) => isNavigationItemActive({ pathname, item }))
+    .sort((a, b) => linkPath(b.href).length - linkPath(a.href).length)[0];
 }
 
 export function getActiveBottomTabIndex(pathname: string): number {

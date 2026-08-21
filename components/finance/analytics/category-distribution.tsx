@@ -1,6 +1,7 @@
 "use client";
 
 import { WalletCards } from "lucide-react";
+import { CategoryDonut } from "@/components/finance/analytics/category-donut";
 import { CategoryIcon, FinanceEmptyState, FinanceProgress } from "@/components/finance/ui/finance-primitives";
 import { krw } from "@/lib/finance-format";
 import type { CategoryAmount } from "@/types/finance";
@@ -20,6 +21,9 @@ export function CategoryDistribution({ categories }: { categories: CategoryAmoun
 
   return (
     <div className="overflow-hidden rounded-2xl border bg-card">
+      <div className="border-b border-border p-4">
+        <CategoryDonut categories={categories} />
+      </div>
       <div className="divide-y divide-border">
         {categories.map((category) => {
           const share = total > 0 ? (category.amountKrw / total) * 100 : 0;

@@ -8,6 +8,7 @@ import { TransactionRow } from "@/components/finance/transactions/transaction-ro
 import { TransactionSheet } from "@/components/finance/transactions/transaction-sheet";
 import { DeleteTransactionDialog } from "@/components/finance/transactions/delete-transaction-dialog";
 import { TransactionFilterPanel } from "@/components/finance/transactions/transaction-filter-panel";
+import { emitTransactionChanged, onTransactionChanged } from "@/lib/finance-events";
 import { cn } from "@/lib/utils";
 import { monthBounds, monthLabel } from "@/lib/finance-month";
 import { krw } from "@/lib/finance-format";
@@ -180,6 +181,8 @@ export function TransactionList() {
     };
   }, [requestKey, monthOffset, typeFilter, categoryFilter, paymentMethodFilter, amountMin, amountMax, sort, search]);
 
+  useEffect(() => onTransactionChanged(() => setReloadToken((token) => token + 1)), []);
+
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -248,6 +251,7 @@ export function TransactionList() {
       await createTransaction(input);
     }
     setReloadToken((token) => token + 1);
+    emitTransactionChanged();
   }
 
   async function handleSaveTemplate(input: CreateTransactionTemplateInput) {
@@ -272,6 +276,7 @@ export function TransactionList() {
       await deleteTransaction(deleteTarget.id);
       setDeleteTarget(null);
       setReloadToken((token) => token + 1);
+      emitTransactionChanged();
     } finally {
       setDeleting(false);
     }

@@ -29,6 +29,7 @@ import {
 } from "@/components/finance/ui/finance-primitives";
 import { BUDGET_STATUS_META, BUDGET_STATUS_TEXT_CLASS } from "@/components/finance/ui/budget-status";
 import { getFinanceOverview } from "@/lib/api/finance";
+import { onTransactionChanged } from "@/lib/finance-events";
 import { krw } from "@/lib/finance-format";
 import { monthKey, monthLabel } from "@/lib/finance-month";
 import { cn } from "@/lib/utils";
@@ -412,6 +413,8 @@ export function FinanceOverview() {
   const loading = result.key !== requestKey;
   const summary = loading ? null : result.summary;
   const error = loading ? null : result.error;
+
+  useEffect(() => onTransactionChanged(() => setRefreshKey((key) => key + 1)), []);
 
   useEffect(() => {
     let active = true;

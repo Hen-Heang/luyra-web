@@ -7,10 +7,11 @@ import { bottomTabs, getActiveBottomTabIndex } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 const TAB =
-  "relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg py-1.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset";
+  "relative flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-xl py-2.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset active:scale-95";
 
 /**
- * The active product destination plus a "More" slot for account controls.
+ * The core money-flow destinations plus a "More" slot for everything else —
+ * a Telegram-style tab strip on an iOS "glass" (frosted, translucent) bar.
  * When the soft keyboard is open the whole element is unmounted by `AppShell`
  * rather than hidden, so nothing inside stays in the tab order.
  */
@@ -24,52 +25,51 @@ export function MobileBottomNav({
   moreOpen: boolean;
 }) {
   const activeIndex = getActiveBottomTabIndex(pathname);
+  const moreActive = activeIndex === bottomTabs.length;
 
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_3px_rgba(0,0,0,0.05)]"
+      className="fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]"
     >
-      <ul className="mx-auto flex max-w-lg items-stretch gap-0.5 px-2 py-1.5">
-        {bottomTabs.map((item, index) => {
-          const active = index === activeIndex;
-          const Icon = item.icon;
-          return (
-            <li key={item.id} className="flex min-w-0 flex-1">
-              <Link
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={cn(TAB, active ? "text-primary" : "text-muted-foreground")}
-              >
-                <Icon size={21} strokeWidth={active ? 2.4 : 2} aria-hidden className={cn("shrink-0", item.color, !active && "opacity-70")} />
-                <span className={cn("w-full truncate px-0.5 text-center text-xs leading-none", active ? "font-semibold" : "font-medium")}>
-                  {item.shortLabel ?? item.label}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
+      {/* Frosted glass bar: translucent background + backdrop blur + a hairline
+          highlight on top, so content scrolling underneath shows through like
+          the iOS tab bar / Telegram's bottom nav. */}
+      <div className="relative border-t border-white/15 bg-background/70 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-background/60 dark:border-white/10 dark:bg-background/50">
+        <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent dark:via-white/15" />
 
-        <li className="flex min-w-0 flex-1">
-          <button
-            type="button"
-            onClick={onOpenMore}
-            aria-haspopup="dialog"
-            aria-expanded={moreOpen}
-            className={cn(TAB, activeIndex === bottomTabs.length ? "text-primary" : "text-muted-foreground")}
-          >
-            <Menu size={21} strokeWidth={activeIndex === bottomTabs.length ? 2.4 : 2} aria-hidden className="shrink-0" />
-            <span
-              className={cn(
-                "w-full truncate px-0.5 text-center text-xs leading-none",
-                activeIndex === bottomTabs.length ? "font-semibold" : "font-medium"
-              )}
+        <ul className="mx-auto flex max-w-lg items-stretch gap-0.5 px-2 py-1.5">
+          {bottomTabs.map((item, index) => {
+            const active = index === activeIndex;
+            const Icon = item.icon;
+            return (
+              <li key={item.id} className="flex min-w-0 flex-1">
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  aria-label={item.shortLabel ?? item.label}
+                  className={cn(TAB, active ? "text-primary" : "text-muted-foreground")}
+                >
+                  <Icon size={26} strokeWidth={active ? 2.4 : 2} aria-hidden className={cn("shrink-0", item.color, !active && "opacity-70")} />
+                </Link>
+              </li>
+            );
+          })}
+
+          <li className="flex min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={onOpenMore}
+              aria-haspopup="dialog"
+              aria-expanded={moreOpen}
+              aria-label="More"
+              className={cn(TAB, moreActive ? "text-primary" : "text-muted-foreground")}
             >
-              More
-            </span>
-          </button>
-        </li>
-      </ul>
+              <Menu size={26} strokeWidth={moreActive ? 2.4 : 2} aria-hidden className={cn("shrink-0", !moreActive && "opacity-70")} />
+            </button>
+          </li>
+        </ul>
+      </div>
     </nav>
   );
 }

@@ -48,16 +48,16 @@ export function FinanceMetricCard({ label, value, detail, icon: Icon, tone = "ne
   const valueStyles = TONE_STYLES[valueTone ?? tone];
   const surfaceStyles = TONE_STYLES[surfaceTone ?? tone];
   return (
-    <div className={cn("flex h-full min-w-0 flex-col rounded-2xl border bg-card p-4 shadow-sm", featured ? "min-h-44 justify-between sm:p-5" : "gap-4", surfaceStyles.surface)}>
-      <div className="flex items-center justify-between gap-3">
+    <div className={cn("flex h-full min-w-0 flex-col rounded-2xl border bg-card p-3 shadow-sm sm:p-4", featured ? "min-h-44 justify-between sm:p-5" : "gap-3 sm:gap-4", surfaceStyles.surface)}>
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", styles.icon)}>
+        <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-xl sm:size-9", styles.icon)}>
           <Icon aria-hidden="true" className="size-4" />
         </span>
       </div>
       <div>
-        <p className={cn("break-words font-mono font-semibold leading-tight tracking-[-0.04em] tabular-nums", featured ? "text-3xl sm:text-4xl" : "text-lg sm:text-2xl", valueStyles.value)} title={value}>{value}</p>
-        <div className="mt-2 text-xs text-muted-foreground">{detail}</div>
+        <p className={cn("break-words font-mono font-semibold leading-tight tracking-[-0.04em] tabular-nums", featured ? "text-3xl sm:text-4xl" : "text-base sm:text-2xl", valueStyles.value)} title={value}>{value}</p>
+        <div className="mt-1.5 text-xs text-muted-foreground sm:mt-2">{detail}</div>
       </div>
     </div>
   );

@@ -9,6 +9,8 @@ import { useNavigationMode } from "@/hooks/useNavigationMode";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { cn } from "@/lib/utils";
 
+import { QuickAddTransaction } from "@/components/finance/transactions/quick-add-transaction";
+
 import { DesktopHeader } from "./DesktopHeader";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
@@ -67,6 +69,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {showBottomNav && (
           <MobileBottomNav onOpenMore={() => setMoreOpen(true)} moreOpen={moreOpen} pathname={pathname} />
         )}
+
+        {!isKeyboardOpen && <QuickAddTransaction raised={isMobile} />}
 
         <MoreNavigationSheet open={moreOpen} onOpenChange={setMoreOpen} pathname={pathname} />
       </MobileHeaderTitleProvider>

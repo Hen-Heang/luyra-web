@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 import { NavIconRow, NavRow } from "@/components/layout/NavItem";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { accountItem, financeItem, isNavigationItemActive, primaryNavItems } from "@/lib/navigation";
+import { accountItem, financeItem, getActiveNavItem, primaryNavItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 import { ProfileMenu } from "./ProfileMenu";
@@ -22,6 +23,8 @@ export function DesktopSidebar({
   collapsed: boolean;
   onToggleCollapsed: () => void;
 }) {
+  const activeItem = getActiveNavItem(pathname);
+
   return (
     <aside
       aria-label="Main navigation"
@@ -35,8 +38,8 @@ export function DesktopSidebar({
           aria-label="Luyra home"
           className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            M
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Image src="/luyra-mark-v2.png" alt="" width={36} height={36} className="size-6" priority />
           </span>
           {!collapsed && (
             <span className="min-w-0">
@@ -68,9 +71,9 @@ export function DesktopSidebar({
       <nav aria-label="Primary" className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
         {primaryNavItems.map((item) =>
           collapsed ? (
-            <NavIconRow key={item.id} item={item} active={isNavigationItemActive({ pathname, item })} />
+            <NavIconRow key={item.id} item={item} active={activeItem?.id === item.id} />
           ) : (
-            <NavRow key={item.id} item={item} active={isNavigationItemActive({ pathname, item })} />
+            <NavRow key={item.id} item={item} active={activeItem?.id === item.id} />
           )
         )}
       </nav>
@@ -78,9 +81,9 @@ export function DesktopSidebar({
       {/* Account + profile menu */}
       <div className="space-y-1 border-t border-border px-3 py-3">
         {collapsed ? (
-          <NavIconRow item={accountItem} active={isNavigationItemActive({ pathname, item: accountItem })} />
+          <NavIconRow item={accountItem} active={activeItem?.id === accountItem.id} />
         ) : (
-          <NavRow item={accountItem} active={isNavigationItemActive({ pathname, item: accountItem })} />
+          <NavRow item={accountItem} active={activeItem?.id === accountItem.id} />
         )}
         <ProfileMenu collapsed={collapsed} />
       </div>

@@ -1,29 +1,16 @@
 "use client";
 
 import { CreditCard } from "lucide-react";
+import { PaymentMethodDonut } from "@/components/finance/analytics/payment-method-donut";
 import { FinanceEmptyState, FinanceProgress } from "@/components/finance/ui/finance-primitives";
 import { krw } from "@/lib/finance-format";
+import { hashSeriesColor } from "@/lib/finance-chart-colors";
 import type { PaymentMethodAmount } from "@/types/finance";
 
-// Fixed-order categorical palette (see app/globals.css --chart-series-*).
-// Color is assigned by a stable hash of the entity's own id/name, never by
-// its rank in the amount-sorted list — so a method keeps its color across
-// months even as spending order shifts.
-const SERIES_COLORS = [
-  "var(--chart-series-1)",
-  "var(--chart-series-2)",
-  "var(--chart-series-3)",
-  "var(--chart-series-4)",
-  "var(--chart-series-5)",
-  "var(--chart-series-6)",
-];
-const MAX_VISIBLE_SERIES = SERIES_COLORS.length;
+const MAX_VISIBLE_SERIES = 6;
 
 function colorForMethod(id: string | null, name: string): string {
-  const key = id ?? name;
-  let hash = 0;
-  for (let index = 0; index < key.length; index += 1) hash = (hash * 31 + key.charCodeAt(index)) >>> 0;
-  return SERIES_COLORS[hash % SERIES_COLORS.length];
+  return hashSeriesColor(id ?? name);
 }
 
 export function PaymentMethodBreakdown({ paymentMethods }: { paymentMethods: PaymentMethodAmount[] }) {
@@ -44,6 +31,10 @@ export function PaymentMethodBreakdown({ paymentMethods }: { paymentMethods: Pay
 
   return (
     <div className="space-y-4 rounded-2xl border bg-card p-4">
+      <div className="border-b border-border pb-4">
+        <PaymentMethodDonut paymentMethods={paymentMethods} />
+      </div>
+
       {visible.map((method) => {
         const share = total > 0 ? (method.amountKrw / total) * 100 : 0;
         const color = colorForMethod(method.paymentMethodId, method.paymentMethodName);

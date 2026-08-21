@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 import { NavIconRow } from "@/components/layout/NavItem";
-import { accountItem, financeItem, isNavigationItemActive, primaryNavItems } from "@/lib/navigation";
+import { accountItem, financeItem, getActiveNavItem, primaryNavItems } from "@/lib/navigation";
 
 import { ProfileMenu } from "./ProfileMenu";
 
@@ -14,6 +15,8 @@ export const RAIL_WIDTH = 80;
  * used at these widths.
  */
 export function TabletNavigationRail({ pathname }: { pathname: string }) {
+  const activeItem = getActiveNavItem(pathname);
+
   return (
     <aside
       aria-label="Main navigation"
@@ -24,9 +27,9 @@ export function TabletNavigationRail({ pathname }: { pathname: string }) {
         <Link
           href={financeItem.href}
           aria-label="Luyra home"
-          className="flex size-11 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-11 items-center justify-center rounded-lg bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          M
+          <Image src="/luyra-mark-v2.png" alt="" width={44} height={44} className="size-7" priority />
         </Link>
       </div>
 
@@ -34,12 +37,12 @@ export function TabletNavigationRail({ pathname }: { pathname: string }) {
 
       <nav aria-label="Primary" className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
         {primaryNavItems.map((item) => (
-          <NavIconRow key={item.id} item={item} showLabel active={isNavigationItemActive({ pathname, item })} />
+          <NavIconRow key={item.id} item={item} showLabel active={activeItem?.id === item.id} />
         ))}
       </nav>
 
       <div className="space-y-1 border-t border-border px-2 py-3">
-        <NavIconRow item={accountItem} showLabel active={isNavigationItemActive({ pathname, item: accountItem })} />
+        <NavIconRow item={accountItem} showLabel active={activeItem?.id === accountItem.id} />
         <ProfileMenu collapsed side="right" />
       </div>
     </aside>
