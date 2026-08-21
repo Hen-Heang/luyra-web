@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               id="main-content"
               tabIndex={-1}
               className={cn(
-                "min-h-0 flex-1 overflow-x-hidden px-4 pt-5 outline-none sm:px-6 lg:px-8",
+                "min-h-0 flex-1 overflow-x-clip px-4 pt-5 outline-none sm:px-6 lg:px-8",
                 showBottomNav ? "pb-[calc(9rem+env(safe-area-inset-bottom))]" : "pb-10"
               )}
             >
