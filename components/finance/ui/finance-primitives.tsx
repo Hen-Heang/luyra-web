@@ -22,7 +22,7 @@ export function FinanceSection({ id, title, description, action, children, class
 }) {
   return (
     <section aria-labelledby={id} className={cn("space-y-3", className)}>
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <h2 id={id} className="text-sm font-semibold tracking-tight text-foreground">{title}</h2>
           {description ? <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p> : null}
@@ -34,17 +34,21 @@ export function FinanceSection({ id, title, description, action, children, class
   );
 }
 
-export function FinanceMetricCard({ label, value, detail, icon: Icon, tone = "neutral", featured = false }: {
+export function FinanceMetricCard({ label, value, detail, icon: Icon, tone = "neutral", valueTone, surfaceTone, featured = false }: {
   label: string;
   value: string;
-  detail: string;
+  detail: React.ReactNode;
   icon: LucideIcon;
   tone?: FinanceTone;
+  valueTone?: FinanceTone;
+  surfaceTone?: FinanceTone;
   featured?: boolean;
 }) {
   const styles = TONE_STYLES[tone];
+  const valueStyles = TONE_STYLES[valueTone ?? tone];
+  const surfaceStyles = TONE_STYLES[surfaceTone ?? tone];
   return (
-    <div className={cn("flex h-full min-w-0 flex-col rounded-2xl border bg-card p-4 shadow-sm", featured ? "min-h-44 justify-between sm:p-5" : "gap-4", styles.surface)}>
+    <div className={cn("flex h-full min-w-0 flex-col rounded-2xl border bg-card p-4 shadow-sm", featured ? "min-h-44 justify-between sm:p-5" : "gap-4", surfaceStyles.surface)}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", styles.icon)}>
@@ -52,8 +56,8 @@ export function FinanceMetricCard({ label, value, detail, icon: Icon, tone = "ne
         </span>
       </div>
       <div>
-        <p className={cn("truncate font-mono font-semibold tracking-[-0.04em] tabular-nums", featured ? "text-3xl sm:text-4xl" : "text-xl sm:text-2xl", styles.value)} title={value}>{value}</p>
-        <p className="mt-2 text-xs text-muted-foreground">{detail}</p>
+        <p className={cn("break-words font-mono font-semibold leading-tight tracking-[-0.04em] tabular-nums", featured ? "text-3xl sm:text-4xl" : "text-lg sm:text-2xl", valueStyles.value)} title={value}>{value}</p>
+        <div className="mt-2 text-xs text-muted-foreground">{detail}</div>
       </div>
     </div>
   );
@@ -82,11 +86,13 @@ export function FinanceProgress({ value, label, tone = "neutral", color }: {
   color?: string | null;
 }) {
   const fillClass = { neutral: "bg-finance-chart", positive: "bg-success", expense: "bg-destructive", warning: "bg-warning" }[tone];
+  const safeValue = Number.isFinite(value) ? value : 0;
+  const visualValue = Math.min(Math.max(safeValue, 0), 100);
   return (
-    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(Math.max(0, value), 100))} className="h-2 overflow-hidden rounded-full bg-secondary">
+    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(visualValue)} className="h-2 overflow-hidden rounded-full bg-secondary">
       <div
         className={cn("h-full rounded-full motion-safe:transition-[width] motion-safe:duration-500", color ? undefined : fillClass)}
-        style={{ width: `${Math.min(Math.max(value, 0), 100)}%`, backgroundColor: color ?? undefined }}
+        style={{ width: `${visualValue}%`, backgroundColor: color ?? undefined }}
       />
     </div>
   );

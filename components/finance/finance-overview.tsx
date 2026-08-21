@@ -7,12 +7,14 @@ import {
   ArrowRight,
   ArrowUpRight,
   CalendarDays,
+  CheckCircle2,
   Clock3,
-  Landmark,
+  Gauge,
   PiggyBank,
   ReceiptText,
   Scale,
   TrendingUp,
+  TriangleAlert,
   WalletCards,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -25,16 +27,20 @@ import {
   FinanceSection,
   MonthSelector,
 } from "@/components/finance/ui/finance-primitives";
+import { BUDGET_STATUS_META, BUDGET_STATUS_TEXT_CLASS } from "@/components/finance/ui/budget-status";
 import { getFinanceOverview } from "@/lib/api/finance";
 import { krw } from "@/lib/finance-format";
 import { monthKey, monthLabel } from "@/lib/finance-month";
 import { cn } from "@/lib/utils";
 import type {
   BudgetPerformance,
+  BudgetHealth,
   CategoryAmount,
   DailyBudgetGuide,
   DailySpendingPoint,
   FinanceOverviewSummary,
+  MonthTotals,
+  SavingsRateHealth,
   Transaction,
 } from "@/types/finance";
 
@@ -56,12 +62,6 @@ function formatTransactionDate(transaction: Transaction): string {
   return `${dateLabel} · ${createdAt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 }
 
-const BUDGET_ALERT_META: Record<Exclude<BudgetPerformance["status"], "ok">, { label: string; tone: "warning" | "expense" }> = {
-  exceeded: { label: "Exceeded", tone: "expense" },
-  near_limit: { label: "Near limit", tone: "warning" },
-  watch: { label: "Watch", tone: "warning" },
-};
-
 const DAILY_BUDGET_META: Record<DailyBudgetGuide["status"], { label: string; cardTone: "positive" | "warning" | "expense"; metricTone: "neutral" | "warning" | "expense" }> = {
   healthy: { label: "On track", cardTone: "positive", metricTone: "neutral" },
   watch: { label: "Spending room is tight", cardTone: "warning", metricTone: "warning" },
@@ -70,18 +70,162 @@ const DAILY_BUDGET_META: Record<DailyBudgetGuide["status"], { label: string; car
 
 function OverviewLoading() {
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading Finance overview">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="col-span-2 h-44 rounded-2xl bg-secondary motion-safe:animate-pulse lg:row-span-2 lg:h-auto" />
-        <div className="h-32 rounded-2xl bg-secondary motion-safe:animate-pulse" />
-        <div className="h-32 rounded-2xl bg-secondary motion-safe:animate-pulse" />
-        <div className="h-32 rounded-2xl bg-secondary motion-safe:animate-pulse" />
-        <div className="h-32 rounded-2xl bg-secondary motion-safe:animate-pulse" />
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]" aria-busy="true" aria-label="Loading Finance summary">
+      <div className="h-64 rounded-2xl bg-secondary motion-safe:animate-pulse lg:h-auto" />
+      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="h-36 rounded-2xl bg-secondary motion-safe:animate-pulse" />
+        ))}
       </div>
-      <div className="h-40 rounded-2xl bg-secondary motion-safe:animate-pulse" />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="h-72 rounded-2xl bg-secondary motion-safe:animate-pulse" />
-        <div className="h-72 rounded-2xl bg-secondary motion-safe:animate-pulse" />
+    </div>
+  );
+}
+
+function entryCountLabel(count: number): string {
+  return `${count} ${count === 1 ? "transaction" : "transactions"}`;
+}
+
+function NetCashFlowCard({ totals }: { totals: MonthTotals }) {
+  const largestFlow = Math.max(totals.totalIncomeKrw, totals.totalExpenseKrw, 1);
+  const incomeWidth = Math.min(Math.max((totals.totalIncomeKrw / largestFlow) * 100, 0), 100);
+  const expenseWidth = Math.min(Math.max((totals.totalExpenseKrw / largestFlow) * 100, 0), 100);
+  const netTone = totals.netCashFlowKrw > 0 ? "text-success" : totals.netCashFlowKrw < 0 ? "text-destructive" : "text-foreground";
+  const positionLabel = totals.netCashFlowKrw > 0
+    ? "Positive cash flow"
+    : totals.netCashFlowKrw < 0
+      ? "Expenses are above income"
+      : "Income and expenses are balanced";
+
+  return (
+    <div className="flex h-full min-w-0 flex-col rounded-2xl border bg-card p-4 shadow-sm sm:p-5" aria-labelledby="net-cash-flow-title">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p id="net-cash-flow-title" className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Net cash flow</p>
+          <p className={cn("mt-4 break-words font-mono text-[clamp(1.75rem,8vw,2.5rem)] font-semibold leading-none tracking-[-0.05em] tabular-nums", netTone)} title={signedAmount(totals.netCashFlowKrw)}>
+            {signedAmount(totals.netCashFlowKrw)}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">Income minus expenses</p>
+        </div>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-finance-chart/10 text-finance-chart">
+          <WalletCards className="size-4" aria-hidden="true" />
+        </span>
+      </div>
+
+      <div className="mt-6 border-t pt-4">
+        <p className={cn("mb-3 text-xs font-medium", netTone)}>{positionLabel}</p>
+        <div
+          className="space-y-3"
+          role="img"
+          aria-label={`Income ${krw.format(totals.totalIncomeKrw)} compared with expenses ${krw.format(totals.totalExpenseKrw)}`}
+        >
+          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2.5" aria-hidden="true">
+            <span className="text-xs text-muted-foreground">Income</span>
+            <span className="h-2 overflow-hidden rounded-full bg-secondary"><span className="block h-full rounded-full bg-success" style={{ width: `${incomeWidth}%` }} /></span>
+            <span className="font-mono text-xs font-medium tabular-nums">{krw.format(totals.totalIncomeKrw)}</span>
+          </div>
+          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2.5" aria-hidden="true">
+            <span className="text-xs text-muted-foreground">Expenses</span>
+            <span className="h-2 overflow-hidden rounded-full bg-secondary"><span className="block h-full rounded-full bg-destructive/70" style={{ width: `${expenseWidth}%` }} /></span>
+            <span className="font-mono text-xs font-medium tabular-nums">{krw.format(totals.totalExpenseKrw)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SavingsRateCard({ totals, health }: { totals: MonthTotals; health: SavingsRateHealth }) {
+  const tone = health.status === "below" ? "warning" : health.status === "unavailable" ? "neutral" : "positive";
+  const delta = health.deltaPct === null ? null : Math.abs(health.deltaPct);
+
+  return (
+    <FinanceMetricCard
+      label="Savings rate"
+      value={`${totals.savingsRatePct}%`}
+      icon={PiggyBank}
+      tone={tone}
+      surfaceTone="neutral"
+      detail={(
+        <div className="space-y-1.5">
+          <p>Goal {health.targetRatePct}%</p>
+          {health.status === "unavailable" ? (
+            <p>Add income to measure savings</p>
+          ) : health.status === "below" ? (
+            <p className="flex items-center gap-1.5 font-medium text-warning"><TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />{delta} points below target</p>
+          ) : (
+            <p className="flex items-center gap-1.5 font-medium text-success"><CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />{health.status === "on_target" ? "On target" : `${delta} points above target`}</p>
+          )}
+        </div>
+      )}
+    />
+  );
+}
+
+function BudgetHealthCard({ health }: { health: BudgetHealth | null }) {
+  if (!health) {
+    return (
+      <FinanceMetricCard
+        label="Budget"
+        value="Not set"
+        icon={Gauge}
+        surfaceTone="neutral"
+        detail={<Link href="/finance/budgets" className="inline-flex min-h-7 items-center font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Set category budgets →</Link>}
+      />
+    );
+  }
+
+  const status = BUDGET_STATUS_META[health.status];
+  const StatusIcon = status.icon;
+  const tone = health.status === "ok" ? "neutral" : status.tone;
+  const value = health.remainingKrw >= 0 ? `${krw.format(health.remainingKrw)} left` : `${krw.format(Math.abs(health.remainingKrw))} over`;
+  const attentionLabel = health.attentionCount === 0
+    ? status.label
+    : `${health.attentionCount} ${health.attentionCount === 1 ? "category needs" : "categories need"} attention`;
+
+  return (
+    <FinanceMetricCard
+      label="Budget"
+      value={value}
+      icon={Gauge}
+      tone={tone}
+      valueTone={health.status === "exceeded" ? "expense" : "neutral"}
+      surfaceTone="neutral"
+      detail={(
+        <div className="space-y-2.5">
+          <FinanceProgress value={health.usagePct} label={`Budget ${health.usagePct} percent used`} tone={status.tone} />
+          <p>{krw.format(health.totalSpentKrw)} of {krw.format(health.totalBudgetKrw)} used · {health.usagePct}%</p>
+          <p className={cn("flex items-center gap-1.5 font-medium", BUDGET_STATUS_TEXT_CLASS[health.status])}><StatusIcon className="size-3.5 shrink-0" aria-hidden="true" />{attentionLabel}</p>
+        </div>
+      )}
+    />
+  );
+}
+
+function FinanceSummaryCards({ summary }: { summary: FinanceOverviewSummary }) {
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+      <NetCashFlowCard totals={summary.totals} />
+      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+        <FinanceMetricCard
+          label="Income"
+          value={krw.format(summary.totals.totalIncomeKrw)}
+          detail={entryCountLabel(summary.totals.incomeTransactionCount)}
+          icon={ArrowUpRight}
+          tone="positive"
+          valueTone="neutral"
+          surfaceTone="neutral"
+        />
+        <FinanceMetricCard
+          label="Expenses"
+          value={krw.format(summary.totals.totalExpenseKrw)}
+          detail={entryCountLabel(summary.totals.expenseTransactionCount)}
+          icon={ArrowDownRight}
+          tone="expense"
+          valueTone="neutral"
+          surfaceTone="neutral"
+        />
+        <SavingsRateCard totals={summary.totals} health={summary.savingsHealth} />
+        <BudgetHealthCard health={summary.budgetHealth} />
       </div>
     </div>
   );
@@ -136,7 +280,7 @@ function BudgetAlerts({ budgets }: { budgets: BudgetPerformance[] }) {
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success"><Scale className="size-4" aria-hidden="true" /></span>
         <div>
           <p className="text-sm font-semibold">No budget alerts</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Budgeted categories are below the 80% watch threshold.</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Budgeted categories are below their watch threshold.</p>
         </div>
       </div>
     );
@@ -145,7 +289,7 @@ function BudgetAlerts({ budgets }: { budgets: BudgetPerformance[] }) {
   return (
     <div className="space-y-3">
       {alerts.map((budget) => {
-        const status = BUDGET_ALERT_META[budget.status as Exclude<BudgetPerformance["status"], "ok">];
+        const status = BUDGET_STATUS_META[budget.status];
         return (
           <Link key={budget.categoryId} href="/finance/budgets" className="block rounded-2xl border bg-card p-4 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <div className="flex items-center gap-3">
@@ -289,38 +433,31 @@ export function FinanceOverview() {
 
   return (
     <div className="space-y-7">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Financial position</p>
-          <p className="mt-1 text-sm text-muted-foreground">Income, spending, budgets, and activity in one place.</p>
-        </div>
-        <MonthSelector
-          label={monthLabel(monthOffset)}
-          onPrevious={() => setMonthOffset((offset) => offset - 1)}
-          onNext={() => setMonthOffset((offset) => offset + 1)}
-          nextDisabled={monthOffset >= 0}
-          ariaLabel="Finance month selector"
-        />
-      </div>
+      <FinanceSection
+        id="finance-summary"
+        title="Summary"
+        description="Your money at a glance."
+        action={(
+          <MonthSelector
+            label={monthLabel(monthOffset)}
+            onPrevious={() => setMonthOffset((offset) => offset - 1)}
+            onNext={() => setMonthOffset((offset) => offset + 1)}
+            nextDisabled={monthOffset >= 0}
+            ariaLabel="Finance month selector"
+          />
+        )}
+      >
+        {error ? (
+          <FinanceErrorState
+            title="Finance overview unavailable"
+            description={error}
+            onRetry={() => setRefreshKey((key) => key + 1)}
+          />
+        ) : loading || !summary ? <OverviewLoading /> : <FinanceSummaryCards summary={summary} />}
+      </FinanceSection>
 
-      {error ? (
-        <FinanceErrorState
-          title="Finance overview unavailable"
-          description={error}
-          onRetry={() => setRefreshKey((key) => key + 1)}
-        />
-      ) : loading || !summary ? <OverviewLoading /> : (
+      {summary ? (
         <>
-          <FinanceSection id="finance-summary" title="Summary" description={`Your ${monthLabel(monthOffset)} cash-flow snapshot.`}>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <div className="col-span-2 lg:row-span-2"><FinanceMetricCard label="Net cash flow" value={signedAmount(summary.totals.netCashFlowKrw)} detail="Income minus expenses" icon={Landmark} tone={summary.totals.netCashFlowKrw > 0 ? "positive" : summary.totals.netCashFlowKrw < 0 ? "expense" : "neutral"} featured /></div>
-              <FinanceMetricCard label="Income" value={krw.format(summary.totals.totalIncomeKrw)} detail={`${summary.totals.transactionCount} total transactions`} icon={ArrowUpRight} tone="positive" />
-              <FinanceMetricCard label="Expenses" value={krw.format(summary.totals.totalExpenseKrw)} detail="Recorded this month" icon={ArrowDownRight} tone="expense" />
-              <FinanceMetricCard label="Savings rate" value={`${summary.totals.savingsRatePct}%`} detail={summary.totals.totalIncomeKrw > 0 ? "Share of income retained" : "Add income to calculate"} icon={PiggyBank} tone={summary.totals.savingsRatePct >= 0 ? "positive" : "expense"} />
-              <FinanceMetricCard label="Budget state" value={summary.dailyBudget ? krw.format(summary.dailyBudget.monthlyRemainingKrw) : `${summary.budgetPerformance.length} active`} detail={summary.dailyBudget ? "Remaining this month" : "Category budgets"} icon={Scale} tone={summary.dailyBudget ? DAILY_BUDGET_META[summary.dailyBudget.status].metricTone : "neutral"} />
-            </div>
-          </FinanceSection>
-
           <FinanceSection id="finance-daily-budget" title="Daily budget" description="A deterministic guide based on your remaining category budgets.">
             {summary.dailyBudget ? <DailyBudgetCard guide={summary.dailyBudget} /> : (
               <div className="flex items-center gap-3 rounded-2xl border bg-card p-4">
@@ -331,7 +468,7 @@ export function FinanceOverview() {
             )}
           </FinanceSection>
 
-          <FinanceSection id="finance-budget-alerts" title="Budget alerts" description="Categories at or above 80% of their monthly limit."><BudgetAlerts budgets={summary.budgetPerformance} /></FinanceSection>
+          <FinanceSection id="finance-budget-alerts" title="Budget alerts" description="Categories at or above their watch threshold."><BudgetAlerts budgets={summary.budgetPerformance} /></FinanceSection>
 
           {summary.totals.transactionCount === 0 ? (
             <FinanceEmptyState icon={ReceiptText} title={`No transactions in ${monthLabel(monthOffset)}`} description="Add your first income or expense to populate spending, trends, and recent activity." action={<Link href="/finance/transactions" className={buttonVariants({ variant: "outline", size: "sm" })}>Open Transactions</Link>} />
@@ -350,7 +487,7 @@ export function FinanceOverview() {
             </>
           )}
         </>
-      )}
+      ) : null}
     </div>
   );
 }

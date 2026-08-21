@@ -6,5 +6,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
+  // manifest.webmanifest, icons, and sw.js must stay reachable without a
+  // session — the OS/browser fetches them for PWA install/offline caching,
+  // not as an authenticated user request.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons|sw.js|api).*)"],
 };

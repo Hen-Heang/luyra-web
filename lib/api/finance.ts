@@ -3,7 +3,9 @@ import type {
   CreateContributionInput,
   CreateSavingsGoalInput,
   CreateTransactionInput,
+  CreateTransactionTemplateInput,
   SetSubscriptionStatusInput,
+  TransactionSort,
   UpdatePreferencesInput,
   UpdateSavingsGoalInput,
   UpdateTransactionInput,
@@ -12,16 +14,20 @@ import type {
 import type {
   AnalyticsSummary,
   Budget,
+  BudgetPerformance,
   Category,
   DetectedSubscription,
   FinancePreferences,
   FinanceOverviewSummary,
+  MonthlyReport,
   PaymentMethod,
   ReviewSummary,
   SavingsContribution,
   SavingsGoal,
   Transaction,
+  TransactionTemplate,
   TransactionType,
+  WeeklySummary,
 } from "@/types/finance";
 
 export function listCategories(): Promise<Category[]> {
@@ -32,18 +38,30 @@ export function listPaymentMethods(): Promise<PaymentMethod[]> {
   return apiFetch<PaymentMethod[]>("/api/finance/payment-methods");
 }
 
+export function getExchangeRate(): Promise<{ rate: number; fetchedAt: string; cached: boolean; fallback: boolean }> {
+  return apiFetch("/api/finance/exchange-rate");
+}
+
 export function listTransactions(params: {
   start: string;
   end: string;
   type?: TransactionType;
   categoryId?: string;
+  paymentMethodId?: string;
+  amountMin?: number;
+  amountMax?: number;
   search?: string;
+  sort?: TransactionSort;
   page?: number;
 }): Promise<{ transactions: Transaction[]; hasMore: boolean }> {
   const query = new URLSearchParams({ start: params.start, end: params.end });
   if (params.type) query.set("type", params.type);
   if (params.categoryId) query.set("categoryId", params.categoryId);
+  if (params.paymentMethodId) query.set("paymentMethodId", params.paymentMethodId);
+  if (params.amountMin !== undefined) query.set("amountMin", String(params.amountMin));
+  if (params.amountMax !== undefined) query.set("amountMax", String(params.amountMax));
   if (params.search) query.set("search", params.search);
+  if (params.sort) query.set("sort", params.sort);
   if (params.page) query.set("page", String(params.page));
   return apiFetch(`/api/finance/transactions?${query.toString()}`);
 }
@@ -60,10 +78,27 @@ export async function deleteTransaction(id: string): Promise<void> {
   await apiFetch<{ id: string }>(`/api/finance/transactions/${id}`, { method: "DELETE" });
 }
 
+export function listTemplates(): Promise<TransactionTemplate[]> {
+  return apiFetch<TransactionTemplate[]>("/api/finance/templates");
+}
+
+export function createTemplate(input: CreateTransactionTemplateInput): Promise<TransactionTemplate> {
+  return apiFetch<TransactionTemplate>("/api/finance/templates", { method: "POST", body: JSON.stringify(input) });
+}
+
+export async function deleteTemplate(id: string): Promise<void> {
+  await apiFetch<{ id: string }>(`/api/finance/templates/${id}`, { method: "DELETE" });
+}
+
 export function listBudgets(
   start: string,
   end: string
-): Promise<{ categories: Category[]; budgets: Budget[]; spendByCategory: Record<string, number> }> {
+): Promise<{
+  categories: Category[];
+  budgets: Budget[];
+  spendByCategory: Record<string, number>;
+  performance: BudgetPerformance[];
+}> {
   const query = new URLSearchParams({ start, end });
   return apiFetch(`/api/finance/budgets?${query.toString()}`);
 }
@@ -99,6 +134,10 @@ export function addSavingsContribution(goalId: string, input: CreateContribution
   });
 }
 
+export function listSavingsContributions(goalId: string): Promise<SavingsContribution[]> {
+  return apiFetch<SavingsContribution[]>(`/api/finance/savings/${goalId}/contributions`);
+}
+
 export function listDetectedSubscriptions(): Promise<DetectedSubscription[]> {
   return apiFetch<DetectedSubscription[]>("/api/finance/subscriptions");
 }
@@ -128,4 +167,57 @@ export function getFinanceOverview(month: string): Promise<FinanceOverviewSummar
 
 export function getReviewSummary(month: string): Promise<ReviewSummary> {
   return apiFetch<ReviewSummary>(`/api/finance/review?month=${month}`);
+}
+
+export function getWeeklySummary(): Promise<WeeklySummary> {
+  return apiFetch<WeeklySummary>("/api/finance/reports/weekly");
+}
+
+export function getMonthlyReport(month: string): Promise<MonthlyReport> {
+  return apiFetch<MonthlyReport>(`/api/finance/reports/monthly?month=${month}`);
+}
+
+export interface MoneyCoachRecommendation {
+  categoryId: string;
+  categoryName: string;
+  currentBudgetKrw: number;
+  suggestedBudgetKrw: number;
+  rationale: string;
+}
+export type MoneyCoachResult =
+  | { ok: true; data: { summary: string; recommendation: MoneyCoachRecommendation | null } }
+  | { ok: false; reason: "not_configured" | "request_failed" };
+
+export function getMoneyCoachInsight(month: string): Promise<MoneyCoachResult> {
+  return apiFetch<MoneyCoachResult>(`/api/finance/money-coach?month=${month}`);
+}
+
+export type TelegramSendResult = { sent: true } | { sent: false; reason: "not_configured" | "not_linked" | "send_failed" };
+
+export function sendWeeklySummaryTelegram(): Promise<TelegramSendResult> {
+  return apiFetch<TelegramSendResult>("/api/finance/telegram/send", { method: "POST", body: JSON.stringify({ type: "weekly" }) });
+}
+
+export function sendMonthlyReportTelegram(month: string, monthLabel: string): Promise<TelegramSendResult> {
+  return apiFetch<TelegramSendResult>("/api/finance/telegram/send", {
+    method: "POST",
+    body: JSON.stringify({ type: "monthly", month, monthLabel }),
+  });
+}
+
+export type EmailSendResult = { sent: true } | { sent: false; reason: "not_configured" | "no_recipient" | "send_failed" };
+
+export function getEmailStatus(): Promise<{ configured: boolean; recipientEmail: string }> {
+  return apiFetch("/api/finance/email/status");
+}
+
+export function sendWeeklySummaryEmail(): Promise<EmailSendResult> {
+  return apiFetch<EmailSendResult>("/api/finance/email/send", { method: "POST", body: JSON.stringify({ type: "weekly" }) });
+}
+
+export function sendMonthlyReportEmail(month: string, monthLabel: string): Promise<EmailSendResult> {
+  return apiFetch<EmailSendResult>("/api/finance/email/send", {
+    method: "POST",
+    body: JSON.stringify({ type: "monthly", month, monthLabel }),
+  });
 }

@@ -1,100 +1,180 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FinanceEmptyState, FinanceErrorState, FinanceSection, MonthSelector } from "@/components/finance/ui/finance-primitives";
+import { BudgetCard } from "@/components/finance/budgets/budget-card";
+import { BudgetSummary } from "@/components/finance/budgets/budget-summary";
+import { BudgetSheet } from "@/components/finance/budgets/budget-sheet";
+import { DeleteBudgetDialog } from "@/components/finance/budgets/delete-budget-dialog";
 import { monthBounds, monthLabel } from "@/lib/finance-month";
 import { deleteBudget, listBudgets, upsertBudget } from "@/lib/api/finance";
-import { BudgetItem } from "@/components/finance/budgets/budget-item";
-import type { Budget, Category } from "@/types/finance";
+import type { BudgetPerformance, Category } from "@/types/finance";
+
+function BudgetListSkeleton() {
+  return (
+    <div className="space-y-6" aria-busy="true" aria-label="Loading budgets">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((card) => (
+          <div key={card} className="h-28 rounded-2xl bg-secondary motion-safe:animate-pulse" />
+        ))}
+      </div>
+      <div className="space-y-3">
+        {[0, 1, 2].map((card) => (
+          <div key={card} className="h-28 rounded-2xl bg-secondary motion-safe:animate-pulse" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function BudgetList() {
   const [monthOffset, setMonthOffset] = useState(0);
+  const [reloadToken, setReloadToken] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [spendByCategory, setSpendByCategory] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [performance, setPerformance] = useState<BudgetPerformance[]>([]);
+  const [budgetedCategoryIds, setBudgetedCategoryIds] = useState<Set<string>>(new Set());
+  const [sheetTarget, setSheetTarget] = useState<
+    { mode: "create"; unbudgetedCategories: Category[] } | { mode: "edit"; budget: BudgetPerformance } | null
+  >(null);
+  const [removeTarget, setRemoveTarget] = useState<BudgetPerformance | null>(null);
+  const [removing, setRemoving] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { start, end } = monthBounds(monthOffset);
-      const result = await listBudgets(start, end);
-      setCategories(result.categories);
-      setBudgets(result.budgets);
-      setSpendByCategory(result.spendByCategory);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't load budgets.");
-    } finally {
-      setLoading(false);
-    }
-  }, [monthOffset]);
+  const requestKey = `${monthOffset}:${reloadToken}`;
+  const [result, setResult] = useState<{ key: string; error: string | null }>({ key: "", error: null });
+  const loading = result.key !== requestKey;
 
   useEffect(() => {
-    void (async () => {
-      await load();
-    })();
-  }, [load]);
+    let active = true;
+    const { start, end } = monthBounds(monthOffset);
+    listBudgets(start, end)
+      .then((data) => {
+        if (!active) return;
+        setCategories(data.categories);
+        setPerformance(data.performance);
+        setBudgetedCategoryIds(new Set(data.budgets.map((budget) => budget.categoryId)));
+        setResult({ key: requestKey, error: null });
+      })
+      .catch(() => {
+        if (active) setResult({ key: requestKey, error: "We couldn't load your budgets. Try again in a moment." });
+      });
+    return () => {
+      active = false;
+    };
+  }, [requestKey, monthOffset]);
 
-  async function handleSave(categoryId: string, amount: number) {
-    await upsertBudget({ categoryId, amountKrw: amount });
-    await load();
+  const unbudgetedCategories = useMemo(
+    () => categories.filter((category) => !budgetedCategoryIds.has(category.id)),
+    [categories, budgetedCategoryIds]
+  );
+
+  function refresh() {
+    setReloadToken((token) => token + 1);
   }
 
-  async function handleRemove(categoryId: string) {
-    await deleteBudget(categoryId);
-    await load();
+  async function handleSave(categoryId: string, amountKrw: number) {
+    await upsertBudget({ categoryId, amountKrw });
+    refresh();
+  }
+
+  async function handleRemove() {
+    if (!removeTarget) return;
+    setRemoving(true);
+    try {
+      await deleteBudget(removeTarget.categoryId);
+      setRemoveTarget(null);
+      refresh();
+    } finally {
+      setRemoving(false);
+    }
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={() => setMonthOffset((o) => o - 1)} aria-label="Previous month">
-          ←
-        </Button>
-        <span className="text-sm font-medium">{monthLabel(monthOffset)}</span>
-        <Button
-          variant="outline"
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <MonthSelector
+          label={monthLabel(monthOffset)}
+          onPrevious={() => setMonthOffset((offset) => offset - 1)}
+          onNext={() => setMonthOffset((offset) => offset + 1)}
+          nextDisabled={monthOffset >= 0}
+          ariaLabel="Budgets month selector"
           size="sm"
-          onClick={() => setMonthOffset((o) => o + 1)}
-          disabled={monthOffset >= 0}
-          aria-label="Next month"
+        />
+        <Button
+          size="sm"
+          className="min-h-11"
+          onClick={() => setSheetTarget({ mode: "create", unbudgetedCategories })}
+          disabled={loading}
         >
-          →
+          <Plus />
+          Add budget
         </Button>
       </div>
 
-      {error && (
-        <p
-          className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
-          role="alert"
-        >
-          {error}
-        </p>
+      {result.error ? (
+        <FinanceErrorState title="Budgets unavailable" description={result.error} onRetry={refresh} />
+      ) : loading ? (
+        <BudgetListSkeleton />
+      ) : categories.length === 0 ? (
+        <FinanceEmptyState
+          icon={WalletCards}
+          title="No expense categories yet"
+          description="Add an expense category in Transactions before setting a budget."
+        />
+      ) : (
+        <>
+          <FinanceSection
+            id="budgets-summary"
+            title="Summary"
+            description={`Standing category limits measured against ${monthLabel(monthOffset)} spending.`}
+          >
+            <BudgetSummary performance={performance} />
+          </FinanceSection>
+
+          <FinanceSection id="budgets-categories" title="Categories" description="Progress, remaining balance, and status for each budgeted category.">
+            {performance.length === 0 ? (
+              <FinanceEmptyState
+                icon={WalletCards}
+                title="No budgets set"
+                description="Add a monthly limit for a category to start tracking budget health here."
+                action={
+                  <Button variant="outline" size="sm" onClick={() => setSheetTarget({ mode: "create", unbudgetedCategories })}>
+                    <Plus />
+                    Add budget
+                  </Button>
+                }
+              />
+            ) : (
+              <div className="space-y-3">
+                {performance.map((budget) => (
+                  <BudgetCard
+                    key={budget.categoryId}
+                    budget={budget}
+                    onEdit={(target) => setSheetTarget({ mode: "edit", budget: target })}
+                    onRemoveRequest={setRemoveTarget}
+                  />
+                ))}
+              </div>
+            )}
+          </FinanceSection>
+        </>
       )}
 
-      {loading ? (
-        <p className="text-sm text-muted-foreground">Loading budgets…</p>
-      ) : categories.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">No expense categories found.</p>
-      ) : (
-        <div className="divide-y divide-border rounded-lg border border-border">
-          {categories.map((category) => {
-            const budget = budgets.find((b) => b.categoryId === category.id);
-            return (
-              <BudgetItem
-                key={category.id}
-                category={category}
-                budgetAmount={budget ? budget.amountKrw : null}
-                spent={spendByCategory[category.id] ?? 0}
-                onSave={(amount) => handleSave(category.id, amount)}
-                onRemove={() => handleRemove(category.id)}
-              />
-            );
-          })}
-        </div>
-      )}
+      <BudgetSheet
+        target={sheetTarget}
+        open={sheetTarget !== null}
+        onOpenChange={(open) => !open && setSheetTarget(null)}
+        onSave={handleSave}
+      />
+
+      <DeleteBudgetDialog
+        isOpen={removeTarget !== null}
+        isDeleting={removing}
+        categoryName={removeTarget?.categoryName ?? ""}
+        onCancel={() => setRemoveTarget(null)}
+        onConfirm={handleRemove}
+      />
     </div>
   );
 }

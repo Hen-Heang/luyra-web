@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CategoryIcon } from "@/components/finance/ui/finance-primitives";
-import { krw } from "@/lib/finance-format";
+import { krw, usd } from "@/lib/finance-format";
 import { cn } from "@/lib/utils";
 import type { Transaction } from "@/types/finance";
 
@@ -46,7 +46,7 @@ export function TransactionRow({
           onEdit(transaction);
         }
       }}
-      className="flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      className="flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-secondary/50 active:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
     >
       <CategoryIcon icon={transaction.categoryIcon} color={transaction.categoryColor} />
       <div className="min-w-0 flex-1">
@@ -58,6 +58,12 @@ export function TransactionRow({
           {isIncome ? "+" : "−"}
           {krw.format(transaction.amountKrw)}
         </p>
+        {transaction.currency === "USD" && transaction.originalAmount !== null && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {usd.format(transaction.originalAmount)}
+            {transaction.exchangeRate !== null ? ` @ ${krw.format(transaction.exchangeRate)}` : ""}
+          </p>
+        )}
         {time && <p className="mt-0.5 text-xs text-muted-foreground">{time}</p>}
       </div>
 
@@ -66,7 +72,7 @@ export function TransactionRow({
           <button
             type="button"
             onClick={(event) => event.stopPropagation()}
-            className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary active:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={`Actions for ${transaction.description}`}
           >
             <MoreHorizontal className="size-4" aria-hidden="true" />

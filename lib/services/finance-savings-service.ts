@@ -10,10 +10,28 @@ import {
   updateSavingsGoal as updateSavingsGoalRepo,
 } from "@/lib/repositories/finance-savings-repository";
 import type { CreateSavingsGoalInput, UpdateSavingsGoalInput } from "@/lib/validation/finance";
-import type { SavingsContribution, SavingsGoal } from "@/types/finance";
+import type { SavingsContribution, SavingsGoal, SavingsProgress } from "@/types/finance";
 
 export async function listSavingsGoals(userId: string): Promise<SavingsGoal[]> {
   return findSavingsGoalsByUser(userId);
+}
+
+// Shared by Review and the Weekly/Monthly reports — one savings-progress
+// calculation, computed once from already-loaded goals.
+export function computeSavingsProgress(goals: SavingsGoal[]): SavingsProgress {
+  const totalSavedUsd = goals.reduce((sum, goal) => sum + goal.currentUsd, 0);
+  const totalTargetUsd = goals.reduce((sum, goal) => sum + goal.targetUsd, 0);
+  return {
+    totalSavedUsd,
+    totalTargetUsd,
+    overallPct: totalTargetUsd > 0 ? Math.round((totalSavedUsd / totalTargetUsd) * 100) : 0,
+    goalsCount: goals.length,
+    goalsReachedCount: goals.filter((goal) => goal.targetUsd > 0 && goal.currentUsd >= goal.targetUsd).length,
+  };
+}
+
+export async function getSavingsProgress(userId: string): Promise<SavingsProgress> {
+  return computeSavingsProgress(await findSavingsGoalsByUser(userId));
 }
 
 export async function addSavingsGoal(userId: string, input: CreateSavingsGoalInput): Promise<SavingsGoal> {

@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { PiggyBank, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FinanceEmptyState, FinanceErrorState, FinanceSection } from "@/components/finance/ui/finance-primitives";
+import { SavingsSummary } from "@/components/finance/savings/savings-summary";
+import { SavingsGoalCard } from "@/components/finance/savings/savings-goal-card";
+import { SavingsGoalSheet } from "@/components/finance/savings/savings-goal-sheet";
+import { ContributionSheet } from "@/components/finance/savings/contribution-sheet";
+import { DeleteSavingsGoalDialog } from "@/components/finance/savings/delete-savings-goal-dialog";
 import {
   addSavingsContribution,
   createSavingsGoal,
@@ -10,94 +16,159 @@ import {
   listSavingsGoals,
   updateSavingsGoal,
 } from "@/lib/api/finance";
-import type { CreateSavingsGoalInput } from "@/lib/validation/finance";
+import type { CreateSavingsGoalInput, UpdateSavingsGoalInput } from "@/lib/validation/finance";
 import type { SavingsGoal } from "@/types/finance";
-import { SavingsGoalForm } from "./savings-goal-form";
-import { SavingsGoalItem } from "./savings-goal-item";
+
+function SavingsListSkeleton() {
+  return (
+    <div className="space-y-6" aria-busy="true" aria-label="Loading savings goals">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((card) => (
+          <div key={card} className="h-28 rounded-2xl bg-secondary motion-safe:animate-pulse" />
+        ))}
+      </div>
+      <div className="space-y-3">
+        {[0, 1].map((card) => (
+          <div key={card} className="h-48 rounded-2xl bg-secondary motion-safe:animate-pulse" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function SavingsList() {
+  const [reloadToken, setReloadToken] = useState(0);
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [result, setResult] = useState<{ key: number; error: string | null }>({ key: -1, error: null });
+  const loading = result.key !== reloadToken;
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      setGoals(await listSavingsGoals());
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't load savings goals.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [goalSheet, setGoalSheet] = useState<{ mode: "create" | "edit"; goal?: SavingsGoal } | null>(null);
+  const [contributionTarget, setContributionTarget] = useState<SavingsGoal | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SavingsGoal | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    listSavingsGoals()
+      .then((data) => setGoals(data))
+      .then(() => setResult({ key: reloadToken, error: null }))
+      .catch(() => setResult({ key: reloadToken, error: "We couldn't load your savings goals. Try again in a moment." }));
+  }, [reloadToken]);
 
   useEffect(() => {
-    void (async () => {
-      await load();
-    })();
+    load();
   }, [load]);
 
-  async function handleCreate(input: CreateSavingsGoalInput) {
-    await createSavingsGoal(input);
-    setCreating(false);
-    await load();
+  function refresh() {
+    setReloadToken((token) => token + 1);
+  }
+
+  async function handleSaveGoal(input: CreateSavingsGoalInput & UpdateSavingsGoalInput) {
+    if (goalSheet?.mode === "edit" && goalSheet.goal) {
+      await updateSavingsGoal(goalSheet.goal.id, input);
+    } else {
+      await createSavingsGoal(input);
+    }
+    refresh();
+  }
+
+  async function handleContribute(amountUsd: number) {
+    if (!contributionTarget) return;
+    await addSavingsContribution(contributionTarget.id, { amountUsd });
+    refresh();
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteSavingsGoal(deleteTarget.id);
+      setDeleteTarget(null);
+      refresh();
+    } catch {
+      setDeleteError("Couldn't delete this goal. Try again in a moment.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {creating ? (
-        <div className="rounded-lg border border-border p-4">
-          <SavingsGoalForm mode="create" onSave={handleCreate} onCancel={() => setCreating(false)} />
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Goal tracking</p>
         </div>
-      ) : (
-        <Button variant="outline" size="sm" onClick={() => setCreating(true)} className="self-start">
+        <Button size="sm" className="min-h-11" onClick={() => setGoalSheet({ mode: "create" })}>
           <Plus />
-          New savings goal
+          New goal
         </Button>
-      )}
+      </div>
 
-      {error && (
-        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-
-      {loading ? (
-        <p className="text-sm text-muted-foreground">Loading savings goals…</p>
+      {result.error ? (
+        <FinanceErrorState title="Savings unavailable" description={result.error} onRetry={refresh} />
+      ) : loading ? (
+        <SavingsListSkeleton />
       ) : goals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card/30 px-4 py-10 text-center">
-          <div className="flex size-12 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
-            <PiggyBank size={24} strokeWidth={1.5} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">No savings goals yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">Create one to start tracking your progress.</p>
-          </div>
-        </div>
+        <FinanceEmptyState
+          icon={PiggyBank}
+          title="No savings goals yet"
+          description="Create one to start tracking progress toward something you're saving for."
+          action={
+            <Button variant="outline" size="sm" onClick={() => setGoalSheet({ mode: "create" })}>
+              <Plus />
+              New goal
+            </Button>
+          }
+        />
       ) : (
-        <div className="flex flex-col gap-3">
-          {goals.map((goal) => (
-            <SavingsGoalItem
-              key={goal.id}
-              goal={goal}
-              onUpdate={async (input) => {
-                await updateSavingsGoal(goal.id, input);
-                await load();
-              }}
-              onDelete={async () => {
-                await deleteSavingsGoal(goal.id);
-                await load();
-              }}
-              onContribute={async (amount) => {
-                await addSavingsContribution(goal.id, { amountUsd: amount });
-                await load();
-              }}
-            />
-          ))}
-        </div>
+        <>
+          <FinanceSection id="savings-summary" title="Summary" description="Combined progress across every goal.">
+            <SavingsSummary goals={goals} />
+          </FinanceSection>
+
+          <FinanceSection id="savings-goals" title="Goals" description="Progress, remaining balance, and target date for each goal.">
+            <div className="space-y-3">
+              {goals.map((goal) => (
+                <SavingsGoalCard
+                  key={goal.id}
+                  goal={goal}
+                  onContribute={setContributionTarget}
+                  onEdit={(target) => setGoalSheet({ mode: "edit", goal: target })}
+                  onDeleteRequest={setDeleteTarget}
+                />
+              ))}
+            </div>
+          </FinanceSection>
+        </>
       )}
+
+      <SavingsGoalSheet
+        mode={goalSheet?.mode ?? "create"}
+        goal={goalSheet?.goal}
+        open={goalSheet !== null}
+        onOpenChange={(open) => !open && setGoalSheet(null)}
+        onSave={handleSaveGoal}
+      />
+
+      <ContributionSheet
+        goal={contributionTarget}
+        open={contributionTarget !== null}
+        onOpenChange={(open) => !open && setContributionTarget(null)}
+        onSave={handleContribute}
+      />
+
+      <DeleteSavingsGoalDialog
+        isOpen={deleteTarget !== null}
+        isDeleting={deleting}
+        goalName={deleteTarget?.name ?? ""}
+        error={deleteError}
+        onCancel={() => {
+          setDeleteTarget(null);
+          setDeleteError(null);
+        }}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

@@ -14,7 +14,11 @@ export async function GET(request: NextRequest) {
       end: searchParams.get("end"),
       type: searchParams.get("type") ?? undefined,
       categoryId: searchParams.get("categoryId") ?? undefined,
+      paymentMethodId: searchParams.get("paymentMethodId") ?? undefined,
+      amountMin: searchParams.get("amountMin") ?? undefined,
+      amountMax: searchParams.get("amountMax") ?? undefined,
       search: searchParams.get("search") ?? undefined,
+      sort: searchParams.get("sort") ?? undefined,
       page: searchParams.get("page") ?? undefined,
     });
 

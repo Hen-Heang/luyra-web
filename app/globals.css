@@ -4,6 +4,7 @@
 @custom-variant data-closed (&:where([data-state="closed"], [data-closed]:not([data-closed="false"])));
 
 :root {
+  color-scheme: light;
   --background: #fafafa;
   --foreground: #18181b;
   --card: #ffffff;
@@ -28,6 +29,15 @@
   --finance-chart: #2563eb;
   --sidebar: #ffffff;
   --radius: 0.625rem;
+  /* Fixed-order categorical palette for multi-series Finance charts (e.g. payment
+     method breakdown) — validated for adjacent-pair colorblind safety, never
+     reassigned by rank or filter state. See dataviz skill reference palette. */
+  --chart-series-1: #2a78d6;
+  --chart-series-2: #eb6834;
+  --chart-series-3: #1baf7a;
+  --chart-series-4: #eda100;
+  --chart-series-5: #e87ba4;
+  --chart-series-6: #008300;
 }
 
 @theme inline {
@@ -63,6 +73,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --background: #0a0a0b;
     --foreground: #fafafa;
     --card: #131316;
@@ -84,6 +95,12 @@
     --warning: #fbbf24;
     --finance-chart: #60a5fa;
     --sidebar: #131316;
+    --chart-series-1: #3987e5;
+    --chart-series-2: #d95926;
+    --chart-series-3: #199e70;
+    --chart-series-4: #c98500;
+    --chart-series-5: #d55181;
+    --chart-series-6: #008300;
   }
 }
 

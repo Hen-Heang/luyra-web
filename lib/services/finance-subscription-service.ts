@@ -42,7 +42,7 @@ export async function listDetectedSubscriptions(userId: string): Promise<Detecte
     findSubscriptionStatuses(userId),
   ]);
 
-  const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
+  const categoryById = new Map(categories.map((c) => [c.id, c]));
 
   return groups.map((group) => {
     const frequency = classifyFrequency(group.dates);
@@ -53,11 +53,14 @@ export async function listDetectedSubscriptions(userId: string): Promise<Detecte
         : frequency === "yearly"
           ? avgAmount
           : avgAmount * (group.occurrenceCount / LOOKBACK_MONTHS) * 12;
+    const category = group.categoryId ? categoryById.get(group.categoryId) : undefined;
 
     return {
       key: group.key,
       name: group.displayName,
-      categoryName: group.categoryId ? categoryNameById.get(group.categoryId) ?? null : null,
+      categoryName: category?.name ?? null,
+      categoryIcon: category?.icon ?? null,
+      categoryColor: category?.color ?? null,
       latestAmountKrw: group.amounts[0],
       averageAmountKrw: Math.round(avgAmount),
       occurrenceCount: group.occurrenceCount,

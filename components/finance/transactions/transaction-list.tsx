@@ -1,31 +1,42 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, ReceiptText, Search, X } from "lucide-react";
+import { Plus, ReceiptText, Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FinanceEmptyState, FinanceErrorState, MonthSelector } from "@/components/finance/ui/finance-primitives";
 import { TransactionRow } from "@/components/finance/transactions/transaction-row";
 import { TransactionSheet } from "@/components/finance/transactions/transaction-sheet";
 import { DeleteTransactionDialog } from "@/components/finance/transactions/delete-transaction-dialog";
+import { TransactionFilterPanel } from "@/components/finance/transactions/transaction-filter-panel";
 import { cn } from "@/lib/utils";
 import { monthBounds, monthLabel } from "@/lib/finance-month";
 import { krw } from "@/lib/finance-format";
 import {
+  createTemplate,
   createTransaction,
+  deleteTemplate,
   deleteTransaction,
   listCategories,
   listPaymentMethods,
+  listTemplates,
   listTransactions,
   updateTransaction,
 } from "@/lib/api/finance";
-import type { CreateTransactionInput } from "@/lib/validation/finance";
-import type { Category, PaymentMethod, Transaction, TransactionType } from "@/types/finance";
+import type { CreateTransactionInput, CreateTransactionTemplateInput, TransactionSort } from "@/lib/validation/finance";
+import type { Category, PaymentMethod, Transaction, TransactionTemplate, TransactionType } from "@/types/finance";
 
 const TYPE_TABS: { label: string; value: TransactionType | undefined }[] = [
   { label: "All", value: undefined },
   { label: "Income", value: "income" },
   { label: "Expense", value: "expense" },
 ];
+
+function parseAmount(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
 
 function groupByDate(
   transactions: Transaction[]
@@ -81,30 +92,49 @@ export function TransactionList() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [typeFilter, setTypeFilter] = useState<TransactionType | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
+  const [amountMinInput, setAmountMinInput] = useState("");
+  const [amountMaxInput, setAmountMaxInput] = useState("");
+  const [amountMin, setAmountMin] = useState<number | undefined>(undefined);
+  const [amountMax, setAmountMax] = useState<number | undefined>(undefined);
+  const [sort, setSort] = useState<TransactionSort>("date_desc");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [reloadToken, setReloadToken] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [templates, setTemplates] = useState<TransactionTemplate[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [sheet, setSheet] = useState<{ mode: "create" | "edit"; transaction?: Transaction } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const requestKey = `${monthOffset}:${typeFilter ?? ""}:${categoryFilter}:${search}:${reloadToken}`;
+  const requestKey = `${monthOffset}:${typeFilter ?? ""}:${categoryFilter}:${paymentMethodFilter}:${amountMin ?? ""}:${amountMax ?? ""}:${sort}:${search}:${reloadToken}`;
   const [result, setResult] = useState<{
     key: string;
     transactions: Transaction[];
     hasMore: boolean;
     pagesLoaded: number;
     error: string | null;
-  }>({ key: "", transactions: [], hasMore: false, pagesLoaded: 0, error: null });
+    loadMoreError: string | null;
+  }>({ key: "", transactions: [], hasMore: false, pagesLoaded: 0, error: null, loadMoreError: null });
   const loading = result.key !== requestKey;
 
   useEffect(() => {
     const timeout = setTimeout(() => setSearch(searchInput.trim()), 300);
     return () => clearTimeout(timeout);
   }, [searchInput]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setAmountMin(parseAmount(amountMinInput)), 300);
+    return () => clearTimeout(timeout);
+  }, [amountMinInput]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setAmountMax(parseAmount(amountMaxInput)), 300);
+    return () => clearTimeout(timeout);
+  }, [amountMaxInput]);
 
   useEffect(() => {
     let active = true;
@@ -114,12 +144,23 @@ export function TransactionList() {
       end,
       type: typeFilter,
       categoryId: categoryFilter || undefined,
+      paymentMethodId: paymentMethodFilter || undefined,
+      amountMin,
+      amountMax,
+      sort,
       search: search || undefined,
       page: 0,
     })
       .then((data) => {
         if (active) {
-          setResult({ key: requestKey, transactions: data.transactions, hasMore: data.hasMore, pagesLoaded: 1, error: null });
+          setResult({
+            key: requestKey,
+            transactions: data.transactions,
+            hasMore: data.hasMore,
+            pagesLoaded: 1,
+            error: null,
+            loadMoreError: null,
+          });
         }
       })
       .catch(() => {
@@ -130,24 +171,26 @@ export function TransactionList() {
             hasMore: false,
             pagesLoaded: 0,
             error: "We couldn't load your transactions. Try again in a moment.",
+            loadMoreError: null,
           });
         }
       });
     return () => {
       active = false;
     };
-  }, [requestKey, monthOffset, typeFilter, categoryFilter, search]);
+  }, [requestKey, monthOffset, typeFilter, categoryFilter, paymentMethodFilter, amountMin, amountMax, sort, search]);
 
   useEffect(() => {
     let active = true;
     void (async () => {
       try {
-        const [cats, methods] = await Promise.all([listCategories(), listPaymentMethods()]);
+        const [cats, methods, templateList] = await Promise.all([listCategories(), listPaymentMethods(), listTemplates()]);
         if (!active) return;
         setCategories(cats);
         setPaymentMethods(methods);
+        setTemplates(templateList);
       } catch {
-        // Category/payment-method pickers stay empty; the transaction list above still works.
+        // Category/payment-method/template pickers stay empty; the transaction list above still works.
       }
     })();
     return () => {
@@ -157,7 +200,16 @@ export function TransactionList() {
 
   const grouped = useMemo(() => groupByDate(result.transactions), [result.transactions]);
   const { start } = monthBounds(monthOffset);
-  const isFiltered = Boolean(search || typeFilter || categoryFilter);
+  const advancedFilterCount = [paymentMethodFilter, amountMin !== undefined, amountMax !== undefined].filter(Boolean).length;
+  const isFiltered = Boolean(search || typeFilter || categoryFilter || advancedFilterCount > 0);
+
+  function clearAdvancedFilters() {
+    setPaymentMethodFilter("");
+    setAmountMinInput("");
+    setAmountMaxInput("");
+    setAmountMin(undefined);
+    setAmountMax(undefined);
+  }
 
   async function handleLoadMore() {
     setLoadingMore(true);
@@ -168,6 +220,10 @@ export function TransactionList() {
         end,
         type: typeFilter,
         categoryId: categoryFilter || undefined,
+        paymentMethodId: paymentMethodFilter || undefined,
+        amountMin,
+        amountMax,
+        sort,
         search: search || undefined,
         page: result.pagesLoaded,
       });
@@ -176,9 +232,10 @@ export function TransactionList() {
         transactions: [...prev.transactions, ...data.transactions],
         hasMore: data.hasMore,
         pagesLoaded: prev.pagesLoaded + 1,
+        loadMoreError: null,
       }));
     } catch {
-      setResult((prev) => ({ ...prev, error: "Couldn't load more transactions." }));
+      setResult((prev) => ({ ...prev, loadMoreError: "Couldn't load more transactions." }));
     } finally {
       setLoadingMore(false);
     }
@@ -191,6 +248,21 @@ export function TransactionList() {
       await createTransaction(input);
     }
     setReloadToken((token) => token + 1);
+  }
+
+  async function handleSaveTemplate(input: CreateTransactionTemplateInput) {
+    const created = await createTemplate(input);
+    setTemplates((prev) => [created, ...prev]);
+  }
+
+  async function handleDeleteTemplate(template: TransactionTemplate) {
+    const previous = templates;
+    setTemplates((prev) => prev.filter((t) => t.id !== template.id));
+    try {
+      await deleteTemplate(template.id);
+    } catch {
+      setTemplates(previous);
+    }
   }
 
   async function handleDelete() {
@@ -236,7 +308,7 @@ export function TransactionList() {
             <button
               type="button"
               onClick={() => setSearchInput("")}
-              className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
+              className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary active:bg-secondary"
               aria-label="Clear search"
             >
               <X className="size-3.5" />
@@ -257,6 +329,43 @@ export function TransactionList() {
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((open) => !open)}
+          aria-expanded={filtersOpen}
+          aria-controls="transaction-advanced-filters"
+          className={cn(
+            "relative flex h-11 min-h-11 items-center gap-1.5 rounded-xl border px-3 text-sm font-medium transition-colors",
+            filtersOpen || advancedFilterCount > 0
+              ? "border-primary/40 bg-primary/10 text-primary"
+              : "bg-card text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <SlidersHorizontal className="size-4" aria-hidden="true" />
+          Filters
+          {advancedFilterCount > 0 && (
+            <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
+              {advancedFilterCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <div id="transaction-advanced-filters">
+        <TransactionFilterPanel
+          open={filtersOpen}
+          paymentMethods={paymentMethods}
+          paymentMethodFilter={paymentMethodFilter}
+          onPaymentMethodChange={setPaymentMethodFilter}
+          amountMin={amountMinInput}
+          onAmountMinChange={setAmountMinInput}
+          amountMax={amountMaxInput}
+          onAmountMaxChange={setAmountMaxInput}
+          sort={sort}
+          onSortChange={setSort}
+          activeFilterCount={advancedFilterCount}
+          onClear={clearAdvancedFilters}
+        />
       </div>
 
       <div className="flex gap-1 rounded-xl border bg-card p-1">
@@ -289,7 +398,7 @@ export function TransactionList() {
           title={isFiltered ? "No matching transactions" : "No transactions yet"}
           description={
             isFiltered
-              ? "Try a different search, category, or date range."
+              ? "Try a different search, category, or amount range."
               : "Add your first income or expense to start tracking this month."
           }
           action={
@@ -327,6 +436,12 @@ export function TransactionList() {
             </div>
           ))}
 
+          {result.loadMoreError && (
+            <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive" role="alert">
+              {result.loadMoreError}
+            </p>
+          )}
+
           {result.hasMore && (
             <Button variant="outline" size="sm" onClick={handleLoadMore} disabled={loadingMore} className="min-h-11 w-full">
               {loadingMore ? "Loading…" : "Load more"}
@@ -340,10 +455,13 @@ export function TransactionList() {
         transaction={sheet?.transaction}
         categories={categories}
         paymentMethods={paymentMethods}
+        templates={templates}
         defaultDate={start}
         open={sheet !== null}
         onOpenChange={(open) => !open && setSheet(null)}
         onSave={handleSave}
+        onSaveTemplate={handleSaveTemplate}
+        onDeleteTemplate={handleDeleteTemplate}
       />
 
       <DeleteTransactionDialog
