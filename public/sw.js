@@ -1,7 +1,7 @@
-// Money Flow service worker. Scope stays deliberately modest: app-shell
+// Luyra service worker. Scope stays deliberately modest: app-shell
 // precache + read-only recent data via cache fallback. Mutations are never
 // intercepted, cached, or queued — an offline write simply fails normally.
-const CACHE_NAME = "money-flow-v1";
+const CACHE_NAME = "luyra-v1";
 
 const PRECACHE_URLS = [
   "/finance",

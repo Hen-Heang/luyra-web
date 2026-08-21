@@ -7,7 +7,7 @@ import { ProfileMenu } from "./ProfileMenu";
 /** Sticky top bar for tablet + desktop. The sidebar/rail owns product branding. */
 export function DesktopHeader({ pathname }: { pathname: string }) {
   const item = getActiveNavItem(pathname);
-  const title = item?.label ?? "Money Flow";
+  const title = item?.label ?? "Luyra";
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border bg-background/90 px-6 py-3 backdrop-blur-sm">

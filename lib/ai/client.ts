@@ -1,7 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 
-// The one shared entry point for every HeangOS domain that wants a
+// The one shared entry point for every Luyra domain that wants a
 // structured LLM response — Finance's Money Coach today, Learning/
 // Interview/Coach features later. No domain service should import
 // @anthropic-ai/sdk directly; they call callClaudeWithTool() here instead,

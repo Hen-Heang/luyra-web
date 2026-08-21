@@ -58,7 +58,7 @@ export const habitsItem: NavItem = {
 export const financeItem: NavItem = {
   id: "finance",
   href: "/finance",
-  label: "Money Flow",
+  label: "Luyra",
   icon: WalletCards,
   color: "text-teal-500",
 };
@@ -88,12 +88,12 @@ export const accountItem: NavItem = {
   color: "text-zinc-500",
 };
 
-/** Money Flow is the active product. Hengo destinations stay defined for an easy future resume. */
+/** Luyra is the active product. Hengo destinations stay defined for an easy future resume. */
 export const primaryNavItems: NavItem[] = [financeItem];
 
 export const allNavItems: NavItem[] = [...primaryNavItems, accountItem];
 
-/** Mobile bottom bar: Money Flow is the only active product destination. */
+/** Mobile bottom bar: Luyra is the only active product destination. */
 export const bottomTabs: NavItem[] = [financeItem];
 
 export const moreItems: NavItem[] = [accountItem];

@@ -64,7 +64,7 @@ export function ReportsPrintView() {
       </div>
 
       <div className="mb-6">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Money Flow</p>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Luyra</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">{type === "weekly" ? "Weekly summary" : "Monthly report"}</h1>
       </div>
 

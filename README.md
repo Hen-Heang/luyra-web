@@ -1,8 +1,8 @@
-# Money Flow
+# Luyra
 
 Personal money tracking, budgeting, savings, analytics, and financial reviews.
 
-Money Flow is the repository's only active product surface. The earlier Hengo
+Luyra is the repository's only active product surface. The earlier Hengo
 goals, tasks, habits, Today, and learning modules are paused and hidden, but
 their source code is intentionally preserved for a possible future resume.
 Authenticated visits start at `/finance`; paused Hengo routes redirect there.
@@ -60,13 +60,13 @@ Copy `.env.example` to `.env.local` and fill in real values. Never commit
 1. Use your existing Supabase project.
 2. Copy the project URL and publishable (anon) key from Project Settings →
    API into `.env.local`.
-3. The primary project currently handles the outer application session. Money
-   Flow remains in its separate Supabase project while authentication is
-   consolidated in a later backend phase.
+3. The primary project currently handles the outer application session. The
+   legacy Money Flow data remains in its separate Supabase project while
+   authentication is consolidated in a later backend phase.
 
 ## Neon setup
 
-Using the `heangos-web` Neon project (id `divine-darkness-19631415`), `main`
+Using the existing Neon project (id `divine-darkness-19631415`), `main`
 branch, `neondb` database. The `users`/`tasks`/`goals` migrations in
 [db/migrations](db/migrations) are already applied there — see
 [db/README.md](db/README.md) if you need to re-apply or add a new one.

@@ -32,7 +32,7 @@ function MoneyFlowSummary({ client }: { client: SupabaseClient }) {
       .limit(1000);
 
     if (queryError) {
-      setError(`Money Flow data is unavailable: ${queryError.message}`);
+      setError(`Luyra data is unavailable: ${queryError.message}`);
       setTransactions([]);
       setLoading(false);
       return;
@@ -96,9 +96,9 @@ function MoneyFlowSummary({ client }: { client: SupabaseClient }) {
         <CardHeader>
           <div className="flex items-center gap-2">
             <WalletCards className="size-4" />
-            <CardTitle>Recent Money Flow activity</CardTitle>
+            <CardTitle>Recent Luyra activity</CardTitle>
           </div>
-          <CardDescription>Read directly from the existing Money Flow Supabase project.</CardDescription>
+          <CardDescription>Read directly from your connected finance data.</CardDescription>
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (

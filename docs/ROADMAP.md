@@ -1,11 +1,11 @@
 # Roadmap
 
-## Current focus — Money Flow
+## Current focus — Luyra
 
-- Money Flow is the only active product surface.
+- Luyra is the only active product surface.
 - Hengo goals, tasks, habits, Today, and learning development is paused.
 - The paused code remains in the repository so it can be resumed later without a rebuild.
-- Current work should deepen Money Flow backend behavior, tests, reporting, and deployment.
+- Current work should deepen Luyra backend behavior, tests, reporting, and deployment.
 
 ## Phase 1 — Foundation
 
@@ -20,13 +20,13 @@
 
 - [x] Finance integration foundation (isolated Money Flow Supabase session)
 - [x] Read-only Finance dashboard test slice
-- [ ] Money Flow transactions, budgets, savings, analytics, and settings
+- [ ] Luyra transactions, budgets, savings, analytics, and settings
 - Habits
 - Reminders
 
 ## Phase 3 — Paused
 
-- [x] Learning integration foundation (shared Hengo/HeangOS session)
+- [x] Learning integration foundation (shared Hengo/Luyra session)
 - [x] Read-only Learning dashboard test slice
 - [ ] Hengo vocabulary, daily study, interview, and progress routes — paused
 - Notion — paused

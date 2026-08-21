@@ -40,7 +40,7 @@ export interface HabitStats {
 }
 
 // Habits are listed with their stats pre-computed server-side (lib/habits.ts)
-// rather than fetched/derived client-side — HeangOS renders lists as server
+// rather than fetched/derived client-side — Luyra renders lists as server
 // components and revalidates with router.refresh(), unlike Hengo's
 // client-side react-query hooks.
 export interface HabitWithStats extends Habit {

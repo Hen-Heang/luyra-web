@@ -5,7 +5,7 @@ export default function LearningPage() {
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm text-muted-foreground">
-        Vocabulary review and your daily study plan, powered by HeangOS&apos;s own Neon-backed learning data.
+        Vocabulary review and your daily study plan, powered by Luyra&apos;s own Neon-backed learning data.
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -31,7 +31,7 @@ export default function LearningPage() {
 
       <p className="text-xs text-muted-foreground">
         Korean Coach and Interview practice aren&apos;t ported yet — both depend on an AI provider that hasn&apos;t
-        been wired up in HeangOS.
+        been wired up in Luyra.
       </p>
     </div>
   );

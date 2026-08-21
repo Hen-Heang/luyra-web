@@ -27,7 +27,7 @@ const FIELD_CLASS =
  * Unified create/edit panel for a goal — replaces the old inline GoalForm and
  * the always-toggled-inline edit state on the card. Same fields the previous
  * form had (title, description, category, target date), plus progress for
- * edit mode, since HeangOS goals track progress manually rather than
+ * edit mode, since Luyra goals track progress manually rather than
  * deriving it from tasks/key results like Hengo's does.
  */
 export function GoalFormSheet({

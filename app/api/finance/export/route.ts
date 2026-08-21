@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(body, {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          "Content-Disposition": `attachment; filename="heangos-finance-transactions-${dateStamp}.json"`,
+          "Content-Disposition": `attachment; filename="luyra-finance-transactions-${dateStamp}.json"`,
         },
       });
     }
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(buildTransactionsCsv(rows), {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="heangos-finance-transactions-${dateStamp}.csv"`,
+        "Content-Disposition": `attachment; filename="luyra-finance-transactions-${dateStamp}.csv"`,
       },
     });
   } catch (error) {

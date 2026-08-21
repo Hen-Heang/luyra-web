@@ -23,7 +23,7 @@ export function TabletNavigationRail({ pathname }: { pathname: string }) {
       <div className="flex justify-center px-2 py-4">
         <Link
           href={financeItem.href}
-          aria-label="Money Flow home"
+          aria-label="Luyra home"
           className="flex size-11 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           M

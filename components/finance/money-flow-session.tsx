@@ -48,7 +48,7 @@ export function MoneyFlowGate({
     } = await client.auth.getSession();
 
     if (sessionError) {
-      setError(`Money Flow session is unavailable: ${sessionError.message}`);
+      setError(`Luyra session is unavailable: ${sessionError.message}`);
       setConnection("signed-out");
       return;
     }
@@ -126,10 +126,10 @@ export function MoneyFlowGate({
         <CardHeader>
           <div className="flex items-center gap-2">
             <CircleAlert className="size-4 text-amber-600" />
-            <CardTitle>Money Flow is not configured</CardTitle>
+            <CardTitle>Luyra is not configured</CardTitle>
           </div>
           <CardDescription>
-            Add the Money Flow Supabase URL and publishable key to the local environment to enable
+            Add the finance Supabase URL and publishable key to the local environment to enable
             this integration. No data will be copied.
           </CardDescription>
         </CardHeader>
@@ -138,16 +138,16 @@ export function MoneyFlowGate({
   }
 
   if (connection === "loading") {
-    return <p className="text-sm text-muted-foreground">Connecting to Money Flow…</p>;
+    return <p className="text-sm text-muted-foreground">Connecting to Luyra…</p>;
   }
 
   if (connection === "signed-out") {
     return (
       <Card className="max-w-md">
         <CardHeader>
-          <CardTitle>Connect your Money Flow account</CardTitle>
+          <CardTitle>Connect your Luyra account</CardTitle>
           <CardDescription>
-            Link your existing Money Flow data account once. Google normally reuses the account
+            Link your existing finance data account once. Google normally reuses the account
             already active in your browser.
           </CardDescription>
         </CardHeader>
@@ -165,13 +165,13 @@ export function MoneyFlowGate({
 
           <div className="my-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">or use Money Flow email</span>
+            <span className="text-xs text-muted-foreground">or use your Luyra email</span>
             <div className="h-px flex-1 bg-border" />
           </div>
 
           <form className="space-y-4" onSubmit={signIn}>
             <div className="space-y-2">
-              <Label htmlFor="money-flow-email">Money Flow email</Label>
+              <Label htmlFor="money-flow-email">Luyra email</Label>
               <Input
                 id="money-flow-email"
                 type="email"
@@ -182,7 +182,7 @@ export function MoneyFlowGate({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="money-flow-password">Money Flow password</Label>
+              <Label htmlFor="money-flow-password">Luyra password</Label>
               <Input
                 id="money-flow-password"
                 type="password"
@@ -199,7 +199,7 @@ export function MoneyFlowGate({
               </p>
             )}
             <Button type="submit" disabled={pending}>
-              {pending ? "Connecting…" : "Connect Money Flow"}
+              {pending ? "Connecting…" : "Connect Luyra"}
             </Button>
           </form>
         </CardContent>
@@ -210,7 +210,7 @@ export function MoneyFlowGate({
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Badge variant="success">Money Flow connected</Badge>
+        <Badge variant="success">Luyra connected</Badge>
         <Button variant="outline" size="sm" onClick={disconnect} disabled={pending}>
           <LogOut />
           Disconnect

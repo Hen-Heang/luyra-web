@@ -1,6 +1,6 @@
 -- Account-level Telegram integration — not Finance-specific, so any future
--- HeangOS domain (Habits, Tasks, ...) can reuse the same linked chat rather
--- than each domain inventing its own link flow. One row per HeangOS user.
+-- Luyra domain (Habits, Tasks, ...) can reuse the same linked chat rather
+-- than each domain inventing its own link flow. One row per Luyra user.
 -- A Telegram chat can only ever be linked to one user at a time, enforced
 -- by the partial unique index on chat_id.
 create table if not exists telegram_accounts (

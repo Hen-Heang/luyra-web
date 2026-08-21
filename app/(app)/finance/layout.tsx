@@ -53,7 +53,7 @@ export default function FinanceLayout({ children }: { children: React.ReactNode 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Money Flow</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Luyra</h1>
       </div>
 
       <nav
