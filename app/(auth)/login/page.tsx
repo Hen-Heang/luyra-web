@@ -30,7 +30,7 @@ function LoginForm() {
   const requestedNext = searchParams.get("next");
   const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
     ? requestedNext
-    : "/today";
+    : "/finance";
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -58,7 +58,7 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1 text-center">
-          <h1 className="text-xl font-semibold tracking-tight">HeangOS</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Money Flow</h1>
           <p className="text-sm text-muted-foreground">
             {mode === "login" ? "Sign in to your account" : "Create your account"}
           </p>

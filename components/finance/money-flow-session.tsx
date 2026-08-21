@@ -147,8 +147,8 @@ export function MoneyFlowGate({
         <CardHeader>
           <CardTitle>Connect your Money Flow account</CardTitle>
           <CardDescription>
-            HeangOS stays signed in with Hengo. Link Money Flow once; Google normally reuses the
-            account already active in your browser.
+            Link your existing Money Flow data account once. Google normally reuses the account
+            already active in your browser.
           </CardDescription>
         </CardHeader>
         <CardContent>

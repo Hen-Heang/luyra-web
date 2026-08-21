@@ -8,7 +8,7 @@ export default function ForgotPasswordPage() {
         <div className="space-y-1 text-center">
           <h1 className="text-xl font-semibold tracking-tight">Reset your password</h1>
           <p className="text-sm text-muted-foreground">
-            We will email a secure link to your existing Hengo account.
+            We will email a secure link to your existing Money Flow account.
           </p>
         </div>
 

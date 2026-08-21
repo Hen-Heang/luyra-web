@@ -5,7 +5,7 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 import { NavIconRow, NavRow } from "@/components/layout/NavItem";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { accountItem, isNavigationItemActive, primaryNavItems, todayItem } from "@/lib/navigation";
+import { accountItem, financeItem, isNavigationItemActive, primaryNavItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 import { ProfileMenu } from "./ProfileMenu";
@@ -31,18 +31,18 @@ export function DesktopSidebar({
       {/* Brand + collapse toggle. Branding lives here only — never also in the top bar. */}
       <div className={cn("flex items-center gap-2 px-3 py-4", collapsed && "flex-col gap-3")}>
         <Link
-          href={todayItem.href}
-          aria-label="HeangOS home"
+          href={financeItem.href}
+          aria-label="Money Flow home"
           className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            H
+            M
           </span>
           {!collapsed && (
             <span className="min-w-0">
-              <span className="block truncate text-[15px] font-semibold leading-tight text-foreground">HeangOS</span>
+              <span className="block truncate text-[15px] font-semibold leading-tight text-foreground">Money Flow</span>
               <span className="block truncate text-xs leading-tight text-muted-foreground">
-                Plan, learn, grow.
+                Track with clarity.
               </span>
             </span>
           )}

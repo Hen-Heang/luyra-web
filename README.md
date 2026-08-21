@@ -1,12 +1,14 @@
-# HeangOS
+# Money Flow
 
-Personal life and productivity operating system.
+Personal money tracking, budgeting, savings, analytics, and financial reviews.
 
-Phase 1 covers authentication, a Today dashboard, and task and goal
-management. The first Money Flow and Hengo migration slices are available at
-`/finance` and `/learning`. See
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit together
-and [docs/APP-MIGRATION.md](docs/APP-MIGRATION.md) for the staged product migration.
+Money Flow is the repository's only active product surface. The earlier Hengo
+goals, tasks, habits, Today, and learning modules are paused and hidden, but
+their source code is intentionally preserved for a possible future resume.
+Authenticated visits start at `/finance`; paused Hengo routes redirect there.
+
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the current focus and
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the existing system boundaries.
 
 ## Tech stack
 
@@ -48,7 +50,7 @@ Copy `.env.example` to `.env.local` and fill in real values. Never commit
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | browser + server | safe to expose |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | browser + server | safe to expose |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Hengo/HeangOS Google Identity Services | safe to expose |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Primary Google Identity Services login | safe to expose |
 | `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_URL` | Finance browser integration | safe to expose |
 | `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_PUBLISHABLE_KEY` | Finance browser integration | safe to expose |
 | `DATABASE_URL` | server only | Neon connection string — never prefix with `NEXT_PUBLIC_` |
@@ -58,9 +60,9 @@ Copy `.env.example` to `.env.local` and fill in real values. Never commit
 1. Use your existing Supabase project.
 2. Copy the project URL and publishable (anon) key from Project Settings →
    API into `.env.local`.
-3. The primary project handles HeangOS authentication and the migrated Hengo
-   learning data. Money Flow remains in its separate Supabase project during
-   the test migration.
+3. The primary project currently handles the outer application session. Money
+   Flow remains in its separate Supabase project while authentication is
+   consolidated in a later backend phase.
 
 ## Neon setup
 

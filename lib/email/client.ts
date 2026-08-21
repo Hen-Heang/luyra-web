@@ -16,7 +16,7 @@ export function isEmailConfigured(): boolean {
 
 // Resend's sandbox sender for accounts without a verified sending domain —
 // used unless the deployer sets RESEND_FROM_EMAIL to a verified address.
-const DEFAULT_FROM = "HeangOS <onboarding@resend.dev>";
+const DEFAULT_FROM = "Money Flow <onboarding@resend.dev>";
 
 export async function sendEmail(params: { to: string; subject: string; html: string }): Promise<{ ok: true } | { ok: false; error: string }> {
   const resend = getClient();

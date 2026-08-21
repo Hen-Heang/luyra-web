@@ -1,7 +1,21 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
+const PAUSED_HENGO_ROUTES = ["/today", "/tasks", "/goals", "/habits", "/learning"];
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const isPausedHengoRoute = PAUSED_HENGO_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+
+  if (isPausedHengoRoute) {
+    const moneyFlowUrl = request.nextUrl.clone();
+    moneyFlowUrl.pathname = "/finance";
+    moneyFlowUrl.search = "";
+    return NextResponse.redirect(moneyFlowUrl);
+  }
+
   return updateSession(request);
 }
 
