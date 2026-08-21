@@ -56,7 +56,10 @@ export function CheckinCalendar({
           <ChevronLeft size={16} strokeWidth={2} />
         </button>
         <p className="text-sm font-semibold text-foreground">
-          {month.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+          {/* Fixed locale, not `undefined` — checkins/startedAt arrive as SSR
+              props, so this renders on the server (Node locale) and again on
+              client hydration (browser locale); a mismatch there is a hydration error. */}
+          {month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
         </p>
         <button
           type="button"

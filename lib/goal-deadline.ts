@@ -134,6 +134,8 @@ export function formatDeadlineFooter(goal: Pick<Goal, "targetDate">, info: GoalD
   if (!goal.targetDate) return info.statusMessage;
 
   const target = new Date(`${goal.targetDate}T00:00:00`);
-  const label = target.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  // Fixed locale, not `undefined` — server and client render environments
+  // can have different default locales, which would mismatch on hydration.
+  const label = target.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   return `${label} · ${info.daysRemaining}d left`;
 }

@@ -23,9 +23,11 @@ export function navigationModeForWidth(width: number): NavigationMode {
  * callers never paint with the placeholder value for long.
  */
 export function useNavigationMode(): NavigationMode {
-  const [mode, setMode] = useState<NavigationMode>(() =>
-    typeof window === "undefined" ? "desktop" : navigationModeForWidth(window.innerWidth)
-  );
+  // Always starts at "desktop" so the client's first render matches the
+  // server's — reading window.innerWidth here would run during hydration
+  // too, not just after mount, and mismatch whenever the real viewport
+  // isn't desktop-sized.
+  const [mode, setMode] = useState<NavigationMode>("desktop");
 
   useEffect(() => {
     const tablet = window.matchMedia(`(min-width: ${TABLET_MIN_WIDTH}px)`);
