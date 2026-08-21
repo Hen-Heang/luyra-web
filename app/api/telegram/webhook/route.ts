@@ -18,8 +18,8 @@ interface TelegramUpdate {
 }
 
 const HELP_TEXT =
-  "HeangOS Finance bot.\n\n" +
-  "/link CODE — link this chat to your HeangOS account (get a code from Finance Settings)\n" +
+  "Money Flow bot.\n\n" +
+  "/link CODE — link this chat to your Money Flow account (get a code from Money Flow Settings)\n" +
   "/unlink — remove this chat's link\n" +
   "/help — show this message";
 
@@ -70,7 +70,7 @@ async function handleMessage(chatId: string, username: string | null, text: stri
     const code = text.startsWith("/start ") ? text.slice(7) : text.replace(/^\/link\s*/, "");
     const result = await consumeLinkCode(code, chatId, username);
     if (result === "linked") {
-      await sendTelegramMessage(chatId, "✅ Linked! This chat is now connected to your HeangOS Finance account.");
+      await sendTelegramMessage(chatId, "✅ Linked! This chat is now connected to your Money Flow account.");
     } else if (result === "expired") {
       await sendTelegramMessage(chatId, "⌛ That code expired. Generate a new one in Finance Settings.");
     } else {
@@ -82,7 +82,7 @@ async function handleMessage(chatId: string, username: string | null, text: stri
   if (text === "/unlink") {
     const userId = await getUserIdForChat(chatId);
     if (!userId) {
-      await sendTelegramMessage(chatId, "This chat isn't linked to a HeangOS account.");
+      await sendTelegramMessage(chatId, "This chat isn't linked to a Money Flow account.");
       return;
     }
     await unlinkTelegram(userId);
@@ -102,6 +102,6 @@ async function handleMessage(chatId: string, username: string | null, text: stri
   // — deferred rather than built as an ad hoc parser here.
   await sendTelegramMessage(
     chatId,
-    "I can't log expenses from a message yet — add them in the HeangOS app. Send /help to see what I can do."
+    "I can't log expenses from a message yet — add them in Money Flow. Send /help to see what I can do."
   );
 }

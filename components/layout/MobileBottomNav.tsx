@@ -10,10 +10,9 @@ const TAB =
   "relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg py-1.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset";
 
 /**
- * Four mobile destinations (Today, Tasks, Goals, Finance) plus a fifth "More"
- * slot for everything else. When the soft keyboard is open the whole element
- * is unmounted by `AppShell` rather than hidden, so nothing inside stays in
- * the tab order.
+ * The active product destination plus a "More" slot for account controls.
+ * When the soft keyboard is open the whole element is unmounted by `AppShell`
+ * rather than hidden, so nothing inside stays in the tab order.
  */
 export function MobileBottomNav({
   pathname,

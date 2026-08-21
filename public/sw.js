@@ -1,18 +1,13 @@
-// Whole-app service worker — installability and offline reading apply to
-// all of HeangOS, not just Finance (AGENTS.md: "Do not make Finance a
-// separate PWA"). Scope is deliberately modest per the PWA phase: app-shell
+// Money Flow service worker. Scope stays deliberately modest: app-shell
 // precache + read-only recent data via cache fallback. Mutations are never
-// intercepted, cached, or queued — an offline write simply fails with a
-// normal network error, exactly as it would with no service worker at all.
-const CACHE_NAME = "heangos-v1";
+// intercepted, cached, or queued — an offline write simply fails normally.
+const CACHE_NAME = "money-flow-v1";
 
 const PRECACHE_URLS = [
-  "/today",
-  "/tasks",
-  "/goals",
-  "/habits",
   "/finance",
-  "/learning",
+  "/finance/transactions",
+  "/finance/budgets",
+  "/finance/savings",
   "/login",
   "/icons/icon-192",
   "/icons/icon-512",

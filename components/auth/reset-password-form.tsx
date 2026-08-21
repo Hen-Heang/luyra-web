@@ -59,11 +59,11 @@ export function ResetPasswordForm() {
         <div className="space-y-1">
           <h2 className="font-semibold">Password updated</h2>
           <p className="text-sm text-muted-foreground">
-            Email and password login is now available for this Hengo account.
+            Email and password login is now available for this account.
           </p>
         </div>
-        <Link href="/today" className={buttonVariants({ className: "w-full" })}>
-          Continue to HeangOS
+        <Link href="/finance" className={buttonVariants({ className: "w-full" })}>
+          Continue to Money Flow
         </Link>
       </div>
     );

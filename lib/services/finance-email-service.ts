@@ -14,7 +14,7 @@ function wrapEmail(title: string, bodyHtml: string): string {
     <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;padding:24px;">
       <h1 style="margin:0 0 16px;font-size:18px;">${escapeHtml(title)}</h1>
       ${bodyHtml}
-      <p style="margin:24px 0 0;font-size:12px;color:#71717a;">Sent by HeangOS Finance.</p>
+      <p style="margin:24px 0 0;font-size:12px;color:#71717a;">Sent by Money Flow.</p>
     </div>
   </body>
 </html>`;
@@ -78,7 +78,7 @@ export async function sendWeeklySummaryEmail(userId: string, accountEmail: strin
   if (!to) return { sent: false, reason: "no_recipient" };
 
   const summary = await getWeeklySummary(userId);
-  const result = await sendEmail({ to, subject: "Weekly summary — HeangOS Finance", html: formatWeeklyEmail(summary) });
+  const result = await sendEmail({ to, subject: "Weekly summary — Money Flow", html: formatWeeklyEmail(summary) });
   return result.ok ? { sent: true } : { sent: false, reason: "send_failed" };
 }
 
@@ -89,6 +89,6 @@ export async function sendMonthlyReportEmail(userId: string, accountEmail: strin
   if (!to) return { sent: false, reason: "no_recipient" };
 
   const report = await getMonthlyReport(userId, month);
-  const result = await sendEmail({ to, subject: `${monthLabel} report — HeangOS Finance`, html: formatMonthlyEmail(report, monthLabel) });
+  const result = await sendEmail({ to, subject: `${monthLabel} report — Money Flow`, html: formatMonthlyEmail(report, monthLabel) });
   return result.ok ? { sent: true } : { sent: false, reason: "send_failed" };
 }

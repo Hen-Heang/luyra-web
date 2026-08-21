@@ -58,7 +58,7 @@ export const habitsItem: NavItem = {
 export const financeItem: NavItem = {
   id: "finance",
   href: "/finance",
-  label: "Finance",
+  label: "Money Flow",
   icon: WalletCards,
   color: "text-teal-500",
 };
@@ -88,23 +88,15 @@ export const accountItem: NavItem = {
   color: "text-zinc-500",
 };
 
-/** Primary destinations, in the order the product nav should present them. */
-export const primaryNavItems: NavItem[] = [
-  todayItem,
-  tasksItem,
-  goalsItem,
-  habitsItem,
-  financeItem,
-  learnItem,
-  remindersItem,
-];
+/** Money Flow is the active product. Hengo destinations stay defined for an easy future resume. */
+export const primaryNavItems: NavItem[] = [financeItem];
 
 export const allNavItems: NavItem[] = [...primaryNavItems, accountItem];
 
-/** Mobile bottom bar: the four most-used destinations; everything else lives in "More". */
-export const bottomTabs: NavItem[] = [todayItem, tasksItem, goalsItem, financeItem];
+/** Mobile bottom bar: Money Flow is the only active product destination. */
+export const bottomTabs: NavItem[] = [financeItem];
 
-export const moreItems: NavItem[] = [habitsItem, learnItem, remindersItem, accountItem];
+export const moreItems: NavItem[] = [accountItem];
 
 export function linkPath(href: string): string {
   const qIndex = href.indexOf("?");

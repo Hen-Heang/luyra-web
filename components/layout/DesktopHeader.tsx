@@ -4,10 +4,10 @@ import { getActiveNavItem } from "@/lib/navigation";
 
 import { ProfileMenu } from "./ProfileMenu";
 
-/** Sticky top bar for tablet + desktop. No HeangOS branding — the sidebar/rail owns that. */
+/** Sticky top bar for tablet + desktop. The sidebar/rail owns product branding. */
 export function DesktopHeader({ pathname }: { pathname: string }) {
   const item = getActiveNavItem(pathname);
-  const title = item?.label ?? "HeangOS";
+  const title = item?.label ?? "Money Flow";
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border bg-background/90 px-6 py-3 backdrop-blur-sm">

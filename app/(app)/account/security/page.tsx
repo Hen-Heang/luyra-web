@@ -10,7 +10,7 @@ export default async function AccountSecurityPage() {
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Account</p>
         <h1 className="text-2xl font-semibold tracking-tight">Security</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage sign-in methods for your primary Hengo/HeangOS identity.
+          Manage sign-in methods for your Money Flow account.
         </p>
       </div>
 

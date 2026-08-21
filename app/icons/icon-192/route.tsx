@@ -20,7 +20,7 @@ export function GET() {
           background: "#18181b",
         }}
       >
-        <div style={{ fontSize: 100, fontWeight: 700, color: "#fafafa", fontFamily: "system-ui, sans-serif" }}>H</div>
+        <div style={{ fontSize: 100, fontWeight: 700, color: "#fafafa", fontFamily: "system-ui, sans-serif" }}>M</div>
       </div>
     ),
     { ...size }

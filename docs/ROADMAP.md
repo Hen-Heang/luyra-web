@@ -1,5 +1,12 @@
 # Roadmap
 
+## Current focus — Money Flow
+
+- Money Flow is the only active product surface.
+- Hengo goals, tasks, habits, Today, and learning development is paused.
+- The paused code remains in the repository so it can be resumed later without a rebuild.
+- Current work should deepen Money Flow backend behavior, tests, reporting, and deployment.
+
 ## Phase 1 — Foundation
 
 - [x] Auth (Supabase, login/logout, protected routes)
@@ -17,13 +24,13 @@
 - Habits
 - Reminders
 
-## Phase 3
+## Phase 3 — Paused
 
 - [x] Learning integration foundation (shared Hengo/HeangOS session)
 - [x] Read-only Learning dashboard test slice
-- [ ] Hengo vocabulary, daily study, interview, and progress routes
-- Notion
-- AI assistant
+- [ ] Hengo vocabulary, daily study, interview, and progress routes — paused
+- Notion — paused
+- AI assistant — paused
 
 ## Phase 4
 

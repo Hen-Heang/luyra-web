@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HeangOS",
-  description: "Personal life and productivity operating system.",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "HeangOS" },
+  title: "Money Flow",
+  description: "Personal money tracking, budgeting, savings, and financial reviews.",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Money Flow" },
 };
 
 export const viewport: Viewport = {

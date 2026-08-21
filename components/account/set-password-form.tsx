@@ -60,8 +60,8 @@ export function SetPasswordForm({ email }: { email: string }) {
           <CardTitle>Set an email password</CardTitle>
         </div>
         <CardDescription>
-          This adds password login to the existing account {email}. Your Google login and real
-          Hengo data remain attached to the same user.
+          This adds password login to the existing account {email}. Your Google login and existing
+          data remain attached to the same user.
         </CardDescription>
       </CardHeader>
       <CardContent>

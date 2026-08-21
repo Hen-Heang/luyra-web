@@ -263,7 +263,7 @@ export function FinanceSettingsForm() {
         </Button>
       </form>
 
-      <FinanceSection id="settings-telegram" title="Telegram" description="Link a Telegram chat to send reports there on demand. HeangOS never ties your Telegram identity to your login — it's a separate integration.">
+      <FinanceSection id="settings-telegram" title="Telegram" description="Link a Telegram chat to send reports there on demand. Money Flow keeps your Telegram identity separate from your login.">
         <TelegramLinkSection />
       </FinanceSection>
 
