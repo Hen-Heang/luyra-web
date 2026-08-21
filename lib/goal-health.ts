@@ -2,7 +2,7 @@ import type { Goal } from "@/types/goal";
 import type { GoalDeadlineInfo } from "@/lib/goal-deadline";
 
 // Ported from Hengo's health-status concept (lib/goals.ts / lib/goal-health.ts),
-// simplified to what HeangOS's Goal actually tracks: no key results or tasks
+// simplified to what Luyra's Goal actually tracks: no key results or tasks
 // to derive health from, just `progress` + the deadline info above.
 
 export type GoalHealthStatus = "on_track" | "attention" | "at_risk" | "completed" | "paused";

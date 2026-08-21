@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-// Money Flow is the active installable product while the broader Hengo modules are paused.
+// Luyra is the active installable product while the broader Hengo modules are paused.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Money Flow",
-    short_name: "Money Flow",
+    name: "Luyra",
+    short_name: "Luyra",
     description: "Personal money tracking, budgeting, savings, and financial reviews.",
     lang: "en",
     start_url: "/finance",

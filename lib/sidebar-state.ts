@@ -2,7 +2,7 @@
 // the component so it can be unit-tested and so the storage key lives in one
 // place. Only a boolean is stored — never anything user-identifying.
 
-export const SIDEBAR_STORAGE_KEY = "heangos-sidebar-collapsed";
+export const SIDEBAR_STORAGE_KEY = "luyra-sidebar-collapsed";
 
 export function readSidebarCollapsed(): boolean {
   if (typeof window === "undefined") return false;

@@ -1,6 +1,6 @@
 import type { MasteryFilter, VocabCard, VocabSortOrder, VocabStats } from "@/types/learning";
 
-// Ported from Hengo's lib/vocab-review.ts, trimmed to what HeangOS's
+// Ported from Hengo's lib/vocab-review.ts, trimmed to what Luyra's
 // simplified review flow (flashcard mode only, no typed-recall mode) needs —
 // isCorrectTerm is dropped since there's no typed-answer mode here.
 

@@ -1,9 +1,9 @@
 import type { Goal } from "@/types/goal";
 
-// Ported from Hengo's lib/goals.ts deadline-info logic, trimmed to HeangOS's
+// Ported from Hengo's lib/goals.ts deadline-info logic, trimmed to Luyra's
 // simpler Goal shape: no `no_duration`/`metadata.start_date`, so a missing
 // `targetDate` is itself the "no deadline" case, and there's no time-elapsed
-// progress bar to compute (HeangOS goals already track a manual `progress`).
+// progress bar to compute (Luyra goals already track a manual `progress`).
 
 export type GoalDeadlineStatus =
   | "no_deadline"

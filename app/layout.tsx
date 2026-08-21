@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Money Flow",
+  title: "Luyra",
   description: "Personal money tracking, budgeting, savings, and financial reviews.",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "Money Flow" },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Luyra" },
 };
 
 export const viewport: Viewport = {

@@ -16,7 +16,7 @@ function subscribe(listener: () => void) {
   };
 }
 
-/** Desktop sidebar collapsed state, persisted under `heangos-sidebar-collapsed`. */
+/** Desktop sidebar collapsed state, persisted under `luyra-sidebar-collapsed`. */
 export function useSidebarState() {
   const collapsed = useSyncExternalStore(
     subscribe,

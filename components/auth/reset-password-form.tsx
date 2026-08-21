@@ -63,7 +63,7 @@ export function ResetPasswordForm() {
           </p>
         </div>
         <Link href="/finance" className={buttonVariants({ className: "w-full" })}>
-          Continue to Money Flow
+          Continue to Luyra
         </Link>
       </div>
     );

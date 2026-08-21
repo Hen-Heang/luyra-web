@@ -17,7 +17,7 @@ export function createMoneyFlowClient(): SupabaseClient | null {
 
   moneyFlowClient = createClient(url, publishableKey, {
     auth: {
-      storageKey: "heangos-money-flow-auth",
+      storageKey: "luyra-money-flow-auth",
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,

@@ -7,7 +7,7 @@ export default function ResetPasswordPage() {
         <div className="space-y-1 text-center">
           <h1 className="text-xl font-semibold tracking-tight">Choose a new password</h1>
           <p className="text-sm text-muted-foreground">
-            This adds email and password login to the same Money Flow account.
+            This adds email and password login to the same Luyra account.
           </p>
         </div>
 

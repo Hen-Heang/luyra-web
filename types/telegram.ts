@@ -1,7 +1,7 @@
 // Account-level Telegram integration — not Finance-specific. See
 // db/migrations/008_telegram_accounts.sql and AGENTS.md's Telegram section:
-// "Do not tie Telegram identity to HeangOS authentication. It is an
-// integration." One linked chat per HeangOS user.
+// "Do not tie Telegram identity to Luyra authentication. It is an
+// integration." One linked chat per Luyra user.
 
 export interface TelegramLinkStatus {
   configured: boolean;
