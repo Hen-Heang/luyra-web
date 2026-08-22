@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { Loader2, Save } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { ArrowRightLeft, Check, Loader2, RefreshCw, Save, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,10 +9,16 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { CategoryIcon } from "@/components/finance/ui/finance-primitives";
 import { TemplateStrip } from "@/components/finance/transactions/template-strip";
 import { getExchangeRate } from "@/lib/api/finance";
-import { krw } from "@/lib/finance-format";
+import { krw, usd } from "@/lib/finance-format";
 import { cn } from "@/lib/utils";
 import type { CreateTransactionInput, CreateTransactionTemplateInput } from "@/lib/validation/finance";
 import type { Category, Currency, PaymentMethod, Transaction, TransactionTemplate, TransactionType } from "@/types/finance";
+
+function localToday(): string {
+  const now = new Date();
+  const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return localTime.toISOString().slice(0, 10);
+}
 
 export function TransactionSheet({
   mode,
@@ -20,7 +26,6 @@ export function TransactionSheet({
   categories,
   paymentMethods,
   templates,
-  defaultDate,
   open,
   onOpenChange,
   onSave,
@@ -32,7 +37,6 @@ export function TransactionSheet({
   categories: Category[];
   paymentMethods: PaymentMethod[];
   templates: TransactionTemplate[];
-  defaultDate: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (input: CreateTransactionInput) => Promise<void>;
@@ -56,7 +60,6 @@ export function TransactionSheet({
             categories={categories}
             paymentMethods={paymentMethods}
             templates={templates}
-            defaultDate={defaultDate}
             onSave={onSave}
             onSaveTemplate={onSaveTemplate}
             onDeleteTemplate={onDeleteTemplate}
@@ -74,7 +77,6 @@ function TransactionSheetFields({
   categories,
   paymentMethods,
   templates,
-  defaultDate,
   onSave,
   onSaveTemplate,
   onDeleteTemplate,
@@ -85,7 +87,6 @@ function TransactionSheetFields({
   categories: Category[];
   paymentMethods: PaymentMethod[];
   templates: TransactionTemplate[];
-  defaultDate: string;
   onSave: (input: CreateTransactionInput) => Promise<void>;
   onSaveTemplate: (input: CreateTransactionTemplateInput) => Promise<void>;
   onDeleteTemplate: (template: TransactionTemplate) => void;
@@ -97,13 +98,14 @@ function TransactionSheetFields({
     transaction ? String(transaction.currency === "USD" ? transaction.originalAmount : transaction.amountKrw) : ""
   );
   const [exchangeRate, setExchangeRate] = useState(transaction?.exchangeRate != null ? String(transaction.exchangeRate) : "");
+  const hasStoredRate = transaction?.currency === "USD" && transaction.exchangeRate != null;
   const [rateFetch, setRateFetch] = useState<{ state: "idle" | "loading" | "error"; fallback: boolean }>({
-    state: "idle",
+    state: hasStoredRate ? "idle" : "loading",
     fallback: false,
   });
   const [categoryId, setCategoryId] = useState(transaction?.categoryId ?? "");
   const [description, setDescription] = useState(transaction?.description ?? "");
-  const [date, setDate] = useState(transaction?.date ?? defaultDate);
+  const [date, setDate] = useState(transaction?.date ?? localToday());
   const [paymentMethodId, setPaymentMethodId] = useState(transaction?.paymentMethodId ?? "");
   const [note, setNote] = useState(transaction?.note ?? "");
   const [pending, setPending] = useState(false);
@@ -111,12 +113,34 @@ function TransactionSheetFields({
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateMessage, setTemplateMessage] = useState<string | null>(null);
 
-  const previewKrw =
-    currency === "USD" && amount.trim() !== "" && exchangeRate.trim() !== "" && Number.isFinite(Number(amount)) && Number.isFinite(Number(exchangeRate))
-      ? Math.round(Number(amount) * Number(exchangeRate))
-      : null;
+  const parsedAmount = Number(amount);
+  const parsedExchangeRate = Number(exchangeRate);
+  const hasValidAmount = amount.trim() !== "" && Number.isFinite(parsedAmount) && parsedAmount > 0;
+  const hasValidRate = exchangeRate.trim() !== "" && Number.isFinite(parsedExchangeRate) && parsedExchangeRate > 0;
+  const previewKrw = currency === "USD" && hasValidAmount && hasValidRate ? Math.round(parsedAmount * parsedExchangeRate) : null;
+  const previewUsd = currency === "KRW" && hasValidAmount && hasValidRate ? parsedAmount / parsedExchangeRate : null;
 
   const availableCategories = categories.filter((category) => category.type === type || category.type === "both");
+
+  useEffect(() => {
+    if (hasStoredRate) return;
+
+    let active = true;
+    void getExchangeRate()
+      .then((result) => {
+        if (!active) return;
+        setExchangeRate(String(result.rate));
+        setRateFetch({ state: "idle", fallback: result.fallback });
+      })
+      .catch(() => {
+        if (!active) return;
+        setRateFetch({ state: "error", fallback: false });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [hasStoredRate]);
 
   function handleTypeChange(nextType: TransactionType) {
     setType(nextType);
@@ -151,7 +175,7 @@ function TransactionSheetFields({
 
   function handleCurrencyChange(next: Currency) {
     setCurrency(next);
-    if (next === "USD" && exchangeRate.trim() === "") {
+    if (next === "USD" && exchangeRate.trim() === "" && rateFetch.state !== "loading") {
       void fetchLiveRate();
     }
   }
@@ -276,7 +300,7 @@ function TransactionSheetFields({
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3">
+          <div className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 transition-shadow focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20">
             <span className="text-2xl font-semibold text-muted-foreground">{currency === "USD" ? "$" : "₩"}</span>
             <input
               id="transaction-amount"
@@ -289,20 +313,33 @@ function TransactionSheetFields({
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
               required
-              className="w-full min-w-0 bg-transparent text-3xl font-bold tracking-tight tabular-nums outline-none"
+              className="w-full min-w-0 bg-transparent text-3xl font-bold tracking-tight tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
 
-          {currency === "USD" && (
-            <div className="space-y-1.5 rounded-xl border bg-secondary/40 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="transaction-exchange-rate" className="text-xs text-muted-foreground">
-                  Rate: 1 USD =
-                </Label>
-                {rateFetch.state === "loading" && <span className="text-xs text-muted-foreground">Fetching…</span>}
+          <div className="rounded-xl border bg-secondary/40 p-3">
+            <div className="flex items-start gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-background text-muted-foreground shadow-xs">
+                <ArrowRightLeft className="size-4" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground">Estimated conversion</p>
+                <p className="mt-0.5 break-words font-semibold tabular-nums" aria-live="polite">
+                  {currency === "KRW" && previewUsd !== null
+                    ? `${krw.format(parsedAmount)} ≈ ${usd.format(previewUsd)}`
+                    : currency === "USD" && previewKrw !== null
+                      ? `${usd.format(parsedAmount)} ≈ ${krw.format(previewKrw)}`
+                      : "Enter an amount to see KRW and USD"}
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">₩</span>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+              <Label htmlFor="transaction-exchange-rate" className="text-xs text-muted-foreground">
+                1 USD =
+              </Label>
+              <div className="flex h-9 items-center rounded-md border border-input bg-background px-2 focus-within:ring-2 focus-within:ring-ring">
+                <span className="text-xs text-muted-foreground">₩</span>
                 <input
                   id="transaction-exchange-rate"
                   type="number"
@@ -311,65 +348,75 @@ function TransactionSheetFields({
                   step="0.01"
                   value={exchangeRate}
                   onChange={(event) => setExchangeRate(event.target.value)}
-                  required
-                  className="h-9 w-28 rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  required={currency === "USD"}
+                  aria-label="KRW value of one US dollar"
+                  className="w-24 bg-transparent px-1.5 text-sm font-medium tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
-                <button
-                  type="button"
-                  onClick={() => void fetchLiveRate()}
-                  disabled={rateFetch.state === "loading"}
-                  className="text-xs font-semibold text-foreground underline-offset-4 hover:underline disabled:opacity-50"
-                >
-                  Refresh
-                </button>
               </div>
-              {previewKrw !== null && (
-                <p className="text-xs text-muted-foreground">
-                  Converted: {krw.format(previewKrw)}
-                  {rateFetch.fallback ? " · fallback rate, edit if it's stale" : ""}
-                </p>
-              )}
-              {rateFetch.state === "error" && (
-                <p className="text-xs text-destructive">Couldn&apos;t fetch a live rate — enter one manually.</p>
-              )}
+              <button
+                type="button"
+                onClick={() => void fetchLiveRate()}
+                disabled={rateFetch.state === "loading"}
+                aria-label="Refresh USD to KRW exchange rate"
+                className="flex min-h-9 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-foreground hover:bg-background disabled:opacity-50"
+              >
+                <RefreshCw className={cn("size-3.5", rateFetch.state === "loading" && "animate-spin")} aria-hidden="true" />
+                {rateFetch.state === "loading" ? "Updating" : "Refresh"}
+              </button>
+              {rateFetch.fallback && <span className="text-xs text-warning">Fallback rate</span>}
             </div>
-          )}
+            {rateFetch.state === "error" && (
+              <p className="mt-2 text-xs text-destructive">Couldn&apos;t fetch a live rate. You can enter the rate manually.</p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-1.5">
-          <Label>Category</Label>
+          <div className="flex items-center justify-between gap-3">
+            <Label>Category</Label>
+            <span className="text-xs text-muted-foreground">Scroll to see all</span>
+          </div>
           {availableCategories.length === 0 ? (
             <p className="text-xs text-muted-foreground">No {type} categories yet.</p>
           ) : (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              <button
-                type="button"
-                onClick={() => setCategoryId("")}
-                className={cn(
-                  "flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors active:scale-[0.98]",
-                  categoryId === ""
-                    ? "border-primary/40 bg-primary text-primary-foreground shadow-sm"
-                    : "border-border bg-background text-muted-foreground hover:bg-secondary active:bg-secondary hover:text-foreground"
-                )}
-              >
-                No category
-              </button>
-              {availableCategories.map((category) => (
+            <div className="max-h-44 overflow-y-auto overscroll-contain rounded-xl border bg-secondary/20 p-2" role="group" aria-label={`${type} categories`}>
+              <div className="grid grid-cols-2 gap-2">
                 <button
-                  key={category.id}
                   type="button"
-                  onClick={() => setCategoryId(category.id)}
+                  onClick={() => setCategoryId("")}
+                  aria-pressed={categoryId === ""}
                   className={cn(
-                    "flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors active:scale-[0.98]",
-                    categoryId === category.id
-                      ? "border-primary/40 bg-primary text-primary-foreground shadow-sm"
-                      : "border-border bg-background text-muted-foreground hover:bg-secondary active:bg-secondary hover:text-foreground"
+                    "flex min-h-12 min-w-0 items-center gap-2 rounded-lg border px-2.5 text-left text-sm font-medium transition-colors active:scale-[0.98]",
+                    categoryId === ""
+                      ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/20"
+                      : "border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
                   )}
                 >
-                  <CategoryIcon icon={category.icon} color={categoryId === category.id ? null : category.color} className="size-6 text-sm" />
-                  {category.name}
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                    <WalletCards className="size-3.5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">No category</span>
+                  {categoryId === "" && <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />}
                 </button>
-              ))}
+                {availableCategories.map((category) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => setCategoryId(category.id)}
+                    aria-pressed={categoryId === category.id}
+                    className={cn(
+                      "flex min-h-12 min-w-0 items-center gap-2 rounded-lg border px-2.5 text-left text-sm font-medium transition-colors active:scale-[0.98]",
+                      categoryId === category.id
+                        ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/20"
+                        : "border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    <CategoryIcon icon={category.icon} color={category.color} className="size-7 text-sm" />
+                    <span className="min-w-0 flex-1 truncate">{category.name}</span>
+                    {categoryId === category.id && <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -385,14 +432,24 @@ function TransactionSheetFields({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="transaction-date">Date</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="transaction-date">Date</Label>
+              <button
+                type="button"
+                onClick={() => setDate(localToday())}
+                className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Today
+              </button>
+            </div>
             <Input id="transaction-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} required />
           </div>
           <div className="space-y-1.5">
-            <Label>Payment method</Label>
+            <Label htmlFor="transaction-payment-method">Payment method</Label>
             <select
+              id="transaction-payment-method"
               value={paymentMethodId}
               onChange={(event) => setPaymentMethodId(event.target.value)}
               className="flex h-11 min-h-11 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -440,7 +497,7 @@ function TransactionSheetFields({
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 py-4">
+      <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending} className="min-h-11 flex-1">
           Cancel
         </Button>

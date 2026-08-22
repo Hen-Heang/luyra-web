@@ -90,7 +90,6 @@ export function QuickAddTransaction({ raised }: { raised: boolean }) {
         categories={categories}
         paymentMethods={paymentMethods}
         templates={templates}
-        defaultDate={new Date().toLocaleDateString("en-CA")}
         open={open}
         onOpenChange={setOpen}
         onSave={handleSave}
