@@ -202,7 +202,6 @@ export function TransactionList() {
   }, []);
 
   const grouped = useMemo(() => groupByDate(result.transactions), [result.transactions]);
-  const { start } = monthBounds(monthOffset);
   const advancedFilterCount = [paymentMethodFilter, amountMin !== undefined, amountMax !== undefined].filter(Boolean).length;
   const isFiltered = Boolean(search || typeFilter || categoryFilter || advancedFilterCount > 0);
 
@@ -461,7 +460,6 @@ export function TransactionList() {
         categories={categories}
         paymentMethods={paymentMethods}
         templates={templates}
-        defaultDate={start}
         open={sheet !== null}
         onOpenChange={(open) => !open && setSheet(null)}
         onSave={handleSave}
