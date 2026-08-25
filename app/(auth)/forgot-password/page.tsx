@@ -1,26 +1,25 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
 export default function ForgotPasswordPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-1 text-center">
-          <h1 className="text-xl font-semibold tracking-tight">Reset your password</h1>
-          <p className="text-sm text-muted-foreground">
-            We will email a secure link to your existing Luyra account.
-          </p>
-        </div>
-
+    <AuthShell
+      title="Reset your password"
+      description="Enter the email connected to Luyra and we will send you a secure recovery link."
+    >
+      <div className="space-y-6">
         <ForgotPasswordForm />
 
         <Link
           href="/login"
-          className="block text-center text-sm text-muted-foreground hover:text-foreground"
+          className="flex min-h-10 items-center justify-center gap-2 rounded-xl text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Back to login
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to sign in
         </Link>
       </div>
-    </main>
+    </AuthShell>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { CheckCircle2, Mail } from "lucide-react";
+import { AlertCircle, CheckCircle2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,39 +42,56 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className="space-y-5" onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <Label htmlFor="recovery-email">Email</Label>
-        <Input
-          id="recovery-email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => {
-            setEmail(event.target.value);
-            setError(null);
-            setSent(false);
-          }}
-          required
-        />
+        <Label htmlFor="recovery-email">Email address</Label>
+        <div className="relative">
+          <Mail
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            id="recovery-email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            className="h-11 pl-9"
+            value={email}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setError(null);
+              setSent(false);
+            }}
+            required
+          />
+        </div>
       </div>
 
       {error && (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
+        <div
+          className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/5 px-3.5 py-3 text-sm text-destructive"
+          role="alert"
+        >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <p className="leading-5">{error}</p>
+        </div>
       )}
 
       {sent && (
-        <p className="flex items-start gap-2 text-sm text-emerald-700" role="status">
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-          If an account exists for this email, a password recovery link has been sent.
-        </p>
+        <div
+          className="flex items-start gap-2.5 rounded-xl border border-success/30 bg-success/5 px-3.5 py-3 text-sm text-success"
+          role="status"
+        >
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <p className="leading-5">
+            If an account exists for this email, a password recovery link has been sent.
+          </p>
+        </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={pending || sent}>
-        <Mail className="size-4" />
-        {pending ? "Sending…" : sent ? "Email sent" : "Send recovery email"}
+      <Button type="submit" className="h-11 w-full font-semibold" disabled={pending || sent}>
+        <Mail className="size-4" aria-hidden="true" />
+        {pending ? "Sending…" : sent ? "Email sent" : "Send recovery link"}
       </Button>
     </form>
   );
