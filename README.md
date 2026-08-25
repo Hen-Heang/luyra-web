@@ -51,9 +51,18 @@ Copy `.env.example` to `.env.local` and fill in real values. Never commit
 | `NEXT_PUBLIC_SUPABASE_URL` | browser + server | safe to expose |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | browser + server | safe to expose |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Primary Google Identity Services login | safe to expose |
-| `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_URL` | Finance browser integration | safe to expose |
-| `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_PUBLISHABLE_KEY` | Finance browser integration | safe to expose |
+| `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_URL` | unused — see below | safe to expose |
+| `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_PUBLISHABLE_KEY` | unused — see below | safe to expose |
 | `DATABASE_URL` | server only | Neon connection string — never prefix with `NEXT_PUBLIC_` |
+
+`.env.example` is the authoritative list and also documents the optional
+integration keys (exchange rate, Telegram, Anthropic, Resend), each of which
+degrades gracefully when unset.
+
+The two `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_*` variables are no longer read by
+any route. Only `components/finance/money-flow-dashboard.tsx` and
+`money-flow-session.tsx` reference them, and nothing imports those files —
+Finance runs entirely on the native Neon API now. They can be left blank.
 
 ## Supabase Auth setup
 
@@ -76,6 +85,19 @@ To point a fresh checkout at it:
 1. Get the pooled connection string: `neon connection-string --project-id divine-darkness-19631415 --pooled`
    (or from the Neon console → Connect).
 2. Put it in `.env.local` as `DATABASE_URL`.
+
+## Deployment
+
+Luyra is not deployed yet. [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) is the
+step-by-step guide: Vercel project settings, the environment-variable matrix
+per environment, the Neon pooled connection string, Supabase Auth redirect
+URLs, Google Identity Services origins, Telegram webhook registration, and a
+post-deploy verification checklist.
+
+Two things a public deployment still lacks — scheduled jobs (cron) and
+security headers — are described at the end of that guide, and the wider
+feature backlog is in
+[docs/FINANCE-GAP-ANALYSIS.md](docs/FINANCE-GAP-ANALYSIS.md).
 
 ## Future: Spring Boot backend
 
