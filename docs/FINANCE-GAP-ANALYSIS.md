@@ -27,32 +27,37 @@ Status meanings used below:
 - `MANUAL_ONLY` — the behavior works, but only when a human presses a button;
   Money Flow runs it on a schedule.
 
-## 1. Scheduling — nothing runs automatically
+## 1. Scheduling — mostly resolved
 
-Money Flow runs eight Vercel Cron jobs, all gated by
-`Authorization: Bearer <CRON_SECRET>` via `lib/server/cron.ts`. Luyra has no
-`app/api/cron/**` directory and no `vercel.json` anywhere in the repo.
+Luyra now has `app/api/cron/**` and a `vercel.json`, gated on `CRON_SECRET`
+through `lib/server/cron.ts`. Five of Money Flow's eight jobs have Luyra
+equivalents; the three still missing all depend on features Luyra doesn't
+have yet rather than on the scheduler.
 
-| Money Flow job | Schedule (UTC) | Purpose | Luyra status |
-|---|---|---|---|
-| `/api/cron/recurring` | Daily 00:00 | Create due recurring transactions | `MISSING` — no recurring engine |
-| `/api/cron/savings` | Daily 00:30 | Send or apply due savings contributions | `MISSING` |
-| `/api/cron/budget-alerts` | Daily 10:00 | Alert only on crossing to a higher threshold level | `MISSING` |
-| `/api/cron/spending-spike` | Daily 12:00 | Alert when today exceeds 2x the month's daily average | `MISSING` |
-| `/api/cron/daily-reminder` | Daily 03:00 + 12:00 | Telegram nudge to log expenses | `MISSING` |
-| `/api/cron/weekly-summary` | Monday 00:00 | Weekly financial check-in | `MANUAL_ONLY` |
-| `/api/cron/monthly-report` | Daily 02:00 | Per-user completed local month, idempotent per user/month/channel | `MANUAL_ONLY` |
-| `/api/cron/cleanup-exchange-rates` | Sunday 03:00 | Delete rates older than 30 days | `MISSING` — rates accumulate forever |
+| Money Flow job | Purpose | Luyra status |
+|---|---|---|
+| `/api/cron/budget-alerts` | Alert only on crossing to a higher threshold level | `DONE` |
+| `/api/cron/spending-spike` | Alert when today far exceeds the month's daily average | `DONE` |
+| `/api/cron/daily-reminder` | Telegram nudge to log expenses | `DONE` — skips users who already logged that day |
+| `/api/cron/weekly-summary` | Weekly financial check-in | `DONE` |
+| `/api/cron/monthly-report` | The completed month, once per user | `DONE` |
+| `/api/cron/recurring` | Create due recurring transactions | `MISSING` — blocked on §2's recurring engine |
+| `/api/cron/savings` | Send or apply due savings contributions | `MISSING` — blocked on §2's savings auto-plan |
+| `/api/cron/cleanup-exchange-rates` | Delete rates older than 30 days | `MISSING` — rates accumulate forever |
 
-The weekly and monthly report *content* already exists in Luyra
-(`lib/services/finance-report-service.ts`), and both Telegram
-(`/api/finance/telegram/send`) and email (`/api/finance/email/send`) delivery
-work today. Only the scheduler and its `CRON_SECRET` gate are missing — this
-is the highest value-per-effort item in the whole list, because it activates
-five features whose logic is already written.
+Two differences from the Money Flow originals, both deliberate:
 
-Budget-threshold alerts and spending-spike detection have no Luyra
-counterpart at all, scheduled or manual.
+- **Date math is pinned to Asia/Seoul** (`lib/finance-cron-time.ts`). Money
+  Flow resolves each user's own timezone; Luyra has no per-user timezone
+  column that anything populates, and every other KRW assumption in Finance is
+  already Seoul-based. `lib/finance-month.ts` stays as it is — it runs in the
+  browser, where server-local time is the user's own clock.
+- **Idempotency lives on `finance_preferences`**
+  (`010_finance_report_delivery.sql`) rather than in a delivery log. One row
+  per user already exists there, and "the last period we sent" is the only
+  fact either report job needs.
+
+Email delivery remains manual-only — the scheduler drives Telegram alone.
 
 ## 2. Schema ported, feature never built
 
@@ -77,7 +82,7 @@ touches them. Verified with a repo-wide grep across `lib/`, `app/`, and
 | Category and payment-method management | `settings/_components/{CategoriesSection,PaymentMethodsSection}.tsx` | Luyra's `app/api/finance/categories/route.ts` and `app/api/finance/payment-methods/route.ts` export **GET only**. Users cannot create, rename, recolor, reorder, or delete either one. |
 | Review to next-month plan | `POST /api/finance/budget-plan`, `/api/finance/goal-plans`, `review/page.tsx` | Luyra's `/api/finance/review` is GET only, and `components/finance/review/review-view.tsx` has no action buttons — the review is read-only, with no way to confirm and apply next month's budget. |
 | Appearance / theme setting | `settings/_components/AppearanceSection.tsx` | Luyra has theme tokens in `app/globals.css` but no user-facing toggle anywhere. |
-| Push notifications | `20260410_push_subscriptions.sql` | Absent. |
+| Web push | `20260410_push_subscriptions.sql` | Absent — **and there is nothing to port.** `push_subscriptions` appears only in SQL (that migration, `20260514_explicit_grants.sql`, `scripts/neon-schema.sql`) with zero application code on Money Flow's `origin/main`: no `web-push` dependency, no VAPID keys, no `pushManager.subscribe`, no service-worker `push` handler. Building it in Luyra would be from scratch, and the Money Flow table's `references auth.users(id)` + RLS shape doesn't transfer — Luyra's app data is in Neon, with authorization in the route handler. Telegram (§1) is the working notification channel in both apps. |
 | Avatar upload | `20260525_avatars_storage.sql`, `components/ui/Avatar.tsx` | Luyra's `components/ui/UserAvatar.tsx` is display-only. |
 | App version endpoint | `/api/version`, shown in Settings | Absent. |
 | AI provider selection | `/api/settings/ai-provider`, `settings/ai/page.tsx`, `20260606_ai_provider.sql` | Money Flow lets the user pick Gemini or OpenAI, with the other as fallback. Luyra is Anthropic-only via `lib/ai/client.ts`. Low priority — single-provider is a defensible choice, not a defect. |
@@ -124,15 +129,16 @@ Luyra already has debounced search, a filter panel, and templates
 
 ## Suggested order
 
-1. **Cron infrastructure + `vercel.json`.** Unblocks five features whose logic
-   is already written. Needs `CRON_SECRET` and a `requireCronAuthorization`
-   helper mirroring Money Flow's `lib/server/cron.ts`.
-2. **Recurring transactions.** The table is already there, and the savings
-   auto-plan reuses the same due-date machinery.
-3. **Category and payment-method CRUD.** A plain functional gap users hit on
-   day one.
+1. ~~**Cron infrastructure + `vercel.json`.**~~ Done — see §1. Still inert
+   until the app is deployed and `CRON_SECRET` is set.
+2. ~~**Category and payment-method CRUD.**~~ Done.
+3. **Recurring transactions.** The table is already there, the savings
+   auto-plan reuses the same due-date machinery, and the two remaining cron
+   jobs (`recurring`, `savings`) are blocked behind it.
 4. **Route loading/error boundaries, then a Vitest setup** over
-   `lib/services/finance-*.ts`.
+   `lib/services/finance-*.ts`. The cron services are the strongest argument
+   for tests yet: their date math and idempotency rules are pure functions
+   with no UI to eyeball.
 5. **Merchant aliases, spending class, AI chat.** Larger, genuinely new
    domains — worth their own phases.
 

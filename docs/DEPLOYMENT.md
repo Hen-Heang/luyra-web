@@ -55,6 +55,7 @@ on. The pooled host contains `-pooler` in its name.
 | `ANTHROPIC_MODEL` | server | Model override | Defaults to `claude-opus-5`. |
 | `RESEND_API_KEY` | server, secret | Emailing the weekly/monthly report | Settings shows "Email isn't configured." |
 | `RESEND_FROM_EMAIL` | server | Custom sender address | Sends from Resend's shared sandbox address, which is more likely to be filtered. |
+| `CRON_SECRET` | server, secret | The scheduled Telegram jobs in `vercel.json` | Every `/api/cron/*` route returns 503, so nothing is scheduled — and nothing is exposed. |
 
 ### Do not set these
 
@@ -144,40 +145,50 @@ either with `psql` or by pasting into the Neon SQL Editor.
       landed).
 - [ ] Settings → link Telegram, then **Send to Telegram** on a report.
 - [ ] Settings → **Send email** on a report.
+- [ ] `curl` one cron route with the deployed `CRON_SECRET` and confirm it
+      returns counts; then call it again with a wrong secret and confirm 401.
 - [ ] Install the PWA and load it once offline.
 
-## Not wired up yet
+## Scheduled Telegram notifications
 
-### Cron
+`vercel.json` is the authoritative schedule. Every job is gated on
+`CRON_SECRET` and only messages users who have linked Telegram, so nothing
+here fires until both are in place.
 
-Luyra has no `app/api/cron/**` routes and no `vercel.json`. Vercel needs
-neither to build a Next.js app, so a `vercel.json` is only worth adding once
-the routes exist. When they do, this is the schedule to mirror from Money
-Flow (all times UTC):
+| Endpoint | Schedule (UTC) | KST | Purpose |
+|---|---|---|---|
+| `/api/cron/budget-alerts` | `0 10 * * *` | 19:00 | Alert on a budget crossing to a higher warning level |
+| `/api/cron/spending-spike` | `0 12 * * *` | 21:00 | Flag a day far above this month's daily average |
+| `/api/cron/daily-reminder` | `0 3 * * *`, `0 11 * * *` | 12:00, 20:00 | Nudge users who have logged nothing that day |
+| `/api/cron/weekly-summary` | `0 0 * * 1` | Mon 09:00 | Weekly summary |
+| `/api/cron/monthly-report` | `0 2 * * *` | 11:00 | The month that just finished, once |
 
-```json
-{
-  "crons": [
-    { "path": "/api/cron/recurring", "schedule": "0 0 * * *" },
-    { "path": "/api/cron/savings", "schedule": "30 0 * * *" },
-    { "path": "/api/cron/cleanup-exchange-rates", "schedule": "0 3 * * 0" },
-    { "path": "/api/cron/budget-alerts", "schedule": "0 10 * * *" },
-    { "path": "/api/cron/daily-reminder", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/daily-reminder", "schedule": "0 12 * * *" },
-    { "path": "/api/cron/spending-spike", "schedule": "0 12 * * *" },
-    { "path": "/api/cron/weekly-summary", "schedule": "0 0 * * 1" },
-    { "path": "/api/cron/monthly-report", "schedule": "0 2 * * *" }
-  ]
-}
+Cron date math is pinned to **Asia/Seoul** (`lib/finance-cron-time.ts`), not
+the function's UTC clock — otherwise "today" and "this month" would land nine
+hours away from the user's actual day. The monthly job runs daily on purpose:
+one missed run on the 1st would otherwise lose a whole month's report, and the
+last-sent marker added by `db/migrations/010_finance_report_delivery.sql`
+keeps the daily schedule from re-sending.
+
+Set `CRON_SECRET` (server-only) in the Vercel project — Vercel Cron sends it
+automatically as `Authorization: Bearer <CRON_SECRET>`. Without it every route
+returns 503 rather than running unauthenticated.
+
+Test one locally with the same secret from `.env.local`:
+
+```bash
+curl http://localhost:3000/api/cron/budget-alerts \
+  -H "Authorization: Bearer <CRON_SECRET>"
 ```
 
-Each route must require `Authorization: Bearer <CRON_SECRET>`, which means a
-new server-only `CRON_SECRET` env var. See
-[FINANCE-GAP-ANALYSIS.md](./FINANCE-GAP-ANALYSIS.md) §1 for what each job
-does and which already have their logic written.
+Vercel's Hobby plan caps cron jobs at a small number of daily invocations;
+this schedule assumes a paid plan. On Hobby, drop the second
+`daily-reminder` entry and the `spending-spike` job first.
 
-Note that Vercel's Hobby plan limits cron jobs to a small number of daily
-invocations; the schedule above assumes a paid plan.
+Email reports are **not** scheduled — they remain manual via the "Send email"
+button in Settings. Only Telegram is wired to the scheduler.
+
+## Not wired up yet
 
 ### Security headers
 
