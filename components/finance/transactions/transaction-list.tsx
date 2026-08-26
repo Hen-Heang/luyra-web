@@ -17,6 +17,7 @@ import {
   createTransaction,
   deleteTemplate,
   deleteTransaction,
+  getTransactionSuggestions,
   listCategories,
   listPaymentMethods,
   listTemplates,
@@ -24,7 +25,14 @@ import {
   updateTransaction,
 } from "@/lib/api/finance";
 import type { CreateTransactionInput, CreateTransactionTemplateInput, TransactionSort } from "@/lib/validation/finance";
-import type { Category, PaymentMethod, Transaction, TransactionTemplate, TransactionType } from "@/types/finance";
+import type {
+  Category,
+  PaymentMethod,
+  Transaction,
+  TransactionSuggestions,
+  TransactionTemplate,
+  TransactionType,
+} from "@/types/finance";
 
 const TYPE_TABS: { label: string; value: TransactionType | undefined }[] = [
   { label: "All", value: undefined },
@@ -106,6 +114,7 @@ export function TransactionList() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [templates, setTemplates] = useState<TransactionTemplate[]>([]);
+  const [suggestions, setSuggestions] = useState<TransactionSuggestions | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [sheet, setSheet] = useState<{ mode: "create" | "edit"; transaction?: Transaction } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
@@ -200,6 +209,23 @@ export function TransactionList() {
       active = false;
     };
   }, []);
+
+  // Reloaded alongside the list so the category ranking and description
+  // suggestions pick up whatever was just added, edited, or deleted.
+  useEffect(() => {
+    let active = true;
+    getTransactionSuggestions()
+      .then((data) => {
+        if (active) setSuggestions(data);
+      })
+      .catch(() => {
+        // The form still works without suggestions - categories just fall
+        // back to plain alphabetical order.
+      });
+    return () => {
+      active = false;
+    };
+  }, [reloadToken]);
 
   const grouped = useMemo(() => groupByDate(result.transactions), [result.transactions]);
   const advancedFilterCount = [paymentMethodFilter, amountMin !== undefined, amountMax !== undefined].filter(Boolean).length;
@@ -460,6 +486,7 @@ export function TransactionList() {
         categories={categories}
         paymentMethods={paymentMethods}
         templates={templates}
+        suggestions={suggestions}
         open={sheet !== null}
         onOpenChange={(open) => !open && setSheet(null)}
         onSave={handleSave}

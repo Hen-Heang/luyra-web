@@ -55,6 +55,31 @@ export interface TransactionExportRow {
   note: string | null;
 }
 
+// Usage history behind the transaction form's smart defaults: which categories
+// the user actually reaches for, and which descriptions they have typed before.
+export interface CategoryUsage {
+  categoryId: string;
+  type: TransactionType;
+  count: number;
+  lastUsedAt: string;
+}
+
+export interface DescriptionSuggestion {
+  description: string;
+  type: TransactionType;
+  categoryId: string | null;
+  categoryName: string | null;
+  paymentMethodId: string | null;
+  amountKrw: number;
+  count: number;
+  lastUsedAt: string;
+}
+
+export interface TransactionSuggestions {
+  categoryUsage: CategoryUsage[];
+  descriptions: DescriptionSuggestion[];
+}
+
 export interface TransactionTemplate {
   id: string;
   type: TransactionType;

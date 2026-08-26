@@ -1,18 +1,32 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowRightLeft, Check, Loader2, RefreshCw, Save, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CategoryIcon } from "@/components/finance/ui/finance-primitives";
+import { DescriptionSuggestInput } from "@/components/finance/transactions/description-suggest-input";
 import { TemplateStrip } from "@/components/finance/transactions/template-strip";
 import { getExchangeRate } from "@/lib/api/finance";
 import { krw, usd } from "@/lib/finance-format";
 import { cn } from "@/lib/utils";
 import type { CreateTransactionInput, CreateTransactionTemplateInput } from "@/lib/validation/finance";
-import type { Category, Currency, PaymentMethod, Transaction, TransactionTemplate, TransactionType } from "@/types/finance";
+import type {
+  Category,
+  Currency,
+  DescriptionSuggestion,
+  PaymentMethod,
+  Transaction,
+  TransactionSuggestions,
+  TransactionTemplate,
+  TransactionType,
+} from "@/types/finance";
+
+// Two rows of the two-column picker: enough for the handful of categories a
+// day-to-day entry actually lands in, without pushing the rest off screen.
+const FREQUENT_CATEGORY_LIMIT = 6;
 
 function localToday(): string {
   const now = new Date();
@@ -26,6 +40,7 @@ export function TransactionSheet({
   categories,
   paymentMethods,
   templates,
+  suggestions,
   open,
   onOpenChange,
   onSave,
@@ -37,6 +52,7 @@ export function TransactionSheet({
   categories: Category[];
   paymentMethods: PaymentMethod[];
   templates: TransactionTemplate[];
+  suggestions: TransactionSuggestions | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (input: CreateTransactionInput) => Promise<void>;
@@ -60,6 +76,7 @@ export function TransactionSheet({
             categories={categories}
             paymentMethods={paymentMethods}
             templates={templates}
+            suggestions={suggestions}
             onSave={onSave}
             onSaveTemplate={onSaveTemplate}
             onDeleteTemplate={onDeleteTemplate}
@@ -77,6 +94,7 @@ function TransactionSheetFields({
   categories,
   paymentMethods,
   templates,
+  suggestions,
   onSave,
   onSaveTemplate,
   onDeleteTemplate,
@@ -87,6 +105,7 @@ function TransactionSheetFields({
   categories: Category[];
   paymentMethods: PaymentMethod[];
   templates: TransactionTemplate[];
+  suggestions: TransactionSuggestions | null;
   onSave: (input: CreateTransactionInput) => Promise<void>;
   onSaveTemplate: (input: CreateTransactionTemplateInput) => Promise<void>;
   onDeleteTemplate: (template: TransactionTemplate) => void;
@@ -120,7 +139,37 @@ function TransactionSheetFields({
   const previewKrw = currency === "USD" && hasValidAmount && hasValidRate ? Math.round(parsedAmount * parsedExchangeRate) : null;
   const previewUsd = currency === "KRW" && hasValidAmount && hasValidRate ? parsedAmount / parsedExchangeRate : null;
 
-  const availableCategories = categories.filter((category) => category.type === type || category.type === "both");
+  const availableCategories = useMemo(
+    () => categories.filter((category) => category.type === type || category.type === "both"),
+    [categories, type]
+  );
+
+  // The picker leads with the categories this user actually reaches for,
+  // ranked by how often they were used for this type of transaction over the
+  // recent history the suggestions endpoint looks at.
+  const usageByCategory = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const usage of suggestions?.categoryUsage ?? []) {
+      if (usage.type === type) counts.set(usage.categoryId, usage.count);
+    }
+    return counts;
+  }, [suggestions, type]);
+
+  const frequentCategories = useMemo(
+    () =>
+      availableCategories
+        .filter((category) => (usageByCategory.get(category.id) ?? 0) > 0)
+        .sort(
+          (a, b) => (usageByCategory.get(b.id) ?? 0) - (usageByCategory.get(a.id) ?? 0) || a.name.localeCompare(b.name)
+        )
+        .slice(0, FREQUENT_CATEGORY_LIMIT),
+    [availableCategories, usageByCategory]
+  );
+
+  const descriptionSuggestions = useMemo(
+    () => (suggestions?.descriptions ?? []).filter((suggestion) => suggestion.type === type),
+    [suggestions, type]
+  );
 
   useEffect(() => {
     if (hasStoredRate) return;
@@ -149,6 +198,26 @@ function TransactionSheetFields({
         ? current
         : ""
     );
+  }
+
+  // Reusing a past description fills in the blanks it can. It never
+  // overwrites a category or payment method the user already picked.
+  function applyDescriptionSuggestion(suggestion: DescriptionSuggestion) {
+    setDescription(suggestion.description);
+    if (
+      categoryId === "" &&
+      suggestion.categoryId &&
+      availableCategories.some((category) => category.id === suggestion.categoryId)
+    ) {
+      setCategoryId(suggestion.categoryId);
+    }
+    if (
+      paymentMethodId === "" &&
+      suggestion.paymentMethodId &&
+      paymentMethods.some((method) => method.id === suggestion.paymentMethodId)
+    ) {
+      setPaymentMethodId(suggestion.paymentMethodId);
+    }
   }
 
   function applyTemplate(template: TransactionTemplate) {
@@ -379,43 +448,60 @@ function TransactionSheetFields({
           {availableCategories.length === 0 ? (
             <p className="text-xs text-muted-foreground">No {type} categories yet.</p>
           ) : (
-            <div className="max-h-44 overflow-y-auto overscroll-contain rounded-xl border bg-secondary/20 p-2" role="group" aria-label={`${type} categories`}>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCategoryId("")}
-                  aria-pressed={categoryId === ""}
-                  className={cn(
-                    "flex min-h-12 min-w-0 items-center gap-2 rounded-lg border px-2.5 text-left text-sm font-medium transition-colors active:scale-[0.98]",
-                    categoryId === ""
-                      ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/20"
-                      : "border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  )}
-                >
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                    <WalletCards className="size-3.5" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">No category</span>
-                  {categoryId === "" && <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />}
-                </button>
-                {availableCategories.map((category) => (
+            <div
+              className="max-h-56 space-y-3 overflow-y-auto overscroll-contain rounded-xl border bg-secondary/20 p-2"
+              role="group"
+              aria-label={`${type} categories`}
+            >
+              {frequentCategories.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="px-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Often used</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {frequentCategories.map((category) => (
+                      <CategoryOption
+                        key={`frequent-${category.id}`}
+                        category={category}
+                        selected={categoryId === category.id}
+                        onSelect={() => setCategoryId(category.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                {frequentCategories.length > 0 && (
+                  <p className="px-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    All categories
+                  </p>
+                )}
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    key={category.id}
                     type="button"
-                    onClick={() => setCategoryId(category.id)}
-                    aria-pressed={categoryId === category.id}
+                    onClick={() => setCategoryId("")}
+                    aria-pressed={categoryId === ""}
                     className={cn(
                       "flex min-h-12 min-w-0 items-center gap-2 rounded-lg border px-2.5 text-left text-sm font-medium transition-colors active:scale-[0.98]",
-                      categoryId === category.id
+                      categoryId === ""
                         ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/20"
                         : "border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
                     )}
                   >
-                    <CategoryIcon icon={category.icon} color={category.color} className="size-7 text-sm" />
-                    <span className="min-w-0 flex-1 truncate">{category.name}</span>
-                    {categoryId === category.id && <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />}
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                      <WalletCards className="size-3.5" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">No category</span>
+                    {categoryId === "" && <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />}
                   </button>
-                ))}
+                  {availableCategories.map((category) => (
+                    <CategoryOption
+                      key={category.id}
+                      category={category}
+                      selected={categoryId === category.id}
+                      onSelect={() => setCategoryId(category.id)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -423,12 +509,12 @@ function TransactionSheetFields({
 
         <div className="space-y-1.5">
           <Label htmlFor="transaction-description">Description</Label>
-          <Input
+          <DescriptionSuggestInput
             id="transaction-description"
             value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            placeholder="What was this for?"
-            required
+            onChange={setDescription}
+            onPick={applyDescriptionSuggestion}
+            suggestions={descriptionSuggestions}
           />
         </div>
 
@@ -507,5 +593,33 @@ function TransactionSheetFields({
         </Button>
       </div>
     </form>
+  );
+}
+
+function CategoryOption({
+  category,
+  selected,
+  onSelect,
+}: {
+  category: Category;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={cn(
+        "flex min-h-12 min-w-0 items-center gap-2 rounded-lg border px-2.5 text-left text-sm font-medium transition-colors active:scale-[0.98]",
+        selected
+          ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/20"
+          : "border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
+      )}
+    >
+      <CategoryIcon icon={category.icon} color={category.color} className="size-7 text-sm" />
+      <span className="min-w-0 flex-1 truncate">{category.name}</span>
+      {selected && <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />}
+    </button>
   );
 }

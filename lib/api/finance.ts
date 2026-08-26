@@ -25,6 +25,7 @@ import type {
   SavingsContribution,
   SavingsGoal,
   Transaction,
+  TransactionSuggestions,
   TransactionTemplate,
   TransactionType,
   WeeklySummary,
@@ -76,6 +77,10 @@ export function updateTransaction(id: string, input: UpdateTransactionInput): Pr
 
 export async function deleteTransaction(id: string): Promise<void> {
   await apiFetch<{ id: string }>(`/api/finance/transactions/${id}`, { method: "DELETE" });
+}
+
+export function getTransactionSuggestions(): Promise<TransactionSuggestions> {
+  return apiFetch<TransactionSuggestions>("/api/finance/transactions/suggestions");
 }
 
 export function listTemplates(): Promise<TransactionTemplate[]> {

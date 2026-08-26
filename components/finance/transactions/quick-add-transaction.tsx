@@ -8,6 +8,7 @@ import {
   createTemplate,
   createTransaction,
   deleteTemplate,
+  getTransactionSuggestions,
   listCategories,
   listPaymentMethods,
   listTemplates,
@@ -15,7 +16,7 @@ import {
 import { emitTransactionChanged } from "@/lib/finance-events";
 import { cn } from "@/lib/utils";
 import type { CreateTransactionInput, CreateTransactionTemplateInput } from "@/lib/validation/finance";
-import type { Category, PaymentMethod, TransactionTemplate } from "@/types/finance";
+import type { Category, PaymentMethod, TransactionSuggestions, TransactionTemplate } from "@/types/finance";
 
 /**
  * A globally-mounted "compose" button — the daily-use shortcut for logging a
@@ -28,6 +29,7 @@ export function QuickAddTransaction({ raised }: { raised: boolean }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [templates, setTemplates] = useState<TransactionTemplate[]>([]);
+  const [suggestions, setSuggestions] = useState<TransactionSuggestions | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -35,11 +37,17 @@ export function QuickAddTransaction({ raised }: { raised: boolean }) {
     let active = true;
     void (async () => {
       try {
-        const [cats, methods, templateList] = await Promise.all([listCategories(), listPaymentMethods(), listTemplates()]);
+        const [cats, methods, templateList, suggestionData] = await Promise.all([
+          listCategories(),
+          listPaymentMethods(),
+          listTemplates(),
+          getTransactionSuggestions(),
+        ]);
         if (!active) return;
         setCategories(cats);
         setPaymentMethods(methods);
         setTemplates(templateList);
+        setSuggestions(suggestionData);
         setLoaded(true);
       } catch {
         // The sheet still works with empty pickers; category/payment-method
@@ -90,6 +98,7 @@ export function QuickAddTransaction({ raised }: { raised: boolean }) {
         categories={categories}
         paymentMethods={paymentMethods}
         templates={templates}
+        suggestions={suggestions}
         open={open}
         onOpenChange={setOpen}
         onSave={handleSave}
