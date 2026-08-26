@@ -131,3 +131,48 @@ export const updatePreferencesSchema = z
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
 
 export const monthQuerySchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Expected YYYY-MM");
+
+export const categoryTypeSchema = z.enum(["income", "expense", "both"]);
+
+// Icons are a single emoji (a few code points once variation selectors and
+// ZWJ sequences are counted). Colors must be hex: CategoryIcon interpolates
+// the stored value straight into a CSS color-mix(), and anything the browser
+// can't parse renders as no color at all rather than failing loudly.
+const lookupIconSchema = z.string().trim().min(1).max(8);
+const hexColorSchema = z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "Color must be a hex value like #10b981");
+
+export const createCategorySchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(40),
+  icon: lookupIconSchema.nullable().default(null),
+  color: hexColorSchema.nullable().default(null),
+  type: categoryTypeSchema.default("expense"),
+});
+export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
+
+export const updateCategorySchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required").max(40).optional(),
+    icon: lookupIconSchema.nullable().optional(),
+    color: hexColorSchema.nullable().optional(),
+    type: categoryTypeSchema.optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided",
+  });
+export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
+
+export const createPaymentMethodSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(40),
+  icon: lookupIconSchema.nullable().default(null),
+});
+export type CreatePaymentMethodInput = z.infer<typeof createPaymentMethodSchema>;
+
+export const updatePaymentMethodSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required").max(40).optional(),
+    icon: lookupIconSchema.nullable().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided",
+  });
+export type UpdatePaymentMethodInput = z.infer<typeof updatePaymentMethodSchema>;
