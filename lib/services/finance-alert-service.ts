@@ -71,6 +71,7 @@ export async function runBudgetAlerts(now: Date = new Date()): Promise<CronRunRe
     );
 
     const lines: string[] = [];
+    const crossed: { id: string; level: number }[] = [];
     for (const budget of budgets) {
       const spent = spendByCategory.get(budget.categoryId) ?? 0;
       const level = budgetLevelFor(spent, budget.amountKrw, preferences);
@@ -82,13 +83,21 @@ export async function runBudgetAlerts(now: Date = new Date()): Promise<CronRunRe
       lines.push(
         `${LEVEL_MARKERS[level]} ${escapeTelegramHtml(budget.categoryName)}: ${pct}% — ${krw.format(spent)} of ${krw.format(budget.amountKrw)}`
       );
-      await updateBudgetAlertState(budget.id, month, level);
+      crossed.push({ id: budget.id, level });
     }
 
     if (lines.length === 0) continue;
 
     const message = ["💸 <b>Budget alert</b>", "", ...lines].join("\n");
-    if (await sendTelegramMessage(account.chatId, message)) notified += 1;
+    // Record the announced level only once the message is actually delivered.
+    // Writing it earlier means a failed send still suppresses the category for
+    // the rest of the month — the alert is lost rather than retried tomorrow.
+    if (!(await sendTelegramMessage(account.chatId, message))) continue;
+
+    for (const { id, level } of crossed) {
+      await updateBudgetAlertState(id, month, level);
+    }
+    notified += 1;
   }
 
   return { scanned: accounts.length, notified };
