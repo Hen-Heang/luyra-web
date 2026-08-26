@@ -1,5 +1,6 @@
 import "server-only";
-import webPush, { type WebPushError } from "web-push";
+import * as webPush from "web-push";
+import type { WebPushError } from "web-push";
 import {
   deletePushSubscriptionByEndpoint,
   type StoredPushSubscription,
