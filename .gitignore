@@ -31,3 +31,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# vercel
+# `vercel link` also appends `.env*`, which would shadow the tracked
+# `.env.example`. The `.env` / `.env*.local` rules above already cover the
+# files that must never be committed.
+.vercel
