@@ -20,6 +20,17 @@ export interface PaymentMethod {
   icon: string | null;
 }
 
+// How many rows still reference a category or payment method, broken down by
+// table so a blocked delete can say what is holding it rather than just "in
+// use". `budgets` is always 0 for payment methods — see countPaymentMethodUsage.
+export interface LookupUsage {
+  transactions: number;
+  budgets: number;
+  templates: number;
+  recurring: number;
+  total: number;
+}
+
 export interface Transaction {
   id: string;
   date: string;
