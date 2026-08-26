@@ -67,3 +67,45 @@ self.addEventListener("fetch", (event) => {
     )
   );
 });
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = { title: "Luyra", body: event.data.text() };
+  }
+
+  const { title = "Luyra", ...options } = payload ?? {};
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      ...options,
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const requestedPath = event.notification.data?.url;
+  const path = typeof requestedPath === "string" && requestedPath.startsWith("/") && !requestedPath.startsWith("//")
+    ? requestedPath
+    : "/finance";
+  const targetUrl = new URL(path, self.location.origin).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (windowClients) => {
+      for (const client of windowClients) {
+        if (new URL(client.url).origin !== self.location.origin) continue;
+        if ("navigate" in client && client.url !== targetUrl) await client.navigate(targetUrl);
+        if ("focus" in client) return client.focus();
+      }
+
+      return self.clients.openWindow ? self.clients.openWindow(targetUrl) : undefined;
+    })
+  );
+});
