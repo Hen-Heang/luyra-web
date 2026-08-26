@@ -2,7 +2,20 @@ import "server-only";
 import { findBudgetAlertState, updateBudgetAlertState } from "@/lib/repositories/finance-budget-repository";
 import { findCronPreferences, type CronPreferences } from "@/lib/repositories/finance-preferences-repository";
 import { findLinkedAccounts } from "@/lib/repositories/telegram-account-repository";
-import { sumExpenseByCategoryForRange, sumExpenseByDayForRange } from "@/lib/repositories/finance-transaction-repository";
+import {
+  sumExpenseByCategoryForRange,
+  sumExpenseByDayForRange,
+  sumTotalsForRange,
+} from "@/lib/repositories/finance-transaction-repository";
+import {
+  listPushSubscriptionsForUser,
+  listUsersWithPushSubscriptions,
+} from "@/lib/repositories/push-subscription-repository";
+import {
+  isPushNotificationConfigured,
+  sendPushNotification,
+  type LuyraPushPayload,
+} from "@/lib/services/push-notification-service";
 import { escapeTelegramHtml, isTelegramConfigured, sendTelegramMessage } from "@/lib/telegram/client";
 import { appDate, appMinutesOfDay, appMonth, monthStart, nextDate, nextMonthStart } from "@/lib/finance-cron-time";
 import { krw } from "@/lib/finance-format";
@@ -180,4 +193,108 @@ export async function runDailyReminder(now: Date = new Date()): Promise<CronRunR
   }
 
   return { scanned: accounts.length, notified };
+}
+
+function entryCount(count: number): string {
+  return `${count} ${count === 1 ? "entry" : "entries"}`;
+}
+
+// Tied to the query rather than restated, so a new column can't drift.
+type DayTotals = Awaited<ReturnType<typeof sumTotalsForRange>>;
+
+/**
+ * The check-in copy, shared by both channels so Telegram and the push
+ * notification never drift apart.
+ */
+function dailyLogCopy(totals: DayTotals): { title: string; lines: string[] } {
+  if (totals.count === 0) {
+    return {
+      title: "Log today's spending and income",
+      lines: [
+        "Nothing recorded yet today — no spending, no income.",
+        "Add it while you still remember what it was for.",
+      ],
+    };
+  }
+
+  return {
+    title: "Today's spending and income",
+    lines: [
+      `Spending: ${krw.format(totals.expenseKrw)} · ${entryCount(totals.expenseCount)}`,
+      `Income: ${krw.format(totals.incomeKrw)} · ${entryCount(totals.incomeCount)}`,
+      "Anything missing before the day closes?",
+    ],
+  };
+}
+
+async function sendDailyLogPush(userId: string, payload: LuyraPushPayload): Promise<number> {
+  const subscriptions = await listPushSubscriptionsForUser(userId);
+  let sent = 0;
+
+  for (const subscription of subscriptions) {
+    try {
+      // A stale endpoint deletes itself inside sendPushNotification; anything
+      // else is logged and skipped so one dead device can't stop the sweep.
+      if ((await sendPushNotification(subscription, payload)).sent) sent += 1;
+    } catch (error) {
+      console.error("Daily log reminder push failed", {
+        userId,
+        error: error instanceof Error ? error.message : "Unknown push error",
+      });
+    }
+  }
+
+  return sent;
+}
+
+/**
+ * The 20:00 (Asia/Seoul) daily log check-in. Unlike runDailyReminder's midday
+ * nudge this one always sends: on a day with nothing recorded it asks for the
+ * day's spending and income, and on a day that already has entries it plays the
+ * totals back so a forgotten income line is obvious before the day closes.
+ *
+ * Delivered on every channel the user has connected — Telegram, browser push,
+ * or both — because Telegram is unreachable from some networks and the PWA
+ * notification is the only channel that always lands on the phone.
+ */
+export async function runDailyLogReminder(now: Date = new Date()): Promise<CronRunResult> {
+  const telegramAccounts = isTelegramConfigured() ? await findLinkedAccounts() : [];
+  const pushUserIds = new Set(isPushNotificationConfigured() ? await listUsersWithPushSubscriptions() : []);
+
+  const chatIdByUser = new Map(telegramAccounts.map((account) => [account.userId, account.chatId]));
+  const userIds = [...new Set([...chatIdByUser.keys(), ...pushUserIds])];
+  if (userIds.length === 0) {
+    return { scanned: 0, notified: 0, skipped: "no_reminder_channel_connected" };
+  }
+
+  const today = appDate(now);
+  const tomorrow = nextDate(today);
+  let telegram = 0;
+  let push = 0;
+
+  for (const userId of userIds) {
+    const preferences = await findCronPreferences(userId);
+    if (isWithinQuietHours(preferences, now)) continue;
+
+    const totals = await sumTotalsForRange(userId, today, tomorrow);
+    const { title, lines } = dailyLogCopy(totals);
+
+    const chatId = chatIdByUser.get(userId);
+    if (chatId) {
+      const message = [`🧾 <b>${title}</b>`, "", ...lines].join("\n");
+      if (await sendTelegramMessage(chatId, message)) telegram += 1;
+    }
+
+    if (pushUserIds.has(userId)) {
+      push += await sendDailyLogPush(userId, {
+        title,
+        body: lines.join(" "),
+        // One notification per day: a re-run replaces it instead of stacking.
+        tag: `daily-log-${today}`,
+        data: { url: "/finance/transactions" },
+      });
+    }
+  }
+
+  return { scanned: userIds.length, notified: telegram + push, channels: { telegram, push } };
 }

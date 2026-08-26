@@ -20,7 +20,7 @@ export interface CronRunResult {
   /** Successful deliveries. A user reached on two channels counts twice. */
   notified: number;
   /** Per-channel breakdown, for jobs that deliver on more than one channel. */
-  channels?: { telegram: number; email: number };
+  channels?: { telegram?: number; email?: number; push?: number };
   /** Set when the run stopped before doing any work. */
   skipped?: string;
 }

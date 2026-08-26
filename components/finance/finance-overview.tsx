@@ -401,7 +401,14 @@ function RecentActivity({ transactions }: { transactions: Transaction[] }) {
   );
 }
 
-export function FinanceOverview() {
+export function FinanceOverview({
+  initialMonth,
+  initialSummary,
+}: {
+  /** YYYY-MM that the server prefetched `initialSummary` for. */
+  initialMonth?: string;
+  initialSummary?: FinanceOverviewSummary;
+}) {
   const [monthOffset, setMonthOffset] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const requestKey = `${monthOffset}:${refreshKey}`;
@@ -409,7 +416,14 @@ export function FinanceOverview() {
     key: string;
     summary: FinanceOverviewSummary | null;
     error: string | null;
-  }>({ key: "", summary: null, error: null });
+  }>(() =>
+    // Seeding from the server keeps the amounts on screen from the first paint.
+    // The month guard covers a browser whose "this month" differs from the
+    // server's; the empty key then falls through to fetch-on-mount.
+    initialSummary && initialMonth === monthKey(0)
+      ? { key: "0:0", summary: initialSummary, error: null }
+      : { key: "", summary: null, error: null }
+  );
   const loading = result.key !== requestKey;
   const summary = loading ? null : result.summary;
   const error = loading ? null : result.error;
@@ -417,6 +431,8 @@ export function FinanceOverview() {
   useEffect(() => onTransactionChanged(() => setRefreshKey((key) => key + 1)), []);
 
   useEffect(() => {
+    // Already holding this month's data — the server prefetch, or a finished fetch.
+    if (result.key === requestKey) return;
     let active = true;
     void getFinanceOverview(monthKey(monthOffset))
       .then((data) => {
@@ -432,7 +448,7 @@ export function FinanceOverview() {
         }
       });
     return () => { active = false; };
-  }, [monthOffset, requestKey]);
+  }, [monthOffset, requestKey, result.key]);
 
   return (
     <div className="space-y-7">
