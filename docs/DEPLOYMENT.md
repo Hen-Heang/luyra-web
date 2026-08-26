@@ -149,19 +149,23 @@ either with `psql` or by pasting into the Neon SQL Editor.
       returns counts; then call it again with a wrong secret and confirm 401.
 - [ ] Install the PWA and load it once offline.
 
-## Scheduled Telegram notifications
+## Scheduled notifications
 
 `vercel.json` is the authoritative schedule. Every job is gated on
-`CRON_SECRET` and only messages users who have linked Telegram, so nothing
-here fires until both are in place.
+`CRON_SECRET`, so nothing here fires until that is set.
+
+The alert jobs reach Telegram-linked users only. The two **report** jobs
+deliver on every channel a user has enabled — Telegram when a chat is linked,
+email when the Settings toggle is on — and track each channel separately, so
+one failing does not suppress the other's retry.
 
 | Endpoint | Schedule (UTC) | KST | Purpose |
 |---|---|---|---|
 | `/api/cron/budget-alerts` | `0 10 * * *` | 19:00 | Alert on a budget crossing to a higher warning level |
 | `/api/cron/spending-spike` | `0 12 * * *` | 21:00 | Flag a day far above this month's daily average |
 | `/api/cron/daily-reminder` | `0 3 * * *`, `0 11 * * *` | 12:00, 20:00 | Nudge users who have logged nothing that day |
-| `/api/cron/weekly-summary` | `0 0 * * 1` | Mon 09:00 | Weekly summary |
-| `/api/cron/monthly-report` | `0 2 * * *` | 11:00 | The month that just finished, once |
+| `/api/cron/weekly-summary` | `0 0 * * 1` | Mon 09:00 | Weekly summary — Telegram and/or email |
+| `/api/cron/monthly-report` | `0 2 * * *` | 11:00 | The month that just finished, once — Telegram and/or email |
 
 Cron date math is pinned to **Asia/Seoul** (`lib/finance-cron-time.ts`), not
 the function's UTC clock — otherwise "today" and "this month" would land nine
@@ -185,8 +189,11 @@ Vercel's Hobby plan caps cron jobs at a small number of daily invocations;
 this schedule assumes a paid plan. On Hobby, drop the second
 `daily-reminder` entry and the `spending-spike` job first.
 
-Email reports are **not** scheduled — they remain manual via the "Send email"
-button in Settings. Only Telegram is wired to the scheduler.
+Email delivery needs `RESEND_API_KEY`; without it the report jobs simply skip
+the email channel and still deliver on Telegram. The "Send email" and "Send to
+Telegram" buttons in Settings remain for sending one on demand — they do not
+touch the schedule's markers, so a manual send does not suppress the
+scheduled one.
 
 ## Not wired up yet
 

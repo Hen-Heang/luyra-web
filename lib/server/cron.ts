@@ -15,10 +15,12 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /** What every cron route returns, so a run is legible in the Vercel logs. */
 export interface CronRunResult {
-  /** Linked users considered. */
+  /** Users considered. */
   scanned: number;
-  /** Users actually messaged. */
+  /** Successful deliveries. A user reached on two channels counts twice. */
   notified: number;
+  /** Per-channel breakdown, for jobs that deliver on more than one channel. */
+  channels?: { telegram: number; email: number };
   /** Set when the run stopped before doing any work. */
   skipped?: string;
 }

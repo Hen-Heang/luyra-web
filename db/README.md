@@ -19,6 +19,7 @@ psql "$DATABASE_URL" -f db/migrations/008_telegram_accounts.sql
 psql "$DATABASE_URL" -f db/migrations/009_finance_report_email.sql
 psql "$DATABASE_URL" -f db/migrations/010_finance_report_delivery.sql
 psql "$DATABASE_URL" -f db/migrations/010_push_notifications.sql
+psql "$DATABASE_URL" -f db/migrations/011_finance_report_email_delivery.sql
 ```
 
 Or paste the file contents into the Neon SQL Editor in the Neon console.
