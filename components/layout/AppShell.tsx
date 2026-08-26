@@ -43,9 +43,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             pathname={pathname}
             collapsed={collapsed}
             onToggleCollapsed={toggle}
-            className="hidden min-[1200px]:flex"
+            className="hidden nav:flex"
           />
-          <TabletNavigationRail pathname={pathname} className="hidden md:flex min-[1200px]:hidden" />
+          <TabletNavigationRail pathname={pathname} className="hidden md:flex nav:hidden" />
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <DesktopHeader pathname={pathname} className="hidden md:flex" />

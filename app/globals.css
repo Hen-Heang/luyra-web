@@ -40,6 +40,14 @@
   --chart-series-6: #008300;
 }
 
+@theme {
+  /* Width at which the expanded sidebar replaces the tablet icon rail (1200px).
+     A real breakpoint rather than an arbitrary `min-[1200px]:` variant, and in
+     rem rather than px: Tailwind emits px-valued media queries ahead of the
+     rem-valued defaults, so a px version would still lose the cascade to `md:`. */
+  --breakpoint-nav: 75rem;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
