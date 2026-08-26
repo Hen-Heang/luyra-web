@@ -72,25 +72,27 @@ function LoginForm() {
       title={mode === "login" ? "Welcome back" : "Create your account"}
       description={
         mode === "login"
-          ? "Sign in to continue to your Luyra finance workspace."
-          : "Create one account for your cash flow, budgets, savings, and reviews."
+          ? "Sign in to continue to your Luyra workspace."
+          : "Start tracking your cash flow, budgets, savings, and reviews in one place."
       }
     >
-      <div className="space-y-6">
-        <div className="rounded-2xl border border-border/70 bg-background/50 p-3">
-          <HengoGoogleSignIn
-            redirectTo={next}
-            onError={setError}
-            onPendingChange={setPending}
-          />
-        </div>
+      <div className="space-y-5">
+        <div className={cn("space-y-5", googleUnavailable && "hidden")}>
+          <div className="rounded-2xl border border-border/70 bg-background/55 p-3 shadow-sm">
+            <HengoGoogleSignIn
+              redirectTo={next}
+              onError={setError}
+              onPendingChange={setPending}
+            />
+          </div>
 
-        <div className="flex items-center gap-3" aria-hidden="true">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-            or continue with email
-          </span>
-          <div className="h-px flex-1 bg-border" />
+          <div className="flex items-center gap-3" aria-hidden="true">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              Or continue with email
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
         </div>
 
         {error && (
@@ -98,15 +100,18 @@ function LoginForm() {
             className={cn(
               "flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm",
               googleUnavailable
-                ? "border-warning/30 bg-warning/5 text-warning"
+                ? "border-warning/25 bg-warning/5 text-foreground"
                 : "border-destructive/30 bg-destructive/5 text-destructive"
             )}
             role="alert"
           >
-            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <AlertCircle
+              className={cn("mt-0.5 size-4 shrink-0", googleUnavailable && "text-warning")}
+              aria-hidden="true"
+            />
             <p className="leading-5">
               {googleUnavailable
-                ? "Google sign-in is unavailable right now. You can still use email and password."
+                ? "Google sign-in is currently unavailable. Email and password still work normally."
                 : error}
             </p>
           </div>
@@ -117,7 +122,7 @@ function LoginForm() {
             <Label htmlFor="email">Email</Label>
             <div className="relative">
               <Mail
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
                 aria-hidden="true"
               />
               <Input
@@ -125,7 +130,7 @@ function LoginForm() {
                 type="email"
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="h-11 pl-9"
+                className="h-12 rounded-xl bg-background/70 pl-10"
                 required
                 value={email}
                 onChange={(event) => {
@@ -150,7 +155,7 @@ function LoginForm() {
             </div>
             <div className="relative">
               <LockKeyhole
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
                 aria-hidden="true"
               />
               <Input
@@ -158,7 +163,7 @@ function LoginForm() {
                 type={showPassword ? "text" : "password"}
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 placeholder={mode === "login" ? "Enter your password" : "At least 6 characters"}
-                className="h-11 pl-9 pr-11"
+                className="h-12 rounded-xl bg-background/70 pl-10 pr-12"
                 required
                 minLength={6}
                 value={password}
@@ -170,7 +175,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword((visible) => !visible)}
-                className="absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="absolute right-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -178,23 +183,21 @@ function LoginForm() {
             </div>
           </div>
 
-          <Button type="submit" className="h-11 w-full text-sm font-semibold" disabled={pending}>
+          <Button type="submit" className="h-12 w-full rounded-xl text-sm font-semibold" disabled={pending}>
             {pending ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
           </Button>
         </form>
 
-        <div className="rounded-2xl bg-secondary/60 px-4 py-3 text-center">
-          <p className="text-sm text-muted-foreground">
-            {mode === "login" ? "New to Luyra?" : "Already have an account?"}{" "}
-            <button
-              type="button"
-              onClick={switchMode}
-              className="font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {mode === "login" ? "Create an account" : "Sign in"}
-            </button>
-          </p>
-        </div>
+        <p className="pt-1 text-center text-sm text-muted-foreground">
+          {mode === "login" ? "New to Luyra?" : "Already have an account?"}{" "}
+          <button
+            type="button"
+            onClick={switchMode}
+            className="font-semibold text-foreground underline-offset-4 transition-colors hover:text-success hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {mode === "login" ? "Create an account" : "Sign in"}
+          </button>
+        </p>
       </div>
     </AuthShell>
   );
