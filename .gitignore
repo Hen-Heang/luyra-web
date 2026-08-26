@@ -37,3 +37,4 @@ next-env.d.ts
 # `.env.example`. The `.env` / `.env*.local` rules above already cover the
 # files that must never be committed.
 .vercel
+/.swc

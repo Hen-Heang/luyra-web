@@ -25,8 +25,10 @@ export const config = {
   // not as an authenticated user request. Brand image assets are excluded
   // too — next/image's server-side optimizer fetches them without forwarding
   // the browser's auth cookie, so a gated request would 500 (received the
-  // /login redirect instead of image bytes).
+  // /login redirect instead of image bytes). Workflow SDK internal paths
+  // under /.well-known/workflow/ are excluded too — the SDK POSTs to them to
+  // drive workflow execution, and proxying those requests breaks the run.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon\\.png|manifest.webmanifest|icons|sw.js|api|luyra-mark-v2\\.png|luyra-logo\\.png).*)",
+    "/((?!_next/static|_next/image|favicon.ico|\\.well-known/workflow/|icon\\.png|manifest.webmanifest|icons|sw.js|api|luyra-mark-v2\\.png|luyra-logo\\.png).*)",
   ],
 };
