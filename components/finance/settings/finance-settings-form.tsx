@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FinanceErrorState, FinanceSection } from "@/components/finance/ui/finance-primitives";
+import { CategoriesSection } from "@/components/finance/settings/categories-section";
+import { PaymentMethodsSection } from "@/components/finance/settings/payment-methods-section";
 import { FinanceReportsSection } from "@/components/finance/settings/finance-reports-section";
 import { TelegramLinkSection } from "@/components/finance/settings/telegram-link-section";
 import { MoneyCoachSection } from "@/components/finance/settings/money-coach-section";
@@ -262,6 +264,14 @@ export function FinanceSettingsForm() {
           {pending ? "Saving…" : "Save changes"}
         </Button>
       </form>
+
+      <FinanceSection id="settings-categories" title="Categories" description="How transactions are grouped, and what budgets are set against. A category still used by a transaction, budget, or template can't be deleted.">
+        <CategoriesSection />
+      </FinanceSection>
+
+      <FinanceSection id="settings-payment-methods" title="Payment methods" description="How you paid — cards, cash, accounts. Used for the payment-method breakdown in Analytics.">
+        <PaymentMethodsSection />
+      </FinanceSection>
 
       <FinanceSection id="settings-telegram" title="Telegram" description="Link a Telegram chat to send reports there on demand. Luyra keeps your Telegram identity separate from your login.">
         <TelegramLinkSection />
