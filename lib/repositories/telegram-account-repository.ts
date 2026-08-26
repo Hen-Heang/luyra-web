@@ -48,6 +48,24 @@ export async function findAccountByLinkCode(code: string): Promise<TelegramAccou
   return rows[0] ? toAccount(rows[0]) : null;
 }
 
+export interface LinkedTelegramAccount {
+  userId: string;
+  chatId: string;
+}
+
+// Every user the scheduler could actually reach. A row exists as soon as a
+// link code is issued, so `chat_id is not null` is what separates "linked"
+// from "started linking and never finished".
+export async function findLinkedAccounts(): Promise<LinkedTelegramAccount[]> {
+  const rows = (await sql`
+    select user_id, chat_id from telegram_accounts
+    where chat_id is not null
+    order by user_id
+  `) as { user_id: string; chat_id: string }[];
+
+  return rows.map((row) => ({ userId: row.user_id, chatId: row.chat_id }));
+}
+
 export async function findUserIdByChatId(chatId: string): Promise<string | null> {
   const rows = (await sql`select user_id from telegram_accounts where chat_id = ${chatId}`) as { user_id: string }[];
   return rows[0]?.user_id ?? null;
