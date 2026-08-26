@@ -1,24 +1,6 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { BarChart3, PiggyBank, ReceiptText } from "lucide-react";
-
-const HIGHLIGHTS = [
-  {
-    icon: ReceiptText,
-    title: "Track clearly",
-    description: "See income and spending without the spreadsheet noise.",
-  },
-  {
-    icon: PiggyBank,
-    title: "Plan with intent",
-    description: "Keep budgets and savings goals in one calm workspace.",
-  },
-  {
-    icon: BarChart3,
-    title: "Review progress",
-    description: "Turn everyday transactions into useful monthly context.",
-  },
-] as const;
+import { ShieldCheck } from "lucide-react";
 
 export function AuthShell({
   title,
@@ -30,89 +12,68 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-background">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 sm:px-6">
       <div
-        className="pointer-events-none absolute -left-28 top-12 size-80 rounded-full bg-emerald-500/10 blur-3xl"
+        className="pointer-events-none absolute inset-0 opacity-70"
         aria-hidden="true"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--success) 10%, transparent), transparent 32%), radial-gradient(circle at 82% 82%, color-mix(in srgb, var(--finance-chart) 9%, transparent), transparent 30%)",
+        }}
       />
       <div
-        className="pointer-events-none absolute -right-32 bottom-0 size-96 rounded-full bg-blue-500/10 blur-3xl"
+        className="pointer-events-none absolute inset-0 opacity-[0.28] dark:opacity-[0.16]"
         aria-hidden="true"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, color-mix(in srgb, var(--border) 45%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--border) 45%, transparent) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+          maskImage: "radial-gradient(circle at center, black, transparent 72%)",
+        }}
       />
 
-      <div className="relative grid min-h-screen lg:grid-cols-[minmax(0,1.05fr)_minmax(460px,0.95fr)]">
-        <section className="hidden border-r border-border/70 px-10 py-9 lg:flex lg:flex-col xl:px-16 xl:py-12">
-          <div className="flex items-center gap-3">
+      <div className="relative w-full max-w-[460px]">
+        <div className="mb-6 flex items-center justify-center gap-2.5">
+          <span className="flex size-11 items-center justify-center rounded-2xl border border-border/70 bg-card/80 shadow-sm backdrop-blur-xl">
             <Image
               src="/icons/icon-192.png"
               alt=""
-              width={38}
-              height={38}
-              className="size-9 rounded-xl shadow-sm"
+              width={32}
+              height={32}
+              className="size-8 rounded-xl"
               priority
             />
-            <span className="text-base font-semibold tracking-tight">Luyra</span>
-          </div>
-
-          <div className="my-auto max-w-xl py-16">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-success">
-              Personal finance, simplified
+          </span>
+          <div className="text-left">
+            <p className="text-base font-semibold tracking-tight text-foreground">Luyra</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              Personal finance
             </p>
-            <h1 className="mt-5 max-w-lg text-4xl font-semibold tracking-[-0.035em] text-foreground xl:text-5xl">
-              Know where your money goes.
+          </div>
+        </div>
+
+        <section className="relative overflow-hidden rounded-[30px] border border-border/80 bg-card/90 p-6 shadow-2xl shadow-black/[0.08] backdrop-blur-2xl sm:p-8 dark:shadow-black/30">
+          <div
+            className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-success/40 to-transparent"
+            aria-hidden="true"
+          />
+
+          <div className="mb-7 text-center">
+            <h1 className="text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-[28px]">
+              {title}
             </h1>
-            <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">
-              Luyra brings cash flow, budgets, savings, and reviews together so your money stays easy to understand.
-            </p>
-
-            <div className="mt-10 grid gap-3">
-              {HIGHLIGHTS.map(({ icon: Icon, title: highlightTitle, description: highlightDescription }) => (
-                <div
-                  key={highlightTitle}
-                  className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card/60 p-4 backdrop-blur-sm"
-                >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success">
-                    <Icon className="size-4" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{highlightTitle}</p>
-                    <p className="mt-1 text-sm leading-5 text-muted-foreground">{highlightDescription}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <p className="text-xs text-muted-foreground">Track · Budget · Save · Review</p>
-        </section>
-
-        <section className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-8 lg:px-12">
-          <div className="w-full max-w-md">
-            <div className="mb-6 flex items-center justify-center gap-2.5 lg:hidden">
-              <Image
-                src="/icons/icon-192.png"
-                alt=""
-                width={36}
-                height={36}
-                className="size-9 rounded-xl shadow-sm"
-                priority
-              />
-              <span className="text-base font-semibold tracking-tight">Luyra</span>
-            </div>
-
-            <div className="rounded-[28px] border border-border/80 bg-card/85 p-6 shadow-2xl shadow-black/5 backdrop-blur-xl sm:p-8 dark:shadow-black/20">
-              <div className="mb-7 space-y-2">
-                <h2 className="text-2xl font-semibold tracking-[-0.025em] text-foreground">{title}</h2>
-                <p className="text-sm leading-6 text-muted-foreground">{description}</p>
-              </div>
-              {children}
-            </div>
-
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              Your finance workspace, in one place.
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+              {description}
             </p>
           </div>
+
+          {children}
         </section>
+
+        <div className="mt-5 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
+          <ShieldCheck className="size-3.5 text-success" aria-hidden="true" />
+          <span>Track, budget, save, and review in one private workspace.</span>
+        </div>
       </div>
     </main>
   );
