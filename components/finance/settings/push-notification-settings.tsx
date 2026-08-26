@@ -163,7 +163,7 @@ export function PushNotificationSettings() {
       <div className="flex items-start gap-3 rounded-2xl border bg-card p-4">
         <BellOff className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
         <div>
-          <p className="text-sm font-semibold">Push notifications aren't supported here</p>
+          <p className="text-sm font-semibold">Push notifications aren&apos;t supported here</p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">Use a modern browser with service-worker and Web Push support.</p>
         </div>
       </div>
@@ -175,7 +175,7 @@ export function PushNotificationSettings() {
       <div className="flex items-start gap-3 rounded-2xl border border-warning/30 bg-warning/5 p-4">
         <ShieldAlert className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
         <div>
-          <p className="text-sm font-semibold">Push notifications aren't configured for this deployment</p>
+          <p className="text-sm font-semibold">Push notifications aren&apos;t configured for this deployment</p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">Add the Luyra VAPID keys in the deployment environment, then redeploy.</p>
         </div>
       </div>
@@ -204,7 +204,7 @@ export function PushNotificationSettings() {
           <div>
             <p className="text-sm font-semibold">Browser notifications</p>
             <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">
-              Get privacy-friendly budget status alerts on this device, even when Luyra isn't open. Each browser or device is enabled separately.
+              Get privacy-friendly budget status alerts on this device, even when Luyra isn&apos;t open. Each browser or device is enabled separately.
             </p>
           </div>
         </div>
