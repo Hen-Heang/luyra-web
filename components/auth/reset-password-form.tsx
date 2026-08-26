@@ -98,7 +98,7 @@ export function ResetPasswordForm() {
           <button
             type="button"
             onClick={() => setShowPasswords((visible) => !visible)}
-            className="absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute right-0 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={showPasswords ? "Hide passwords" : "Show passwords"}
           >
             {showPasswords ? <EyeOff className="size-4" /> : <Eye className="size-4" />}

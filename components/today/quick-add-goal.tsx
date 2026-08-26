@@ -41,14 +41,14 @@ export function QuickAddGoal() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+    <form onSubmit={handleSubmit} className="flex w-full flex-wrap items-center gap-2 min-[520px]:w-auto">
       <Input
         autoFocus
         placeholder="Goal title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-        className="h-8 w-56"
+        className="h-11 min-w-0 flex-[1_1_100%] min-[520px]:h-8 min-[520px]:w-56 min-[520px]:flex-none"
       />
       <Button type="submit" size="sm" disabled={pending || title.trim().length === 0}>
         Add

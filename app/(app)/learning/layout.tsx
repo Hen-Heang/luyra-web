@@ -25,7 +25,7 @@ export default function LearningLayout({ children }: { children: React.ReactNode
             key={tab.href}
             href={tab.href}
             className={cn(
-              "shrink-0 px-3 py-2 text-sm",
+              "inline-flex min-h-11 shrink-0 items-center px-3 py-2 text-sm",
               pathname === tab.href
                 ? "border-b-2 border-primary font-medium text-foreground"
                 : "text-muted-foreground hover:text-foreground"

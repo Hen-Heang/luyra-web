@@ -18,10 +18,12 @@ export function DesktopSidebar({
   pathname,
   collapsed,
   onToggleCollapsed,
+  className,
 }: {
   pathname: string;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  className?: string;
 }) {
   const activeItem = getActiveNavItem(pathname);
 
@@ -29,7 +31,7 @@ export function DesktopSidebar({
     <aside
       aria-label="Main navigation"
       style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH }}
-      className="sticky top-0 flex h-dvh shrink-0 flex-col border-r border-border bg-sidebar"
+      className={cn("sticky top-0 flex h-dvh shrink-0 flex-col border-r border-border bg-sidebar", className)}
     >
       {/* Brand + collapse toggle. Branding lives here only — never also in the top bar. */}
       <div className={cn("flex items-center gap-2 px-3 py-4", collapsed && "flex-col gap-3")}>

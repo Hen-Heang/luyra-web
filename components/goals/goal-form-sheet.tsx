@@ -21,7 +21,7 @@ const CATEGORIES: { label: string; value: GoalCategory }[] = [
 ];
 
 const FIELD_CLASS =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "flex h-11 w-full min-w-0 rounded-md border border-input bg-transparent px-3 text-base shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:text-sm";
 
 /**
  * Unified create/edit panel for a goal — replaces the old inline GoalForm and
@@ -127,7 +127,7 @@ function GoalFormFields({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
-            className="flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
           />
         </div>
 
@@ -163,7 +163,7 @@ function GoalFormFields({
         )}
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between rounded-md border border-border bg-muted/40 px-3 py-2">
+          <div className="flex min-h-11 items-center justify-between rounded-md border border-border bg-muted/40 px-3 py-2">
             <Label htmlFor="goal-no-due-date" className="font-normal">
               No due date
             </Label>
@@ -172,7 +172,7 @@ function GoalFormFields({
               type="checkbox"
               checked={noDueDate}
               onChange={(e) => setNoDueDate(e.target.checked)}
-              className="size-4 rounded border-input"
+              className="size-6 rounded border-input"
             />
           </div>
           {!noDueDate && (
@@ -191,7 +191,7 @@ function GoalFormFields({
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 py-4">
+      <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending} className="flex-1">
           Cancel
         </Button>

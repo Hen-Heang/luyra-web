@@ -80,8 +80,8 @@ export function SavingsGoalCard({
       </div>
 
       <div className="mt-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <p className="truncate font-mono text-lg font-semibold tabular-nums">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <p className="min-w-0 [overflow-wrap:anywhere] font-mono text-lg font-semibold tabular-nums">
             {usd.format(goal.currentUsd)}
             <span className="ml-1 text-xs font-medium text-muted-foreground">/ {usd.format(goal.targetUsd)}</span>
           </p>
@@ -97,7 +97,7 @@ export function SavingsGoalCard({
         </p>
       </div>
 
-      {goal.note && <p className="mt-2 text-xs italic text-muted-foreground">{goal.note}</p>}
+      {goal.note && <p className="mt-2 break-words text-xs italic text-muted-foreground">{goal.note}</p>}
 
       <div className="mt-3">
         <Button variant="outline" size="sm" className="min-h-11" onClick={() => onContribute(goal)}>

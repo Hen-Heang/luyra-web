@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRightLeft, Check, Loader2, RefreshCw, Save, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,8 +45,8 @@ export function TransactionSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[90vh] w-full gap-0 sm:max-w-lg sm:rounded-t-2xl">
-        <SheetHeader>
+      <SheetContent side="bottom" className="mx-auto flex max-h-[90dvh] w-full gap-0 sm:max-w-lg sm:rounded-t-2xl">
+        <SheetHeader className="pr-16">
           <SheetTitle>{mode === "create" ? "New transaction" : "Edit transaction"}</SheetTitle>
           <SheetDescription>
             {mode === "create" ? "Record income or an expense." : "Update the details for this transaction."}
@@ -112,6 +112,7 @@ function TransactionSheetFields({
   const [error, setError] = useState<string | null>(null);
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateMessage, setTemplateMessage] = useState<string | null>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
 
   const parsedAmount = Number(amount);
   const parsedExchangeRate = Number(exchangeRate);
@@ -121,6 +122,12 @@ function TransactionSheetFields({
   const previewUsd = currency === "KRW" && hasValidAmount && hasValidRate ? parsedAmount / parsedExchangeRate : null;
 
   const availableCategories = categories.filter((category) => category.type === type || category.type === "both");
+
+  useEffect(() => {
+    if (!window.matchMedia("(min-width: 768px)").matches) return;
+    const frame = window.requestAnimationFrame(() => amountInputRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     if (hasStoredRate) return;
@@ -281,7 +288,7 @@ function TransactionSheetFields({
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <Label htmlFor="transaction-amount">Amount</Label>
             <div className="flex gap-1 rounded-lg border bg-secondary p-0.5">
               {(["KRW", "USD"] as const).map((option) => (
@@ -291,7 +298,7 @@ function TransactionSheetFields({
                   onClick={() => handleCurrencyChange(option)}
                   aria-pressed={currency === option}
                   className={cn(
-                    "min-h-7 rounded-md px-2.5 text-xs font-semibold transition-colors",
+                    "min-h-11 rounded-md px-2.5 text-xs font-semibold transition-colors sm:min-h-7",
                     currency === option ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -303,17 +310,17 @@ function TransactionSheetFields({
           <div className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 transition-shadow focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20">
             <span className="text-2xl font-semibold text-muted-foreground">{currency === "USD" ? "$" : "₩"}</span>
             <input
+              ref={amountInputRef}
               id="transaction-amount"
               type="number"
               inputMode={currency === "USD" ? "decimal" : "numeric"}
               min="0"
               step={currency === "USD" ? "0.01" : "1"}
-              autoFocus
               placeholder="0"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
               required
-              className="w-full min-w-0 bg-transparent text-3xl font-bold tracking-tight tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="w-full min-w-0 bg-transparent text-[clamp(2rem,10vw,3rem)] font-bold tracking-tight tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
 
@@ -335,10 +342,10 @@ function TransactionSheetFields({
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
-              <Label htmlFor="transaction-exchange-rate" className="text-xs text-muted-foreground">
+              <Label htmlFor="transaction-exchange-rate" className="w-full text-xs text-muted-foreground min-[380px]:w-auto">
                 1 USD =
               </Label>
-              <div className="flex h-9 items-center rounded-md border border-input bg-background px-2 focus-within:ring-2 focus-within:ring-ring">
+              <div className="flex h-11 min-w-0 flex-1 items-center rounded-md border border-input bg-background px-2 focus-within:ring-2 focus-within:ring-ring sm:h-9 sm:flex-none">
                 <span className="text-xs text-muted-foreground">₩</span>
                 <input
                   id="transaction-exchange-rate"
@@ -350,7 +357,7 @@ function TransactionSheetFields({
                   onChange={(event) => setExchangeRate(event.target.value)}
                   required={currency === "USD"}
                   aria-label="KRW value of one US dollar"
-                  className="w-24 bg-transparent px-1.5 text-sm font-medium tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="min-w-0 w-full bg-transparent px-1.5 text-base font-medium tabular-nums outline-none sm:w-24 sm:text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
               <button
@@ -358,7 +365,7 @@ function TransactionSheetFields({
                 onClick={() => void fetchLiveRate()}
                 disabled={rateFetch.state === "loading"}
                 aria-label="Refresh USD to KRW exchange rate"
-                className="flex min-h-9 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-foreground hover:bg-background disabled:opacity-50"
+                className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-foreground hover:bg-background disabled:opacity-50 sm:min-h-9"
               >
                 <RefreshCw className={cn("size-3.5", rateFetch.state === "loading" && "animate-spin")} aria-hidden="true" />
                 {rateFetch.state === "loading" ? "Updating" : "Refresh"}
@@ -380,7 +387,7 @@ function TransactionSheetFields({
             <p className="text-xs text-muted-foreground">No {type} categories yet.</p>
           ) : (
             <div className="max-h-44 overflow-y-auto overscroll-contain rounded-xl border bg-secondary/20 p-2" role="group" aria-label={`${type} categories`}>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => setCategoryId("")}
@@ -452,7 +459,7 @@ function TransactionSheetFields({
               id="transaction-payment-method"
               value={paymentMethodId}
               onChange={(event) => setPaymentMethodId(event.target.value)}
-              className="flex h-11 min-h-11 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex h-11 min-h-11 w-full min-w-0 rounded-md border border-input bg-transparent px-3 text-base shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
             >
               <option value="">None</option>
               {paymentMethods.map((method) => (
@@ -472,17 +479,17 @@ function TransactionSheetFields({
             value={note}
             onChange={(event) => setNote(event.target.value)}
             rows={2}
-            className="flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
           />
         </div>
 
         {mode === "create" && (
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               onClick={handleSaveAsTemplate}
               disabled={savingTemplate}
-              className="min-h-9 text-xs font-semibold text-foreground underline-offset-4 hover:underline disabled:opacity-50"
+              className="min-h-11 text-xs font-semibold text-foreground underline-offset-4 hover:underline disabled:opacity-50 sm:min-h-9"
             >
               {savingTemplate ? "Saving…" : "Save as template"}
             </button>

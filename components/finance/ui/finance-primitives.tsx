@@ -56,7 +56,7 @@ export function FinanceMetricCard({ label, value, detail, icon: Icon, tone = "ne
         </span>
       </div>
       <div>
-        <p className={cn("break-words font-mono font-semibold leading-tight tracking-[-0.04em] tabular-nums", featured ? "text-3xl sm:text-4xl" : "text-base sm:text-2xl", valueStyles.value)} title={value}>{value}</p>
+        <p className={cn("[overflow-wrap:anywhere] font-mono font-semibold leading-tight tracking-[-0.04em] tabular-nums", featured ? "text-3xl sm:text-4xl" : "text-base sm:text-2xl", valueStyles.value)} title={value}>{value}</p>
         <div className="mt-1.5 text-xs text-muted-foreground sm:mt-2">{detail}</div>
       </div>
     </div>
@@ -106,7 +106,7 @@ export function MonthSelector({ label, onPrevious, onNext, nextDisabled, ariaLab
   ariaLabel: string;
   size?: "sm" | "md";
 }) {
-  const buttonSize = size === "sm" ? "size-9" : "size-11";
+  const buttonSize = size === "sm" ? "size-11 sm:size-9" : "size-11";
   return (
     <div className="flex min-h-11 items-center rounded-xl border bg-card p-1 shadow-sm" aria-label={ariaLabel}>
       <button
@@ -117,7 +117,7 @@ export function MonthSelector({ label, onPrevious, onNext, nextDisabled, ariaLab
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
       </button>
-      <span className="min-w-32 px-2 text-center text-sm font-semibold tabular-nums">{label}</span>
+      <span className="min-w-28 px-1 text-center text-sm font-semibold tabular-nums sm:min-w-32 sm:px-2">{label}</span>
       <button
         type="button"
         onClick={onNext}

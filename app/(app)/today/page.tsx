@@ -35,7 +35,7 @@ export default async function TodayPage() {
       </div>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="items-stretch justify-between gap-3 min-[520px]:flex-row min-[520px]:items-center">
           <div>
             <CardTitle>Tasks</CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -61,7 +61,7 @@ export default async function TodayPage() {
       </Card>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="items-stretch justify-between gap-3 min-[520px]:flex-row min-[520px]:items-center">
           <div>
             <CardTitle>Goals</CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">{today.goals.active} active</p>

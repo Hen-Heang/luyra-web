@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useMobileKeyboard } from "@/hooks/useMobileKeyboard";
-import { useNavigationMode } from "@/hooks/useNavigationMode";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +20,6 @@ import { TabletNavigationRail } from "./TabletNavigationRail";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const mode = useNavigationMode();
   const isKeyboardOpen = useMobileKeyboard();
   const { collapsed, toggle } = useSidebarState();
   // The More sheet is pinned to the route it was opened on, so navigating
@@ -29,11 +27,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [more, setMore] = useState<{ open: boolean; route: string }>({ open: false, route: pathname });
   const moreOpen = more.open && more.route === pathname;
   const setMoreOpen = useCallback((open: boolean) => setMore({ open, route: pathname }), [pathname]);
-
-  const isMobile = mode === "mobile";
-  // Unmounted (not just hidden) when the keyboard is up, so nothing inside
-  // stays focusable behind the keyboard.
-  const showBottomNav = isMobile && !isKeyboardOpen;
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -46,19 +39,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </a>
 
         <div className="flex min-h-[100dvh] bg-background">
-          {mode === "desktop" && <DesktopSidebar pathname={pathname} collapsed={collapsed} onToggleCollapsed={toggle} />}
-          {mode === "tablet" && <TabletNavigationRail pathname={pathname} />}
+          <DesktopSidebar
+            pathname={pathname}
+            collapsed={collapsed}
+            onToggleCollapsed={toggle}
+            className="hidden min-[1200px]:flex"
+          />
+          <TabletNavigationRail pathname={pathname} className="hidden md:flex min-[1200px]:hidden" />
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            {!isMobile && <DesktopHeader pathname={pathname} />}
-            {isMobile && <MobileHeader pathname={pathname} />}
+            <DesktopHeader pathname={pathname} className="hidden md:flex" />
+            <MobileHeader pathname={pathname} className="md:hidden" />
 
             <main
               id="main-content"
               tabIndex={-1}
               className={cn(
-                "min-h-0 flex-1 overflow-x-clip px-4 pt-5 outline-none sm:px-6 lg:px-8",
-                showBottomNav ? "pb-[calc(9rem+env(safe-area-inset-bottom))]" : "pb-10"
+                "min-h-0 flex-1 overflow-x-clip px-4 pt-5 pb-[calc(9rem+env(safe-area-inset-bottom))] outline-none sm:px-6 md:pb-10 lg:px-8",
+                isKeyboardOpen && "pb-10"
               )}
             >
               <div className="mx-auto w-full max-w-6xl">{children}</div>
@@ -66,11 +64,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {showBottomNav && (
-          <MobileBottomNav onOpenMore={() => setMoreOpen(true)} moreOpen={moreOpen} pathname={pathname} />
+        {!isKeyboardOpen && (
+          <MobileBottomNav
+            onOpenMore={() => setMoreOpen(true)}
+            moreOpen={moreOpen}
+            pathname={pathname}
+            className="md:hidden"
+          />
         )}
 
-        {!isKeyboardOpen && <QuickAddTransaction raised={isMobile} />}
+        {!isKeyboardOpen && <QuickAddTransaction />}
 
         <MoreNavigationSheet open={moreOpen} onOpenChange={setMoreOpen} pathname={pathname} />
       </MobileHeaderTitleProvider>

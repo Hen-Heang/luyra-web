@@ -12,7 +12,7 @@ const SORT_OPTIONS: { label: string; value: TransactionSort }[] = [
 ];
 
 const FIELD_CLASS =
-  "h-11 w-full rounded-xl border bg-card px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "h-11 min-w-0 w-full rounded-xl border bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm";
 
 export function TransactionFilterPanel({
   open,
@@ -45,7 +45,7 @@ export function TransactionFilterPanel({
 
   return (
     <div className="space-y-3 rounded-2xl border bg-card p-4" role="group" aria-label="Advanced transaction filters">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
         <div className="space-y-1.5">
           <label htmlFor="filter-amount-min" className="text-xs font-medium text-muted-foreground">
             Min amount (₩)
@@ -78,7 +78,7 @@ export function TransactionFilterPanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
         <div className="space-y-1.5">
           <label htmlFor="filter-payment-method" className="text-xs font-medium text-muted-foreground">
             Payment method
@@ -121,7 +121,7 @@ export function TransactionFilterPanel({
         <button
           type="button"
           onClick={onClear}
-          className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-destructive/10 text-xs font-semibold text-destructive"
+          className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-destructive/10 text-xs font-semibold text-destructive"
         >
           <X className="size-3.5" aria-hidden="true" />
           Clear {activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""}

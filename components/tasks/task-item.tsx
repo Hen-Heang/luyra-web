@@ -56,19 +56,18 @@ export function TaskItem({ task }: { task: Task }) {
   const isOverdue = dueLabel?.startsWith("Overdue");
 
   return (
-    <div className="flex items-center justify-between gap-3 p-3">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex flex-col items-stretch gap-2 p-3 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between min-[520px]:gap-3">
+      <div className="flex min-w-0 items-center gap-1 min-[380px]:gap-3">
         <button
           type="button"
           onClick={toggleDone}
           disabled={pending}
           aria-label={isDone ? "Reopen task" : "Mark task complete"}
-          className={cn(
-            "flex size-5 shrink-0 items-center justify-center rounded-full border",
-            isDone ? "border-primary bg-primary text-primary-foreground" : "border-input"
-          )}
+          className="flex size-11 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {isDone && <Check className="size-3" />}
+          <span className={cn("flex size-5 items-center justify-center rounded-full border", isDone ? "border-primary bg-primary text-primary-foreground" : "border-input")}>
+            {isDone && <Check className="size-3" />}
+          </span>
         </button>
         <div className="min-w-0">
           <p className={cn("truncate text-sm", isDone && "text-muted-foreground line-through")}>
@@ -80,7 +79,7 @@ export function TaskItem({ task }: { task: Task }) {
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-1 min-[520px]:shrink-0 min-[520px]:gap-2">
         {dueLabel && (
           <span className={isOverdue && !isDone ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
             {dueLabel}

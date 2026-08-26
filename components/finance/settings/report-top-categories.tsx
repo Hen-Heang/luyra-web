@@ -12,7 +12,7 @@ export function ReportTopCategories({ categories }: { categories: ReportCategory
     <div className="overflow-hidden rounded-xl border">
       <div className="divide-y divide-border">
         {categories.map((category) => (
-          <div key={category.categoryId ?? category.categoryName} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+          <div key={category.categoryId ?? category.categoryName} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-sm">
             <span className="min-w-0 truncate">{category.categoryName}</span>
             <span className="flex shrink-0 items-center gap-2">
               <span className="text-xs text-muted-foreground">{category.pctOfTotal}%</span>

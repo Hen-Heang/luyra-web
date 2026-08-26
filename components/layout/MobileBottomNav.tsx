@@ -19,10 +19,12 @@ export function MobileBottomNav({
   pathname,
   onOpenMore,
   moreOpen,
+  className,
 }: {
   pathname: string;
   onOpenMore: () => void;
   moreOpen: boolean;
+  className?: string;
 }) {
   const activeIndex = getActiveBottomTabIndex(pathname);
   const moreActive = activeIndex === bottomTabs.length;
@@ -30,7 +32,7 @@ export function MobileBottomNav({
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]"
+      className={cn("fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]", className)}
     >
       {/* Frosted glass bar: translucent background + backdrop blur + a hairline
           highlight on top, so content scrolling underneath shows through like

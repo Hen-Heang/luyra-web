@@ -59,7 +59,7 @@ export function SetPasswordForm({ email }: { email: string }) {
           <KeyRound className="size-4" />
           <CardTitle>Set an email password</CardTitle>
         </div>
-        <CardDescription>
+        <CardDescription className="break-words [overflow-wrap:anywhere]">
           This adds password login to the existing account {email}. Your Google login and existing
           data remain attached to the same user.
         </CardDescription>
@@ -112,8 +112,8 @@ export function SetPasswordForm({ email }: { email: string }) {
           )}
 
           {success && (
-            <p className="flex items-center gap-2 text-sm text-emerald-700" role="status">
-              <CheckCircle2 className="size-4" />
+            <p className="flex items-start gap-2 break-words text-sm text-emerald-700 [overflow-wrap:anywhere]" role="status">
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
               Password set. You can now sign in with {email} and this password.
             </p>
           )}

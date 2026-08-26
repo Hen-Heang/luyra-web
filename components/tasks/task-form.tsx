@@ -76,11 +76,11 @@ export function TaskForm({
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
-      <div className="flex gap-2">
+      <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value as TaskPriority | "")}
-          className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+          className="h-11 min-w-0 rounded-md border border-input bg-transparent px-2 text-base sm:h-9 sm:text-sm"
         >
           <option value="">No priority</option>
           {PRIORITIES.map((p) => (
@@ -93,7 +93,7 @@ export function TaskForm({
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+          className="h-11 min-w-0 rounded-md border border-input bg-transparent px-2 text-base sm:h-9 sm:text-sm"
         />
       </div>
       {error && <span className="text-xs text-destructive">{error}</span>}

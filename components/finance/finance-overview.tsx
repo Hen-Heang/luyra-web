@@ -102,7 +102,7 @@ function NetCashFlowCard({ totals }: { totals: MonthTotals }) {
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p id="net-cash-flow-title" className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Net cash flow</p>
-          <p className={cn("mt-4 break-words font-mono text-[clamp(1.75rem,8vw,2.5rem)] font-semibold leading-none tracking-[-0.05em] tabular-nums", netTone)} title={signedAmount(totals.netCashFlowKrw)}>
+          <p className={cn("mt-4 [overflow-wrap:anywhere] font-mono text-[clamp(1.75rem,8vw,2.5rem)] font-semibold leading-none tracking-[-0.05em] tabular-nums", netTone)} title={signedAmount(totals.netCashFlowKrw)}>
             {signedAmount(totals.netCashFlowKrw)}
           </p>
           <p className="mt-2 text-xs text-muted-foreground">Income minus expenses</p>
@@ -119,15 +119,15 @@ function NetCashFlowCard({ totals }: { totals: MonthTotals }) {
           role="img"
           aria-label={`Income ${krw.format(totals.totalIncomeKrw)} compared with expenses ${krw.format(totals.totalExpenseKrw)}`}
         >
-          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2.5" aria-hidden="true">
+          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 min-[380px]:grid-cols-[4.5rem_minmax(0,1fr)_auto]" aria-hidden="true">
             <span className="text-xs text-muted-foreground">Income</span>
             <span className="h-2 overflow-hidden rounded-full bg-secondary"><span className="block h-full rounded-full bg-success" style={{ width: `${incomeWidth}%` }} /></span>
-            <span className="font-mono text-xs font-medium tabular-nums">{krw.format(totals.totalIncomeKrw)}</span>
+            <span className="col-span-2 break-words text-right font-mono text-xs font-medium tabular-nums min-[380px]:col-span-1">{krw.format(totals.totalIncomeKrw)}</span>
           </div>
-          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2.5" aria-hidden="true">
+          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 min-[380px]:grid-cols-[4.5rem_minmax(0,1fr)_auto]" aria-hidden="true">
             <span className="text-xs text-muted-foreground">Expenses</span>
             <span className="h-2 overflow-hidden rounded-full bg-secondary"><span className="block h-full rounded-full bg-destructive/70" style={{ width: `${expenseWidth}%` }} /></span>
-            <span className="font-mono text-xs font-medium tabular-nums">{krw.format(totals.totalExpenseKrw)}</span>
+            <span className="col-span-2 break-words text-right font-mono text-xs font-medium tabular-nums min-[380px]:col-span-1">{krw.format(totals.totalExpenseKrw)}</span>
           </div>
         </div>
       </div>
@@ -258,15 +258,15 @@ function DailyBudgetCard({ guide }: { guide: DailyBudgetGuide }) {
       <div className="mt-5 grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         <div className="pb-4 sm:pb-0 sm:pr-4">
           <p className="text-xs text-muted-foreground">Available per day</p>
-          <p className="mt-1 truncate font-mono text-xl font-semibold tracking-tight text-foreground tabular-nums" title={krw.format(guide.availablePerDayKrw)}>{krw.format(guide.availablePerDayKrw)}</p>
+          <p className="mt-1 break-words font-mono text-xl font-semibold tracking-tight text-foreground tabular-nums" title={krw.format(guide.availablePerDayKrw)}>{krw.format(guide.availablePerDayKrw)}</p>
         </div>
         <div className="py-4 sm:px-4 sm:py-0">
           <p className="text-xs text-muted-foreground">Spent today</p>
-          <p className="mt-1 truncate font-mono text-xl font-semibold tracking-tight text-destructive tabular-nums" title={krw.format(guide.spentTodayKrw)}>{krw.format(guide.spentTodayKrw)}</p>
+          <p className="mt-1 break-words font-mono text-xl font-semibold tracking-tight text-destructive tabular-nums" title={krw.format(guide.spentTodayKrw)}>{krw.format(guide.spentTodayKrw)}</p>
         </div>
         <div className="pt-4 sm:pl-4 sm:pt-0">
           <p className="text-xs text-muted-foreground">Monthly remaining</p>
-          <p className="mt-1 truncate font-mono text-xl font-semibold tracking-tight text-foreground tabular-nums" title={krw.format(guide.monthlyRemainingKrw)}>{krw.format(guide.monthlyRemainingKrw)}</p>
+          <p className="mt-1 break-words font-mono text-xl font-semibold tracking-tight text-foreground tabular-nums" title={krw.format(guide.monthlyRemainingKrw)}>{krw.format(guide.monthlyRemainingKrw)}</p>
         </div>
       </div>
     </div>
@@ -296,9 +296,9 @@ function BudgetAlerts({ budgets }: { budgets: BudgetPerformance[] }) {
             <div className="flex items-center gap-3">
               <CategoryIcon icon={budget.categoryIcon} color={budget.categoryColor} />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col items-start gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-3">
                   <p className="truncate text-sm font-semibold">{budget.categoryName}</p>
-                  <span className={cn("shrink-0 text-xs font-semibold", status.tone === "expense" ? "text-destructive" : "text-warning")}>{status.label} · {budget.usagePct}%</span>
+                  <span className={cn("text-xs font-semibold", status.tone === "expense" ? "text-destructive" : "text-warning")}>{status.label} · {budget.usagePct}%</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{krw.format(budget.spentKrw)} of {krw.format(budget.budgetKrw)}</p>
                 <div className="mt-2"><FinanceProgress value={budget.usagePct} label={`${budget.categoryName} budget ${budget.usagePct}% used`} tone={status.tone} /></div>
@@ -328,12 +328,12 @@ function CategorySpending({ categories, budgets, totalExpense }: { categories: C
               <div className="flex items-center gap-3">
                 <CategoryIcon icon={category.categoryIcon} color={category.categoryColor} />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col items-start gap-1 min-[380px]:flex-row min-[380px]:justify-between min-[380px]:gap-4">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{category.categoryName}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">{share.toFixed(0)}% of expenses{budget ? ` · ${budget.usagePct}% of budget` : " · No category budget"}</p>
                     </div>
-                    <p className="shrink-0 font-mono text-sm font-semibold tabular-nums">{krw.format(category.amountKrw)}</p>
+                    <p className="break-words font-mono text-sm font-semibold tabular-nums">{krw.format(category.amountKrw)}</p>
                   </div>
                   <div className="mt-2.5"><FinanceProgress value={share} label={`${category.categoryName} is ${share.toFixed(0)}% of expenses`} color={category.categoryColor} /></div>
                 </div>
@@ -387,13 +387,13 @@ function RecentActivity({ transactions }: { transactions: Transaction[] }) {
     <div className="overflow-hidden rounded-2xl border bg-card">
       <div className="divide-y divide-border">
         {transactions.map((transaction) => (
-          <Link key={transaction.id} href="/finance/transactions" className="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+          <Link key={transaction.id} href="/finance/transactions" className="flex min-h-16 items-start gap-2 px-3 py-3 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring min-[380px]:items-center min-[380px]:gap-3 min-[380px]:px-4">
             <CategoryIcon icon={transaction.categoryIcon} color={transaction.categoryColor} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{transaction.description || "Untitled transaction"}</p>
               <p className="mt-0.5 truncate text-xs text-muted-foreground">{transaction.categoryName || (transaction.type === "income" ? "Income" : "Uncategorized")} · {formatTransactionDate(transaction)}</p>
             </div>
-            <p className={cn("shrink-0 font-mono text-sm font-semibold tracking-tight tabular-nums", transaction.type === "income" ? "text-success" : "text-foreground")}>{transactionAmount(transaction)}</p>
+            <p className={cn("max-w-[48%] shrink-0 [overflow-wrap:anywhere] text-right font-mono text-xs font-semibold tracking-tight tabular-nums min-[380px]:text-sm", transaction.type === "income" ? "text-success" : "text-foreground")}>{transactionAmount(transaction)}</p>
           </Link>
         ))}
       </div>

@@ -25,7 +25,7 @@ export function WeeklySummaryCard({ summary }: { summary: WeeklySummary }) {
     <div className="space-y-4">
       <p className="text-xs text-muted-foreground">{formatRange(summary.weekStart, summary.weekEnd)}</p>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-3">
         <FinanceMetricCard label="Income" value={krw.format(summary.incomeKrw)} detail="This week" icon={ArrowUpRight} tone="positive" />
         <FinanceMetricCard label="Expenses" value={krw.format(summary.expenseKrw)} detail="This week" icon={ArrowDownRight} tone="expense" />
         <FinanceMetricCard

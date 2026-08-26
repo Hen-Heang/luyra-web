@@ -38,7 +38,7 @@ export function ReviewSavingsProgressCard({ progress }: { progress: SavingsProgr
       <div className="mt-3">
         <FinanceProgress value={progress.overallPct} label={`${progress.overallPct}% of combined savings targets reached`} tone="positive" />
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
         <span>
           {progress.goalsCount} goal{progress.goalsCount === 1 ? "" : "s"}
           {progress.goalsReachedCount > 0 ? ` · ${progress.goalsReachedCount} reached` : ""}

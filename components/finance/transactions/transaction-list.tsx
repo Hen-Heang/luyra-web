@@ -283,7 +283,7 @@ export function TransactionList() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2">
         <MonthSelector
           label={monthLabel(monthOffset)}
           onPrevious={() => setMonthOffset((offset) => offset - 1)}
@@ -292,38 +292,39 @@ export function TransactionList() {
           ariaLabel="Transactions month selector"
           size="sm"
         />
-        <Button size="sm" className="min-h-11" onClick={() => setSheet({ mode: "create" })}>
+        <Button size="sm" className="min-h-11 shrink-0 px-3" onClick={() => setSheet({ mode: "create" })} aria-label="Add transaction">
           <Plus />
-          Add transaction
+          <span className="hidden min-[400px]:inline">Add transaction</span>
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <div className="relative min-w-48 flex-1">
+      <div className="grid gap-2 sm:flex sm:flex-wrap">
+        <div className="relative w-full min-w-0 flex-1 sm:min-w-48">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search description…"
             aria-label="Search transactions"
-            className="h-11 w-full rounded-xl border bg-card pl-9 pr-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-11 w-full rounded-xl border bg-card pl-9 pr-11 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
           />
           {searchInput && (
             <button
               type="button"
               onClick={() => setSearchInput("")}
-              className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary active:bg-secondary"
+              className="absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary active:bg-secondary"
               aria-label="Clear search"
             >
               <X className="size-3.5" />
             </button>
           )}
         </div>
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex">
         <select
           value={categoryFilter}
           onChange={(event) => setCategoryFilter(event.target.value)}
           aria-label="Filter by category"
-          className="h-11 rounded-xl border bg-card px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-11 min-w-0 w-full max-w-full rounded-xl border bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-auto sm:max-w-56 sm:text-sm"
         >
           <option value="">All categories</option>
           {categories.map((category) => (
@@ -353,6 +354,7 @@ export function TransactionList() {
             </span>
           )}
         </button>
+        </div>
       </div>
 
       <div id="transaction-advanced-filters">
@@ -379,7 +381,7 @@ export function TransactionList() {
             type="button"
             onClick={() => setTypeFilter(tab.value)}
             className={cn(
-              "min-h-9 flex-1 rounded-lg text-sm font-medium transition-colors",
+              "min-h-11 flex-1 rounded-lg text-sm font-medium transition-colors sm:min-h-9",
               typeFilter === tab.value ? "bg-secondary font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -418,7 +420,7 @@ export function TransactionList() {
         <div className="space-y-4">
           {grouped.map(({ date, items, incomeKrw, expenseKrw }) => (
             <div key={date}>
-              <div className="flex items-center justify-between px-1 py-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1 py-1.5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{dateHeading(date)}</p>
                 <div className="flex gap-3 text-xs font-semibold tabular-nums">
                   {incomeKrw > 0 && <span className="text-success">+{krw.format(incomeKrw)}</span>}

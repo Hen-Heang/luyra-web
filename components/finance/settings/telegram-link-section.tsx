@@ -86,7 +86,7 @@ export function TelegramLinkSection() {
   if (status.linked) {
     return (
       <div className="rounded-2xl border bg-card p-4">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col items-start gap-3 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
           <p className="flex items-center gap-1.5 text-sm font-medium text-success">
             <CheckCircle2 className="size-4" aria-hidden="true" />
             Linked{status.telegramUsername ? ` as @${status.telegramUsername}` : ""}
@@ -116,7 +116,7 @@ export function TelegramLinkSection() {
               href={deepLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-secondary"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-secondary sm:min-h-9"
             >
               <Send className="size-4" aria-hidden="true" />
               Open in Telegram
