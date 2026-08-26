@@ -1,11 +1,15 @@
 import { apiFetch } from "@/lib/api/client";
 import type {
+  CreateCategoryInput,
   CreateContributionInput,
+  CreatePaymentMethodInput,
   CreateSavingsGoalInput,
   CreateTransactionInput,
   CreateTransactionTemplateInput,
   SetSubscriptionStatusInput,
   TransactionSort,
+  UpdateCategoryInput,
+  UpdatePaymentMethodInput,
   UpdatePreferencesInput,
   UpdateSavingsGoalInput,
   UpdateTransactionInput,
@@ -34,8 +38,35 @@ export function listCategories(): Promise<Category[]> {
   return apiFetch<Category[]>("/api/finance/categories");
 }
 
+export function createCategory(input: CreateCategoryInput): Promise<Category> {
+  return apiFetch<Category>("/api/finance/categories", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function updateCategory(id: string, input: UpdateCategoryInput): Promise<Category> {
+  return apiFetch<Category>(`/api/finance/categories/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await apiFetch<{ id: string }>(`/api/finance/categories/${id}`, { method: "DELETE" });
+}
+
 export function listPaymentMethods(): Promise<PaymentMethod[]> {
   return apiFetch<PaymentMethod[]>("/api/finance/payment-methods");
+}
+
+export function createPaymentMethod(input: CreatePaymentMethodInput): Promise<PaymentMethod> {
+  return apiFetch<PaymentMethod>("/api/finance/payment-methods", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function updatePaymentMethod(id: string, input: UpdatePaymentMethodInput): Promise<PaymentMethod> {
+  return apiFetch<PaymentMethod>(`/api/finance/payment-methods/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deletePaymentMethod(id: string): Promise<void> {
+  await apiFetch<{ id: string }>(`/api/finance/payment-methods/${id}`, { method: "DELETE" });
 }
 
 export function getExchangeRate(): Promise<{ rate: number; fetchedAt: string; cached: boolean; fallback: boolean }> {
