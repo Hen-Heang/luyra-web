@@ -79,23 +79,126 @@ export async function findCronPreferences(userId: string): Promise<CronPreferenc
   };
 }
 
-// finance_preferences.user_id is the primary key, so ON CONFLICT is safe here.
-// A user who has never opened Settings has no row yet, and the scheduler must
-// still be able to record that it sent them something.
-export async function markWeeklyReportSent(userId: string, week: string): Promise<void> {
-  await sql`
-    insert into finance_preferences (user_id, weekly_report_last_sent_week)
-    values (${userId}, ${week})
-    on conflict (user_id) do update set weekly_report_last_sent_week = ${week}, updated_at = now()
-  `;
+export type ReportType = "weekly" | "monthly";
+export type ReportChannel = "telegram" | "email";
+
+// The two pre-011 columns are the Telegram markers — every value ever written
+// to them came from a Telegram send. See 011_finance_report_email_delivery.sql
+// for why they were not renamed.
+const MARKER_COLUMNS: Record<ReportType, Record<ReportChannel, string>> = {
+  weekly: {
+    telegram: "weekly_report_last_sent_week",
+    email: "weekly_report_email_last_sent_week",
+  },
+  monthly: {
+    telegram: "monthly_report_last_sent_month",
+    email: "monthly_report_email_last_sent_month",
+  },
+};
+
+/**
+ * Records that one report type reached one channel for one period.
+ *
+ * Per channel, so a Telegram success can't suppress an email retry (or the
+ * reverse). The column name comes from the literal map above, never from the
+ * caller, so it cannot carry injected SQL.
+ *
+ * finance_preferences.user_id is the primary key, so ON CONFLICT is safe. A
+ * user who has never opened Settings has no row yet, and the scheduler must
+ * still be able to record what it sent them.
+ */
+export async function markReportSent(
+  userId: string,
+  type: ReportType,
+  channel: ReportChannel,
+  period: string
+): Promise<void> {
+  const column = MARKER_COLUMNS[type][channel];
+  await sql.query(
+    `insert into finance_preferences (user_id, ${column})
+     values ($1, $2)
+     on conflict (user_id) do update set ${column} = $2, updated_at = now()`,
+    [userId, period]
+  );
 }
 
-export async function markMonthlyReportSent(userId: string, month: string): Promise<void> {
-  await sql`
-    insert into finance_preferences (user_id, monthly_report_last_sent_month)
-    values (${userId}, ${month})
-    on conflict (user_id) do update set monthly_report_last_sent_month = ${month}, updated_at = now()
-  `;
+/** One row per user who could receive a scheduled report on some channel. */
+export interface ReportRecipient {
+  userId: string;
+  /** Supabase account email from Neon `users`; the fallback recipient. */
+  accountEmail: string;
+  /** null when Telegram was never linked. */
+  chatId: string | null;
+  weeklyEnabled: boolean;
+  monthlyEnabled: boolean;
+  monthlyTelegramEnabled: boolean;
+  weeklyEmailEnabled: boolean;
+  monthlyEmailEnabled: boolean;
+  weeklyTelegramSentWeek: string | null;
+  weeklyEmailSentWeek: string | null;
+  monthlyTelegramSentMonth: string | null;
+  monthlyEmailSentMonth: string | null;
+}
+
+/**
+ * Everyone the report jobs should consider.
+ *
+ * Deliberately NOT sourced from telegram_accounts: a user who enabled email
+ * reports but never linked Telegram must still be reached. Users with neither
+ * a preferences row nor a linked chat are excluded — there is no channel to
+ * deliver on and no preference to honor.
+ *
+ * A missing preferences row means defaults, matching findPreferences().
+ */
+export async function findReportRecipients(): Promise<ReportRecipient[]> {
+  const rows = (await sql`
+    select
+      u.id as user_id,
+      u.email as account_email,
+      t.chat_id,
+      coalesce(p.weekly_review_enabled, true) as weekly_enabled,
+      coalesce(p.monthly_review_enabled, true) as monthly_enabled,
+      coalesce(p.monthly_report_channel_telegram, true) as monthly_telegram_enabled,
+      coalesce(p.weekly_report_channel_email, false) as weekly_email_enabled,
+      coalesce(p.monthly_report_channel_email, false) as monthly_email_enabled,
+      p.weekly_report_last_sent_week,
+      p.weekly_report_email_last_sent_week,
+      p.monthly_report_last_sent_month,
+      p.monthly_report_email_last_sent_month
+    from users u
+    left join finance_preferences p on p.user_id = u.id
+    left join telegram_accounts t on t.user_id = u.id
+    where t.chat_id is not null or p.user_id is not null
+    order by u.id
+  `) as {
+    user_id: string;
+    account_email: string;
+    chat_id: string | null;
+    weekly_enabled: boolean;
+    monthly_enabled: boolean;
+    monthly_telegram_enabled: boolean;
+    weekly_email_enabled: boolean;
+    monthly_email_enabled: boolean;
+    weekly_report_last_sent_week: string | null;
+    weekly_report_email_last_sent_week: string | null;
+    monthly_report_last_sent_month: string | null;
+    monthly_report_email_last_sent_month: string | null;
+  }[];
+
+  return rows.map((row) => ({
+    userId: row.user_id,
+    accountEmail: row.account_email,
+    chatId: row.chat_id,
+    weeklyEnabled: row.weekly_enabled,
+    monthlyEnabled: row.monthly_enabled,
+    monthlyTelegramEnabled: row.monthly_telegram_enabled,
+    weeklyEmailEnabled: row.weekly_email_enabled,
+    monthlyEmailEnabled: row.monthly_email_enabled,
+    weeklyTelegramSentWeek: row.weekly_report_last_sent_week,
+    weeklyEmailSentWeek: row.weekly_report_email_last_sent_week,
+    monthlyTelegramSentMonth: row.monthly_report_last_sent_month,
+    monthlyEmailSentMonth: row.monthly_report_email_last_sent_month,
+  }));
 }
 
 const DEFAULT_PREFERENCES: FinancePreferences = {
