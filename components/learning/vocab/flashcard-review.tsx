@@ -70,25 +70,25 @@ export function FlashcardReview({
       <button
         type="button"
         onClick={() => setFlipped((f) => !f)}
-        className="flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card p-6 text-center transition-colors hover:bg-accent/30"
+        className="flex min-h-56 min-w-0 flex-col items-center justify-center gap-3 overflow-hidden rounded-lg border border-border bg-card p-4 text-center transition-colors hover:bg-accent/30 min-[380px]:p-6"
       >
         {!flipped ? (
           <>
-            <p className="text-3xl font-bold">{card.term}</p>
+            <p className="max-w-full break-words text-3xl font-bold">{card.term}</p>
             {card.pronunciation && <p className="text-sm italic text-muted-foreground">[{card.pronunciation}]</p>}
             <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">Tap to reveal</p>
           </>
         ) : (
           <>
-            <p className="text-2xl font-bold">{card.meaning}</p>
-            <p className="text-lg text-muted-foreground">{card.term}</p>
-            {card.example && <p className="mt-3 max-w-sm text-sm text-muted-foreground">{card.example}</p>}
+            <p className="max-w-full break-words text-2xl font-bold">{card.meaning}</p>
+            <p className="max-w-full break-words text-lg text-muted-foreground">{card.term}</p>
+            {card.example && <p className="mt-3 max-w-sm break-words text-sm text-muted-foreground">{card.example}</p>}
           </>
         )}
       </button>
 
       {flipped && (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {RATINGS.map((rating) => (
             <button
               key={rating}
@@ -96,7 +96,7 @@ export function FlashcardReview({
               disabled={pending}
               onClick={() => grade(rating)}
               className={cn(
-                "flex flex-col items-center gap-0.5 rounded-md px-2 py-2.5 text-white transition-colors disabled:opacity-50",
+                "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2.5 text-white transition-colors disabled:opacity-50",
                 GRADE_CLASSES[rating]
               )}
             >

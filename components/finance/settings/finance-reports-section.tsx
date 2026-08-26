@@ -134,8 +134,8 @@ export function FinanceReportsSection() {
 
   return (
     <div className="space-y-4 rounded-2xl border bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1 rounded-xl border bg-secondary p-1">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="grid w-full grid-cols-2 gap-1 rounded-xl border bg-secondary p-1 sm:flex sm:w-auto">
           {([
             { value: "weekly", label: "Weekly summary" },
             { value: "monthly", label: "Monthly report" },
@@ -145,7 +145,7 @@ export function FinanceReportsSection() {
               type="button"
               onClick={() => setTab(option.value)}
               className={cn(
-                "min-h-9 rounded-lg px-3 text-sm font-medium transition-colors",
+                "min-h-11 min-w-0 rounded-lg px-2 text-xs font-medium transition-colors sm:min-h-9 sm:px-3 sm:text-sm",
                 tab === option.value ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -153,7 +153,7 @@ export function FinanceReportsSection() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
           {tab === "monthly" && (
             <MonthSelector
               label={monthLabel(monthOffset)}
@@ -169,7 +169,7 @@ export function FinanceReportsSection() {
               href={printHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-secondary"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-secondary sm:min-h-9"
             >
               <Printer className="size-4" aria-hidden="true" />
               Print
@@ -180,7 +180,7 @@ export function FinanceReportsSection() {
               type="button"
               onClick={handleSendToTelegram}
               disabled={sendingToTelegram}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-secondary disabled:opacity-50"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-secondary disabled:opacity-50 sm:min-h-9"
             >
               <Send className="size-4" aria-hidden="true" />
               {sendingToTelegram ? "Sending…" : "Send to Telegram"}
@@ -191,7 +191,7 @@ export function FinanceReportsSection() {
               type="button"
               onClick={handleSendEmail}
               disabled={sendingEmail}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-secondary disabled:opacity-50"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-secondary disabled:opacity-50 sm:min-h-9"
             >
               <Mail className="size-4" aria-hidden="true" />
               {sendingEmail ? "Sending…" : "Send email"}

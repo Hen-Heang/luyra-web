@@ -12,7 +12,7 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 sm:px-6">
+    <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-background px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6">
       <div
         className="pointer-events-none absolute inset-0 opacity-70"
         aria-hidden="true"
@@ -52,7 +52,7 @@ export function AuthShell({
           </div>
         </div>
 
-        <section className="relative overflow-hidden rounded-[30px] border border-border/80 bg-card/90 p-6 shadow-2xl shadow-black/[0.08] backdrop-blur-2xl sm:p-8 dark:shadow-black/30">
+        <section className="relative overflow-hidden rounded-[26px] border border-border/80 bg-card/90 p-5 shadow-2xl shadow-black/[0.08] backdrop-blur-2xl min-[380px]:rounded-[30px] min-[380px]:p-6 sm:p-8 dark:shadow-black/30">
           <div
             className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-success/40 to-transparent"
             aria-hidden="true"
@@ -70,9 +70,9 @@ export function AuthShell({
           {children}
         </section>
 
-        <div className="mt-5 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
-          <ShieldCheck className="size-3.5 text-success" aria-hidden="true" />
-          <span>Track, budget, save, and review in one private workspace.</span>
+        <div className="mt-5 flex items-start justify-center gap-2 text-center text-xs text-muted-foreground">
+          <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-success" aria-hidden="true" />
+          <span className="break-words">Track, budget, save, and review in one private workspace.</span>
         </div>
       </div>
     </main>

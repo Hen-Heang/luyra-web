@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { getActiveNavItem, isDetailRoute } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
 
 import { useMobileHeaderTitleValue } from "./mobile-header-title";
 
@@ -11,7 +12,7 @@ import { useMobileHeaderTitleValue } from "./mobile-header-title";
  * Contextual mobile header. Root pages get just a title; detail pages get
  * `Back | Title`.
  */
-export function MobileHeader({ pathname }: { pathname: string }) {
+export function MobileHeader({ pathname, className }: { pathname: string; className?: string }) {
   const router = useRouter();
   const publishedTitle = useMobileHeaderTitleValue();
   const detail = isDetailRoute(pathname);
@@ -20,7 +21,7 @@ export function MobileHeader({ pathname }: { pathname: string }) {
   const title = publishedTitle ?? navLabel ?? "Luyra";
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-1 border-b border-border bg-background/95 px-2 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-sm">
+    <header className={cn("sticky top-0 z-30 flex items-center gap-1 border-b border-border bg-background/95 px-2 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-sm", className)}>
       {detail && (
         <button
           type="button"

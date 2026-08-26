@@ -13,7 +13,6 @@ import {
   listTemplates,
 } from "@/lib/api/finance";
 import { emitTransactionChanged } from "@/lib/finance-events";
-import { cn } from "@/lib/utils";
 import type { CreateTransactionInput, CreateTransactionTemplateInput } from "@/lib/validation/finance";
 import type { Category, PaymentMethod, TransactionTemplate } from "@/types/finance";
 
@@ -23,7 +22,7 @@ import type { Category, PaymentMethod, TransactionTemplate } from "@/types/finan
  * Sits above the mobile tab bar (Telegram-style floating compose action);
  * on tablet/desktop it floats at the window's bottom-right instead.
  */
-export function QuickAddTransaction({ raised }: { raised: boolean }) {
+export function QuickAddTransaction() {
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -77,10 +76,7 @@ export function QuickAddTransaction({ raised }: { raised: boolean }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Add transaction"
-        className={cn(
-          "fixed right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 outline-none transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring",
-          raised ? "bottom-[calc(6rem+env(safe-area-inset-bottom))]" : "bottom-6"
-        )}
+        className="fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 outline-none transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring md:bottom-6"
       >
         <Plus className="size-6" strokeWidth={2.5} aria-hidden />
       </button>

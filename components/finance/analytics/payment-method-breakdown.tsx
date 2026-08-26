@@ -40,12 +40,12 @@ export function PaymentMethodBreakdown({ paymentMethods }: { paymentMethods: Pay
         const color = colorForMethod(method.paymentMethodId, method.paymentMethodName);
         return (
           <div key={method.paymentMethodId ?? method.paymentMethodName}>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col items-start gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-3">
               <span className="flex min-w-0 items-center gap-2 text-sm">
                 <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
                 <span className="truncate">{method.paymentMethodName}</span>
               </span>
-              <span className="shrink-0 font-mono text-sm font-medium tabular-nums">{krw.format(method.amountKrw)}</span>
+              <span className="[overflow-wrap:anywhere] font-mono text-sm font-medium tabular-nums">{krw.format(method.amountKrw)}</span>
             </div>
             <div className="mt-1.5">
               <FinanceProgress value={share} label={`${method.paymentMethodName} is ${share.toFixed(0)}% of expenses`} color={color} />
@@ -55,12 +55,12 @@ export function PaymentMethodBreakdown({ paymentMethods }: { paymentMethods: Pay
       })}
 
       {overflow.length > 0 && (
-        <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+        <div className="flex flex-col items-start gap-1 border-t border-border pt-3 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-3">
           <span className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
             <span className="size-2.5 shrink-0 rounded-full bg-muted-foreground/40" aria-hidden="true" />
             Other ({overflow.length})
           </span>
-          <span className="shrink-0 font-mono text-sm font-medium tabular-nums text-muted-foreground">{krw.format(overflowAmountKrw)}</span>
+          <span className="[overflow-wrap:anywhere] font-mono text-sm font-medium tabular-nums text-muted-foreground">{krw.format(overflowAmountKrw)}</span>
         </div>
       )}
     </div>

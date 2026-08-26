@@ -18,7 +18,7 @@ import type { ReviewSummary } from "@/types/finance";
 function ReviewLoading() {
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Loading monthly review">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
         {[0, 1, 2, 3].map((card) => (
           <div key={card} className="h-28 rounded-2xl bg-secondary motion-safe:animate-pulse" />
         ))}

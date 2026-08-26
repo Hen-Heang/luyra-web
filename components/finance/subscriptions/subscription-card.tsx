@@ -40,7 +40,7 @@ export function SubscriptionCard({
 
   return (
     <div className={cn("rounded-2xl border bg-card p-4", cancelled && "opacity-70")}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <CategoryIcon icon={subscription.categoryIcon} color={subscription.categoryColor} />
         <div className="min-w-0 flex-1">
           <p className={cn("truncate text-sm font-semibold", cancelled && "line-through")}>{subscription.name}</p>
@@ -49,8 +49,8 @@ export function SubscriptionCard({
             {subscription.categoryName ? ` · ${subscription.categoryName}` : ""}
           </p>
         </div>
-        <div className="shrink-0 text-right">
-          <p className="font-mono text-sm font-semibold tabular-nums">{krw.format(subscription.latestAmountKrw)}</p>
+        <div className="max-w-[45%] shrink-0 text-right">
+          <p className="[overflow-wrap:anywhere] font-mono text-xs font-semibold tabular-nums min-[380px]:text-sm">{krw.format(subscription.latestAmountKrw)}</p>
           <p className="text-xs text-muted-foreground">latest</p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export function SubscriptionCard({
               type="button"
               disabled={saving}
               className={cn(
-                "flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors disabled:opacity-50",
+                "flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors disabled:opacity-50 sm:min-h-9",
                 status.textClass,
                 "border-current/25 hover:bg-secondary active:bg-secondary"
               )}

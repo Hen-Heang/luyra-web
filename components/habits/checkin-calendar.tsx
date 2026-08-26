@@ -50,7 +50,7 @@ export function CheckinCalendar({
         <button
           type="button"
           onClick={() => setMonth((m) => addMonths(m, -1))}
-          className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:size-8"
           aria-label="Previous month"
         >
           <ChevronLeft size={16} strokeWidth={2} />
@@ -65,7 +65,7 @@ export function CheckinCalendar({
           type="button"
           onClick={() => setMonth((m) => addMonths(m, 1))}
           disabled={nextMonthDisabled}
-          className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+          className="flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30 sm:size-8"
           aria-label="Next month"
         >
           <ChevronRight size={16} strokeWidth={2} />

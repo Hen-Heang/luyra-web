@@ -24,9 +24,9 @@ export function ReviewBudgetPerformance({ budgets }: { budgets: BudgetPerformanc
               <div className="flex items-center gap-3">
                 <CategoryIcon icon={budget.categoryIcon} color={budget.categoryColor} />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col items-start gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-3">
                     <p className="truncate text-sm font-semibold">{budget.categoryName}</p>
-                    <span className={`flex shrink-0 items-center gap-1 text-xs font-semibold ${BUDGET_STATUS_TEXT_CLASS[budget.status]}`}>
+                    <span className={`flex items-center gap-1 text-xs font-semibold ${BUDGET_STATUS_TEXT_CLASS[budget.status]}`}>
                       <StatusIcon className="size-3.5" aria-hidden="true" />
                       {status.label}
                     </span>

@@ -34,6 +34,7 @@ export function TransactionRow({
     transaction.paymentMethodName,
     transaction.note,
   ].filter(Boolean);
+  const meta = metaParts.join(" · ");
 
   return (
     <div
@@ -46,25 +47,40 @@ export function TransactionRow({
           onEdit(transaction);
         }
       }}
-      className="flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-secondary/50 active:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      className="flex min-h-16 cursor-pointer items-start gap-2 px-3 py-3 transition-colors hover:bg-secondary/50 active:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:items-center sm:gap-3 sm:px-4"
     >
       <CategoryIcon icon={transaction.categoryIcon} color={transaction.categoryColor} />
+
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{transaction.description}</p>
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">{metaParts.join(" · ")}</p>
-      </div>
-      <div className="shrink-0 text-right">
-        <p className={cn("font-mono text-sm font-semibold tabular-nums", isIncome ? "text-success" : "text-foreground")}>
-          {isIncome ? "+" : "−"}
-          {krw.format(transaction.amountKrw)}
-        </p>
-        {transaction.currency === "USD" && transaction.originalAmount !== null && (
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {usd.format(transaction.originalAmount)}
-            {transaction.exchangeRate !== null ? ` @ ${krw.format(transaction.exchangeRate)}` : ""}
+        <div className="flex min-w-0 items-start gap-2">
+          <p className="min-w-0 flex-1 truncate text-sm font-semibold" title={transaction.description}>
+            {transaction.description}
           </p>
-        )}
-        {time && <p className="mt-0.5 text-xs text-muted-foreground">{time}</p>}
+          <p
+            className={cn(
+              "max-w-[58%] shrink-0 whitespace-nowrap text-right font-mono text-xs font-semibold tabular-nums sm:text-sm",
+              isIncome ? "text-success" : "text-foreground"
+            )}
+          >
+            {isIncome ? "+" : "−"}
+            {krw.format(transaction.amountKrw)}
+          </p>
+        </div>
+
+        <div className="mt-1 flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+          <p className="min-w-0 flex-1 truncate" title={meta}>
+            {meta}
+          </p>
+          <div className="ml-auto flex max-w-full flex-wrap justify-end gap-x-2 text-right text-[11px] tabular-nums sm:text-xs">
+            {transaction.currency === "USD" && transaction.originalAmount !== null && (
+              <span className="break-words">
+                {usd.format(transaction.originalAmount)}
+                {transaction.exchangeRate !== null ? ` @ ${krw.format(transaction.exchangeRate)}` : ""}
+              </span>
+            )}
+            {time && <span>{time}</span>}
+          </div>
+        </div>
       </div>
 
       <DropdownMenu>

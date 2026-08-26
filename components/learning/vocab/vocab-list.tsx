@@ -142,14 +142,14 @@ export function VocabList() {
       {words.length > 0 && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Input placeholder="Search Korean, English, or deck…" value={query} onChange={(e) => setQuery(e.target.value)} className="sm:max-w-xs" />
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {FILTER_TABS.map((tab) => (
               <button
                 key={tab.value}
                 type="button"
                 onClick={() => setFilter(tab.value)}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm",
+                  "inline-flex min-h-11 items-center rounded-md px-3 py-1.5 text-sm sm:min-h-9",
                   filter === tab.value ? "bg-secondary font-medium" : "text-muted-foreground hover:bg-secondary"
                 )}
               >
@@ -160,7 +160,7 @@ export function VocabList() {
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value as VocabSortOrder)}
-            className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+            className="h-11 w-full min-w-0 rounded-md border border-input bg-transparent px-2 text-base sm:h-9 sm:w-auto sm:text-sm"
           >
             <option value="due">Sort: Due date</option>
             <option value="alpha">Sort: Alphabetical</option>

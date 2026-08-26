@@ -5,6 +5,7 @@ import Image from "next/image";
 
 import { NavIconRow } from "@/components/layout/NavItem";
 import { accountItem, financeItem, getActiveNavItem, primaryNavItems } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
 
 import { ProfileMenu } from "./ProfileMenu";
 
@@ -14,14 +15,14 @@ export const RAIL_WIDTH = 80;
  * 768–1199px navigation. Compact icon rail — the mobile bottom bar is never
  * used at these widths.
  */
-export function TabletNavigationRail({ pathname }: { pathname: string }) {
+export function TabletNavigationRail({ pathname, className }: { pathname: string; className?: string }) {
   const activeItem = getActiveNavItem(pathname);
 
   return (
     <aside
       aria-label="Main navigation"
       style={{ width: RAIL_WIDTH }}
-      className="sticky top-0 flex h-dvh shrink-0 flex-col border-r border-border bg-sidebar"
+      className={cn("sticky top-0 flex h-dvh shrink-0 flex-col border-r border-border bg-sidebar", className)}
     >
       <div className="flex justify-center px-2 py-4">
         <Link

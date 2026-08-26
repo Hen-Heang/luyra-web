@@ -35,7 +35,7 @@ export default async function GoalsPage({
             key={tab.label}
             href={tab.value ? `/goals?status=${tab.value}` : "/goals"}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm",
+              "inline-flex min-h-11 items-center rounded-md px-3 py-1.5 text-sm sm:min-h-9",
               filters.status === tab.value
                 ? "bg-secondary font-medium"
                 : "text-muted-foreground hover:bg-secondary"

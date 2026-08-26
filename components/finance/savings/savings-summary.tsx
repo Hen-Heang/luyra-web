@@ -12,7 +12,7 @@ export function SavingsSummary({ goals }: { goals: SavingsGoal[] }) {
   const reachedCount = goals.filter((goal) => goal.targetUsd > 0 && goal.currentUsd >= goal.targetUsd).length;
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
       <FinanceMetricCard label="Total saved" value={usd.format(totalSavedUsd)} detail="Across all goals" icon={PiggyBank} tone="positive" />
       <FinanceMetricCard label="Total target" value={usd.format(totalTargetUsd)} detail={`${goals.length} goal${goals.length === 1 ? "" : "s"}`} icon={Target} />
       <FinanceMetricCard label="Overall progress" value={`${overallPct}%`} detail="Saved of combined targets" icon={TrendingUp} tone={overallPct >= 100 ? "positive" : "neutral"} />

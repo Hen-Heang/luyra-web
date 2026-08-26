@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type MouseEvent } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 import { krw } from "@/lib/finance-format";
 import type { DailyFlowPoint } from "@/types/finance";
 
@@ -32,7 +32,7 @@ export function CashFlowTrendChart({ data }: { data: DailyFlowPoint[] }) {
     ? new Date(`${hovered.date}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })
     : null;
 
-  function handleMove(event: MouseEvent<SVGSVGElement>) {
+  function handleMove(event: PointerEvent<SVGSVGElement>) {
     const svg = svgRef.current;
     if (!svg || data.length === 0) return;
     const rect = svg.getBoundingClientRect();
@@ -63,12 +63,12 @@ export function CashFlowTrendChart({ data }: { data: DailyFlowPoint[] }) {
         <svg
           ref={svgRef}
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          className="h-52 w-full overflow-visible"
+          className="h-44 w-full overflow-visible sm:h-52"
           role="img"
           aria-labelledby="cash-flow-trend-title cash-flow-trend-summary"
           preserveAspectRatio="none"
-          onMouseMove={handleMove}
-          onMouseLeave={() => setHoverIndex(null)}
+          onPointerMove={handleMove}
+          onPointerLeave={() => setHoverIndex(null)}
         >
           <title id="cash-flow-trend-title">Daily income and expense trend</title>
           {[0, 0.5, 1].map((position) => (
@@ -104,10 +104,16 @@ export function CashFlowTrendChart({ data }: { data: DailyFlowPoint[] }) {
 
         {hovered && hoveredLabel && hoverIndex !== null && (
           <div
-            className="pointer-events-none absolute top-2 z-10 rounded-lg border bg-popover px-3 py-2 text-xs shadow-md"
+            className="pointer-events-none absolute top-2 z-10 max-w-[calc(100%-0.5rem)] rounded-lg border bg-popover px-3 py-2 text-xs shadow-md"
             style={{
-              left: `${Math.min(Math.max((hoverIndex / Math.max(data.length - 1, 1)) * 100, 8), 92)}%`,
-              transform: "translateX(-50%)",
+              ...(hoverIndex <= Math.max(data.length - 1, 1) * 0.2
+                ? { left: 0 }
+                : hoverIndex >= Math.max(data.length - 1, 1) * 0.8
+                  ? { right: 0 }
+                  : {
+                      left: `${(hoverIndex / Math.max(data.length - 1, 1)) * 100}%`,
+                      transform: "translateX(-50%)",
+                    }),
             }}
           >
             <p className="font-semibold text-popover-foreground">{hoveredLabel}</p>

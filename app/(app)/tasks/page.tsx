@@ -55,7 +55,7 @@ export default async function TasksPage({
               key={tab.label}
               href={hrefFor({ status: tab.value })}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm",
+                "inline-flex min-h-11 items-center rounded-md px-3 py-1.5 text-sm sm:min-h-9",
                 filters.status === tab.value
                   ? "bg-secondary font-medium"
                   : "text-muted-foreground hover:bg-secondary"
@@ -72,7 +72,7 @@ export default async function TasksPage({
               key={option.label}
               href={hrefFor({ priority: option.value })}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm",
+                "inline-flex min-h-11 items-center rounded-md px-3 py-1.5 text-sm sm:min-h-9",
                 filters.priority === option.value
                   ? "bg-secondary font-medium"
                   : "text-muted-foreground hover:bg-secondary"

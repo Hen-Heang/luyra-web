@@ -28,7 +28,7 @@ export function SavingsGoalSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[90vh] w-full gap-0 sm:max-w-lg sm:rounded-t-2xl">
+      <SheetContent side="bottom" className="mx-auto flex max-h-[90dvh] w-full gap-0 sm:max-w-lg sm:rounded-t-2xl">
         <SheetHeader>
           <SheetTitle>{mode === "create" ? "New savings goal" : "Edit savings goal"}</SheetTitle>
           <SheetDescription>
@@ -154,7 +154,7 @@ function SavingsGoalSheetFields({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="goal-target">Target (USD)</Label>
             <Input
@@ -192,7 +192,7 @@ function SavingsGoalSheetFields({
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 py-4">
+      <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending} className="min-h-11 flex-1">
           Cancel
         </Button>

@@ -53,13 +53,13 @@ export function MonthComparison({
       </div>
       <div className="divide-y divide-border">
         {rows.map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-3 px-4 py-3">
+          <div key={row.label} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
             <div className="min-w-0">
               <p className="text-sm font-medium">{row.label}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{krw.format(row.previous)} last month</p>
             </div>
-            <div className="shrink-0 text-right">
-              <p className="font-mono text-sm font-semibold tabular-nums">{krw.format(row.current)}</p>
+            <div className="max-w-full text-right">
+              <p className="[overflow-wrap:anywhere] font-mono text-sm font-semibold tabular-nums">{krw.format(row.current)}</p>
               <div className="mt-0.5">
                 <DeltaPill current={row.current} previous={row.previous} invert={row.invert} />
               </div>

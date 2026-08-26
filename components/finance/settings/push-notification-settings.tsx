@@ -211,7 +211,7 @@ export function PushNotificationSettings() {
         <Button
           type="button"
           variant={state === "enabled" ? "outline" : "default"}
-          className="min-h-11 shrink-0"
+          className="min-h-11 w-full shrink-0 sm:w-auto"
           disabled={pending}
           onClick={() => void (state === "enabled" ? disablePush() : enablePush())}
         >

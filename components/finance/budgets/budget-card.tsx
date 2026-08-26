@@ -53,11 +53,11 @@ export function BudgetCard({
         </DropdownMenu>
       </div>
 
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <p className="min-w-0 truncate font-mono text-xs text-muted-foreground tabular-nums">
+      <div className="mt-2 flex flex-col items-start gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-2">
+        <p className="min-w-0 [overflow-wrap:anywhere] font-mono text-xs text-muted-foreground tabular-nums">
           {krw.format(budget.spentKrw)} of {krw.format(budget.budgetKrw)}
         </p>
-        <span className={`flex shrink-0 items-center gap-1 text-xs font-semibold ${BUDGET_STATUS_TEXT_CLASS[budget.status]}`}>
+        <span className={`flex items-center gap-1 text-xs font-semibold ${BUDGET_STATUS_TEXT_CLASS[budget.status]}`}>
           <StatusIcon className="size-3.5" aria-hidden="true" />
           {status.label}
         </span>
@@ -66,9 +66,9 @@ export function BudgetCard({
       <div className="mt-3">
         <FinanceProgress value={budget.usagePct} label={`${budget.categoryName} budget ${budget.usagePct}% used`} tone={status.tone} />
       </div>
-      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground">
         <span>{budget.usagePct}% used</span>
-        <span className="font-mono tabular-nums">
+        <span className="[overflow-wrap:anywhere] text-right font-mono tabular-nums">
           {budget.overBudget
             ? `${krw.format(Math.abs(budget.remainingKrw))} over`
             : `${krw.format(budget.remainingKrw)} remaining`}

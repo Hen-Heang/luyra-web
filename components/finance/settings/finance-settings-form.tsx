@@ -178,12 +178,12 @@ export function FinanceSettingsForm() {
         </FinanceSection>
 
         <FinanceSection id="settings-reviews" title="Reviews" description="Whether the Monthly Review screen is available.">
-          <div className="flex items-center justify-between gap-4 rounded-2xl border bg-card p-4">
-            <div>
+          <div className="flex flex-col items-stretch gap-3 rounded-2xl border bg-card p-4 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-4">
+            <div className="min-w-0">
               <p className="text-sm font-medium">Monthly review</p>
               <p className="mt-0.5 text-xs text-muted-foreground">Show the Monthly Review screen and its deterministic observations.</p>
             </div>
-            <div className="flex shrink-0 gap-1 rounded-xl border bg-secondary p-1">
+            <div className="flex shrink-0 self-end gap-1 rounded-xl border bg-secondary p-1">
               {[
                 { label: "On", value: true },
                 { label: "Off", value: false },
@@ -193,7 +193,7 @@ export function FinanceSettingsForm() {
                   type="button"
                   onClick={() => setMonthlyReviewEnabled(option.value)}
                   className={cn(
-                    "min-h-9 rounded-lg px-3 text-sm font-medium transition-colors",
+                    "min-h-11 rounded-lg px-3 text-sm font-medium transition-colors sm:min-h-9",
                     monthlyReviewEnabled === option.value ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -222,9 +222,9 @@ export function FinanceSettingsForm() {
                 { label: "Monthly report email", value: monthlyReportEmailEnabled, onChange: setMonthlyReportEmailEnabled },
               ] as const
             ).map((toggle) => (
-              <div key={toggle.label} className="flex items-center justify-between gap-4">
-                <p className="text-sm font-medium">{toggle.label}</p>
-                <div className="flex shrink-0 gap-1 rounded-xl border bg-secondary p-1">
+              <div key={toggle.label} className="flex flex-col items-stretch gap-2 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-4">
+                <p className="min-w-0 text-sm font-medium">{toggle.label}</p>
+                <div className="flex shrink-0 self-end gap-1 rounded-xl border bg-secondary p-1">
                   {[
                     { label: "On", value: true },
                     { label: "Off", value: false },
@@ -234,7 +234,7 @@ export function FinanceSettingsForm() {
                       type="button"
                       onClick={() => toggle.onChange(option.value)}
                       className={cn(
-                        "min-h-9 rounded-lg px-3 text-sm font-medium transition-colors",
+                        "min-h-11 rounded-lg px-3 text-sm font-medium transition-colors sm:min-h-9",
                         toggle.value === option.value ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -259,7 +259,7 @@ export function FinanceSettingsForm() {
           </p>
         )}
 
-        <Button type="submit" size="sm" disabled={pending} className="min-h-11">
+        <Button type="submit" size="sm" disabled={pending} className="min-h-11 w-full min-[380px]:w-auto">
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {pending ? "Saving…" : "Save changes"}
         </Button>
