@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
-import { FinanceMetricCard } from "@/components/finance/ui/finance-primitives";
+import { FinanceMetricCard, FinanceMetricGrid } from "@/components/finance/ui/finance-primitives";
 import { ReviewBudgetPerformance } from "@/components/finance/review/review-budget-performance";
 import { ReviewSavingsProgressCard } from "@/components/finance/review/review-savings-progress";
 import { ReportTopCategories } from "@/components/finance/settings/report-top-categories";
@@ -25,7 +25,7 @@ export function WeeklySummaryCard({ summary }: { summary: WeeklySummary }) {
     <div className="space-y-4">
       <p className="text-xs text-muted-foreground">{formatRange(summary.weekStart, summary.weekEnd)}</p>
 
-      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-3">
+      <FinanceMetricGrid columns={3}>
         <FinanceMetricCard label="Income" value={krw.format(summary.incomeKrw)} detail="This week" icon={ArrowUpRight} tone="positive" />
         <FinanceMetricCard label="Expenses" value={krw.format(summary.expenseKrw)} detail="This week" icon={ArrowDownRight} tone="expense" />
         <FinanceMetricCard
@@ -35,7 +35,7 @@ export function WeeklySummaryCard({ summary }: { summary: WeeklySummary }) {
           icon={Minus}
           tone={summary.netCashFlowKrw > 0 ? "positive" : summary.netCashFlowKrw < 0 ? "expense" : "neutral"}
         />
-      </div>
+      </FinanceMetricGrid>
 
       <div className="flex items-center gap-1.5 text-xs">
         <ChangeIcon className={`size-3.5 ${changeToneClass}`} aria-hidden="true" />

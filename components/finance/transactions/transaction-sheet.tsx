@@ -5,8 +5,9 @@ import { ArrowRightLeft, Check, Loader2, RefreshCw, Save, WalletCards } from "lu
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { CategoryIcon } from "@/components/finance/ui/finance-primitives";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { AmountField, CategoryIcon } from "@/components/finance/ui/finance-primitives";
 import { TemplateStrip } from "@/components/finance/transactions/template-strip";
 import { getExchangeRate } from "@/lib/api/finance";
 import { krw, usd } from "@/lib/finance-format";
@@ -45,7 +46,7 @@ export function TransactionSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[90dvh] w-full gap-0 sm:max-w-lg sm:rounded-t-2xl">
+      <SheetContent side="bottom" size="form">
         <SheetHeader className="pr-16">
           <SheetTitle>{mode === "create" ? "New transaction" : "Edit transaction"}</SheetTitle>
           <SheetDescription>
@@ -307,22 +308,18 @@ function TransactionSheetFields({
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 transition-shadow focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20">
-            <span className="text-2xl font-semibold text-muted-foreground">{currency === "USD" ? "$" : "₩"}</span>
-            <input
-              ref={amountInputRef}
-              id="transaction-amount"
-              type="number"
-              inputMode={currency === "USD" ? "decimal" : "numeric"}
-              min="0"
-              step={currency === "USD" ? "0.01" : "1"}
-              placeholder="0"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              required
-              className="w-full min-w-0 bg-transparent text-[clamp(2rem,10vw,3rem)] font-bold tracking-tight tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
-          </div>
+          <AmountField
+            ref={amountInputRef}
+            symbol={currency === "USD" ? "$" : "₩"}
+            id="transaction-amount"
+            inputMode={currency === "USD" ? "decimal" : "numeric"}
+            min="0"
+            step={currency === "USD" ? "0.01" : "1"}
+            placeholder="0"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            required
+          />
 
           <div className="rounded-xl border bg-secondary/40 p-3">
             <div className="flex items-start gap-3">
@@ -342,10 +339,10 @@ function TransactionSheetFields({
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
-              <Label htmlFor="transaction-exchange-rate" className="w-full text-xs text-muted-foreground min-[380px]:w-auto">
+              <Label htmlFor="transaction-exchange-rate" className="w-full text-xs text-muted-foreground xs:w-auto">
                 1 USD =
               </Label>
-              <div className="flex h-11 min-w-0 flex-1 items-center rounded-md border border-input bg-background px-2 focus-within:ring-2 focus-within:ring-ring sm:h-9 sm:flex-none">
+              <div className="flex h-11 min-w-0 flex-1 items-center rounded-xl border border-input bg-background px-2 focus-within:ring-2 focus-within:ring-ring sm:h-9 sm:flex-none">
                 <span className="text-xs text-muted-foreground">₩</span>
                 <input
                   id="transaction-exchange-rate"
@@ -459,7 +456,7 @@ function TransactionSheetFields({
               id="transaction-payment-method"
               value={paymentMethodId}
               onChange={(event) => setPaymentMethodId(event.target.value)}
-              className="flex h-11 min-h-11 w-full min-w-0 rounded-md border border-input bg-transparent px-3 text-base shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
+              className="flex h-11 min-h-11 w-full min-w-0 rounded-xl border border-input bg-transparent px-3 text-base shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
             >
               <option value="">None</option>
               {paymentMethods.map((method) => (
@@ -474,13 +471,7 @@ function TransactionSheetFields({
 
         <div className="space-y-1.5">
           <Label htmlFor="transaction-note">Note (optional)</Label>
-          <textarea
-            id="transaction-note"
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            rows={2}
-            className="flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
-          />
+          <Textarea id="transaction-note" value={note} onChange={(event) => setNote(event.target.value)} rows={2} />
         </div>
 
         {mode === "create" && (
@@ -504,7 +495,7 @@ function TransactionSheetFields({
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <SheetFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending} className="min-h-11 flex-1">
           Cancel
         </Button>
@@ -512,7 +503,7 @@ function TransactionSheetFields({
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {mode === "create" ? "Add transaction" : "Save changes"}
         </Button>
-      </div>
+      </SheetFooter>
     </form>
   );
 }

@@ -10,7 +10,7 @@ import {
 } from "@/lib/repositories/push-subscription-repository";
 import {
   isPushNotificationConfigured,
-  sendPushNotification,
+  sendPushToSubscriptions,
 } from "@/lib/services/push-notification-service";
 
 export const runtime = "nodejs";
@@ -79,32 +79,21 @@ export async function GET(request: NextRequest) {
         const previousStatus = await findPushBudgetAlertStatus(userId, budget.categoryId, monthKey);
         if (previousStatus && STATUS_RANK[status] <= STATUS_RANK[previousStatus]) continue;
 
-        let sentForAlert = false;
-        for (const subscription of subscriptions) {
-          try {
-            const result = await sendPushNotification(subscription, {
-              title: "Budget alert",
-              body: `${budget.categoryName} ${STATUS_COPY[status]} (${budget.usagePct}% used).`,
-              tag: `budget-${budget.categoryId}-${monthKey}-${status}`,
-              data: { url: "/finance/budgets" },
-            });
-            if (result.sent) {
-              notificationsSent += 1;
-              sentForAlert = true;
-            }
-            if (result.staleRemoved) staleSubscriptionsRemoved += 1;
-          } catch (error) {
-            errors += 1;
-            console.error("Push delivery failed", {
-              userId,
-              categoryId: budget.categoryId,
-              status,
-              error: error instanceof Error ? error.message : "Unknown push error",
-            });
-          }
-        }
+        const delivery = await sendPushToSubscriptions(
+          subscriptions,
+          {
+            title: "Budget alert",
+            body: `${budget.categoryName} ${STATUS_COPY[status]} (${budget.usagePct}% used).`,
+            tag: `budget-${budget.categoryId}-${monthKey}-${status}`,
+            data: { url: "/finance/budgets" },
+          },
+          { userId, categoryId: budget.categoryId, status }
+        );
+        notificationsSent += delivery.sent;
+        staleSubscriptionsRemoved += delivery.staleRemoved;
+        errors += delivery.failed;
 
-        if (sentForAlert) {
+        if (delivery.sent > 0) {
           await upsertPushBudgetAlertStatus(userId, budget.categoryId, monthKey, status);
         }
       }

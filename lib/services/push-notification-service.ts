@@ -40,6 +40,39 @@ export function isPushNotificationConfigured(): boolean {
   );
 }
 
+/**
+ * Fan one payload out to every device a user has registered. Each endpoint is a
+ * separate HTTPS POST to a different push service, so they go out together
+ * rather than one round trip after another; a stale endpoint deletes itself
+ * inside `sendPushNotification` and any other failure is counted and logged, so
+ * one dead device can't stop a sweep.
+ */
+export async function sendPushToSubscriptions(
+  subscriptions: StoredPushSubscription[],
+  payload: LuyraPushPayload,
+  logContext: Record<string, unknown> = {}
+): Promise<{ sent: number; staleRemoved: number; failed: number }> {
+  const results = await Promise.allSettled(
+    subscriptions.map((subscription) => sendPushNotification(subscription, payload))
+  );
+
+  const totals = { sent: 0, staleRemoved: 0, failed: 0 };
+  for (const result of results) {
+    if (result.status === "rejected") {
+      totals.failed += 1;
+      console.error("Push delivery failed", {
+        ...logContext,
+        error: result.reason instanceof Error ? result.reason.message : "Unknown push error",
+      });
+      continue;
+    }
+    if (result.value.sent) totals.sent += 1;
+    if (result.value.staleRemoved) totals.staleRemoved += 1;
+  }
+
+  return totals;
+}
+
 export async function sendPushNotification(
   subscription: StoredPushSubscription,
   payload: LuyraPushPayload

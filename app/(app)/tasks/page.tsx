@@ -5,6 +5,7 @@ import { listTasks } from "@/lib/services/task-service";
 import { taskFiltersSchema } from "@/lib/validation/task";
 import type { TaskPriority, TaskStatus } from "@/types/task";
 import { TaskList } from "@/components/tasks/task-list";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const STATUS_TABS: { label: string; value: TaskStatus | undefined }[] = [
   { label: "All", value: undefined },
@@ -46,7 +47,7 @@ export default async function TasksPage({
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
+      <PageHeader title="Tasks" className="pb-0" />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1">

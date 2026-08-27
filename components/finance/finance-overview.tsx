@@ -23,6 +23,7 @@ import {
   FinanceEmptyState,
   FinanceErrorState,
   FinanceMetricCard,
+  FinanceMetricGrid,
   FinanceProgress,
   FinanceSection,
   MonthSelector,
@@ -73,11 +74,11 @@ function OverviewLoading() {
   return (
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]" aria-busy="true" aria-label="Loading Finance summary">
       <div className="h-64 rounded-2xl bg-secondary motion-safe:animate-pulse lg:h-auto" />
-      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+      <FinanceMetricGrid columns={2}>
         {Array.from({ length: 4 }, (_, index) => (
           <div key={index} className="h-36 rounded-2xl bg-secondary motion-safe:animate-pulse" />
         ))}
-      </div>
+      </FinanceMetricGrid>
     </div>
   );
 }
@@ -119,15 +120,15 @@ function NetCashFlowCard({ totals }: { totals: MonthTotals }) {
           role="img"
           aria-label={`Income ${krw.format(totals.totalIncomeKrw)} compared with expenses ${krw.format(totals.totalExpenseKrw)}`}
         >
-          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 min-[380px]:grid-cols-[4.5rem_minmax(0,1fr)_auto]" aria-hidden="true">
+          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 xs:grid-cols-[4.5rem_minmax(0,1fr)_auto]" aria-hidden="true">
             <span className="text-xs text-muted-foreground">Income</span>
             <span className="h-2 overflow-hidden rounded-full bg-secondary"><span className="block h-full rounded-full bg-success" style={{ width: `${incomeWidth}%` }} /></span>
-            <span className="col-span-2 break-words text-right font-mono text-xs font-medium tabular-nums min-[380px]:col-span-1">{krw.format(totals.totalIncomeKrw)}</span>
+            <span className="col-span-2 break-words text-right font-mono text-xs font-medium tabular-nums xs:col-span-1">{krw.format(totals.totalIncomeKrw)}</span>
           </div>
-          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 min-[380px]:grid-cols-[4.5rem_minmax(0,1fr)_auto]" aria-hidden="true">
+          <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 xs:grid-cols-[4.5rem_minmax(0,1fr)_auto]" aria-hidden="true">
             <span className="text-xs text-muted-foreground">Expenses</span>
             <span className="h-2 overflow-hidden rounded-full bg-secondary"><span className="block h-full rounded-full bg-destructive/70" style={{ width: `${expenseWidth}%` }} /></span>
-            <span className="col-span-2 break-words text-right font-mono text-xs font-medium tabular-nums min-[380px]:col-span-1">{krw.format(totals.totalExpenseKrw)}</span>
+            <span className="col-span-2 break-words text-right font-mono text-xs font-medium tabular-nums xs:col-span-1">{krw.format(totals.totalExpenseKrw)}</span>
           </div>
         </div>
       </div>
@@ -206,7 +207,7 @@ function FinanceSummaryCards({ summary }: { summary: FinanceOverviewSummary }) {
   return (
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
       <NetCashFlowCard totals={summary.totals} />
-      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+      <FinanceMetricGrid columns={2}>
         <FinanceMetricCard
           label="Income"
           value={krw.format(summary.totals.totalIncomeKrw)}
@@ -227,7 +228,7 @@ function FinanceSummaryCards({ summary }: { summary: FinanceOverviewSummary }) {
         />
         <SavingsRateCard totals={summary.totals} health={summary.savingsHealth} />
         <BudgetHealthCard health={summary.budgetHealth} />
-      </div>
+      </FinanceMetricGrid>
     </div>
   );
 }
@@ -296,7 +297,7 @@ function BudgetAlerts({ budgets }: { budgets: BudgetPerformance[] }) {
             <div className="flex items-center gap-3">
               <CategoryIcon icon={budget.categoryIcon} color={budget.categoryColor} />
               <div className="min-w-0 flex-1">
-                <div className="flex flex-col items-start gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-3">
+                <div className="flex flex-col items-start gap-1 xs:flex-row xs:items-center xs:justify-between xs:gap-3">
                   <p className="truncate text-sm font-semibold">{budget.categoryName}</p>
                   <span className={cn("text-xs font-semibold", status.tone === "expense" ? "text-destructive" : "text-warning")}>{status.label} · {budget.usagePct}%</span>
                 </div>
@@ -328,7 +329,7 @@ function CategorySpending({ categories, budgets, totalExpense }: { categories: C
               <div className="flex items-center gap-3">
                 <CategoryIcon icon={category.categoryIcon} color={category.categoryColor} />
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-col items-start gap-1 min-[380px]:flex-row min-[380px]:justify-between min-[380px]:gap-4">
+                  <div className="flex flex-col items-start gap-1 xs:flex-row xs:justify-between xs:gap-4">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{category.categoryName}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">{share.toFixed(0)}% of expenses{budget ? ` · ${budget.usagePct}% of budget` : " · No category budget"}</p>
@@ -387,13 +388,13 @@ function RecentActivity({ transactions }: { transactions: Transaction[] }) {
     <div className="overflow-hidden rounded-2xl border bg-card">
       <div className="divide-y divide-border">
         {transactions.map((transaction) => (
-          <Link key={transaction.id} href="/finance/transactions" className="flex min-h-16 items-start gap-2 px-3 py-3 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring min-[380px]:items-center min-[380px]:gap-3 min-[380px]:px-4">
+          <Link key={transaction.id} href="/finance/transactions" className="flex min-h-16 items-start gap-2 px-3 py-3 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring xs:items-center xs:gap-3 xs:px-4">
             <CategoryIcon icon={transaction.categoryIcon} color={transaction.categoryColor} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{transaction.description || "Untitled transaction"}</p>
               <p className="mt-0.5 truncate text-xs text-muted-foreground">{transaction.categoryName || (transaction.type === "income" ? "Income" : "Uncategorized")} · {formatTransactionDate(transaction)}</p>
             </div>
-            <p className={cn("max-w-[48%] shrink-0 [overflow-wrap:anywhere] text-right font-mono text-xs font-semibold tracking-tight tabular-nums min-[380px]:text-sm", transaction.type === "income" ? "text-success" : "text-foreground")}>{transactionAmount(transaction)}</p>
+            <p className={cn("max-w-[48%] shrink-0 [overflow-wrap:anywhere] text-right font-mono text-xs font-semibold tracking-tight tabular-nums xs:text-sm", transaction.type === "income" ? "text-success" : "text-foreground")}>{transactionAmount(transaction)}</p>
           </Link>
         ))}
       </div>
@@ -401,7 +402,14 @@ function RecentActivity({ transactions }: { transactions: Transaction[] }) {
   );
 }
 
-export function FinanceOverview() {
+export function FinanceOverview({
+  initialMonth,
+  initialSummary,
+}: {
+  /** YYYY-MM that the server prefetched `initialSummary` for. */
+  initialMonth?: string;
+  initialSummary?: FinanceOverviewSummary;
+}) {
   const [monthOffset, setMonthOffset] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const requestKey = `${monthOffset}:${refreshKey}`;
@@ -409,7 +417,14 @@ export function FinanceOverview() {
     key: string;
     summary: FinanceOverviewSummary | null;
     error: string | null;
-  }>({ key: "", summary: null, error: null });
+  }>(() =>
+    // Seeding from the server keeps the amounts on screen from the first paint.
+    // The month guard covers a browser whose "this month" differs from the
+    // server's; the empty key then falls through to fetch-on-mount.
+    initialSummary && initialMonth === monthKey(0)
+      ? { key: requestKey, summary: initialSummary, error: null }
+      : { key: "", summary: null, error: null }
+  );
   const loading = result.key !== requestKey;
   const summary = loading ? null : result.summary;
   const error = loading ? null : result.error;
@@ -417,6 +432,8 @@ export function FinanceOverview() {
   useEffect(() => onTransactionChanged(() => setRefreshKey((key) => key + 1)), []);
 
   useEffect(() => {
+    // Already holding this month's data — the server prefetch, or a finished fetch.
+    if (result.key === requestKey) return;
     let active = true;
     void getFinanceOverview(monthKey(monthOffset))
       .then((data) => {
@@ -432,10 +449,10 @@ export function FinanceOverview() {
         }
       });
     return () => { active = false; };
-  }, [monthOffset, requestKey]);
+  }, [monthOffset, requestKey, result.key]);
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-6 lg:space-y-7">
       <FinanceSection
         id="finance-summary"
         title="Summary"

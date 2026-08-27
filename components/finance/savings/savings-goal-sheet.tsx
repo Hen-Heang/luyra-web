@@ -5,7 +5,8 @@ import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { CreateSavingsGoalInput, UpdateSavingsGoalInput } from "@/lib/validation/finance";
 import type { SavingsGoal } from "@/types/finance";
@@ -28,7 +29,7 @@ export function SavingsGoalSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[90dvh] w-full gap-0 sm:max-w-lg sm:rounded-t-2xl">
+      <SheetContent side="bottom" size="form">
         <SheetHeader>
           <SheetTitle>{mode === "create" ? "New savings goal" : "Edit savings goal"}</SheetTitle>
           <SheetDescription>
@@ -176,13 +177,7 @@ function SavingsGoalSheetFields({
 
         <div className="space-y-1.5">
           <Label htmlFor="goal-note">Note (optional)</Label>
-          <textarea
-            id="goal-note"
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            rows={2}
-            className="flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
+          <Textarea id="goal-note" value={note} onChange={(event) => setNote(event.target.value)} rows={2} />
         </div>
 
         {error && (
@@ -192,7 +187,7 @@ function SavingsGoalSheetFields({
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <SheetFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending} className="min-h-11 flex-1">
           Cancel
         </Button>
@@ -200,7 +195,7 @@ function SavingsGoalSheetFields({
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {mode === "create" ? "Add goal" : "Save changes"}
         </Button>
-      </div>
+      </SheetFooter>
     </form>
   );
 }

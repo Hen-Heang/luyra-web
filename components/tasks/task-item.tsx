@@ -57,7 +57,7 @@ export function TaskItem({ task }: { task: Task }) {
 
   return (
     <div className="flex flex-col items-stretch gap-2 p-3 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between min-[520px]:gap-3">
-      <div className="flex min-w-0 items-center gap-1 min-[380px]:gap-3">
+      <div className="flex min-w-0 items-center gap-1 xs:gap-3">
         <button
           type="button"
           onClick={toggleDone}

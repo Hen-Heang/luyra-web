@@ -50,7 +50,7 @@ export function SubscriptionCard({
           </p>
         </div>
         <div className="max-w-[45%] shrink-0 text-right">
-          <p className="[overflow-wrap:anywhere] font-mono text-xs font-semibold tabular-nums min-[380px]:text-sm">{krw.format(subscription.latestAmountKrw)}</p>
+          <p className="[overflow-wrap:anywhere] font-mono text-xs font-semibold tabular-nums xs:text-sm">{krw.format(subscription.latestAmountKrw)}</p>
           <p className="text-xs text-muted-foreground">latest</p>
         </div>
       </div>

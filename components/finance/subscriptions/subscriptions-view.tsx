@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Repeat } from "lucide-react";
-import { FinanceEmptyState, FinanceErrorState, FinanceSection } from "@/components/finance/ui/finance-primitives";
+import { FinanceEmptyState, FinanceErrorState, FinanceMetricGrid, FinanceSection } from "@/components/finance/ui/finance-primitives";
 import { SubscriptionsSummary } from "@/components/finance/subscriptions/subscriptions-summary";
 import { SubscriptionCard } from "@/components/finance/subscriptions/subscription-card";
 import { listDetectedSubscriptions, setSubscriptionStatus } from "@/lib/api/finance";
@@ -11,11 +11,11 @@ import type { DetectedSubscription, SubscriptionStatus } from "@/types/finance";
 function SubscriptionsLoading() {
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Loading subscriptions">
-      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
+      <FinanceMetricGrid>
         {[0, 1, 2, 3].map((card) => (
           <div key={card} className="h-24 rounded-2xl bg-secondary motion-safe:animate-pulse" />
         ))}
-      </div>
+      </FinanceMetricGrid>
       <div className="space-y-3">
         {[0, 1, 2].map((card) => (
           <div key={card} className="h-28 rounded-2xl bg-secondary motion-safe:animate-pulse" />

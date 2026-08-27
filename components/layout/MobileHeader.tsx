@@ -21,7 +21,7 @@ export function MobileHeader({ pathname, className }: { pathname: string; classN
   const title = publishedTitle ?? navLabel ?? "Luyra";
 
   return (
-    <header className={cn("sticky top-0 z-30 flex items-center gap-1 border-b border-border bg-background/95 px-2 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-sm", className)}>
+    <header className={cn("sticky top-0 z-30 flex min-h-[calc(3.25rem+env(safe-area-inset-top))] items-center gap-1 border-b border-border/80 bg-background/88 px-2.5 pt-[env(safe-area-inset-top)] backdrop-blur-md", className)}>
       {detail && (
         <button
           type="button"

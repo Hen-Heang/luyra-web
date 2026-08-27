@@ -53,7 +53,7 @@ export function BudgetCard({
         </DropdownMenu>
       </div>
 
-      <div className="mt-2 flex flex-col items-start gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-2">
+      <div className="mt-2 flex flex-col items-start gap-1 xs:flex-row xs:items-center xs:justify-between xs:gap-2">
         <p className="min-w-0 [overflow-wrap:anywhere] font-mono text-xs text-muted-foreground tabular-nums">
           {krw.format(budget.spentKrw)} of {krw.format(budget.budgetKrw)}
         </p>

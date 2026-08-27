@@ -29,6 +29,17 @@
   --finance-chart: #2563eb;
   --sidebar: #ffffff;
   --radius: 0.625rem;
+  /* Geometry of the floating mobile tab bar, defined once so the three things
+     that must clear it can't drift apart. `--mobile-nav-height` is the bar's own
+     box (a 3.5rem tab plus the 0.375rem padding either side of it) and
+     `--mobile-nav-gap` is how far it floats above the safe area; together they
+     give `--mobile-nav-inset`, the first pixel the bar covers. The Finance FAB
+     stacks on that, and `--mobile-content-inset` is what scrolling content has
+     to reserve to clear both. */
+  --mobile-nav-gap: 0.5rem;
+  --mobile-nav-height: 4.25rem;
+  --mobile-nav-inset: calc(env(safe-area-inset-bottom) + var(--mobile-nav-gap) + var(--mobile-nav-height));
+  --mobile-content-inset: calc(var(--mobile-nav-inset) + 3.75rem);
   /* Fixed-order categorical palette for multi-series Finance charts (e.g. payment
      method breakdown) — validated for adjacent-pair colorblind safety, never
      reassigned by rank or filter state. See dataviz skill reference palette. */
@@ -46,6 +57,12 @@
      rem rather than px: Tailwind emits px-valued media queries ahead of the
      rem-valued defaults, so a px version would still lose the cascade to `md:`. */
   --breakpoint-nav: 75rem;
+
+  /* Narrow-phone step (390px — iPhone 12/13/14 class), the width at which the
+     one-column mobile stacks earn a second column. Named for the same reason as
+     `--breakpoint-nav`, and because it had drifted into two arbitrary variants
+     meaning the same thing (`min-[380px]:` and `min-[390px]:`). */
+  --breakpoint-xs: 24.375rem;
 }
 
 @theme inline {
@@ -120,6 +137,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 /* iOS Safari zooms focused form controls whose rendered text is below 16px.

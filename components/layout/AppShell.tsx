@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               id="main-content"
               tabIndex={-1}
               className={cn(
-                "min-h-0 flex-1 overflow-x-clip px-4 pt-5 pb-[calc(9rem+env(safe-area-inset-bottom))] outline-none sm:px-6 md:pb-10 lg:px-8",
+                "min-h-0 flex-1 overflow-x-clip px-4 pt-5 pb-[var(--mobile-content-inset)] outline-none sm:px-6 md:pb-8 lg:px-8",
                 isKeyboardOpen && "pb-10"
               )}
             >

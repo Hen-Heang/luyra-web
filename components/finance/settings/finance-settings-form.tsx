@@ -178,7 +178,7 @@ export function FinanceSettingsForm() {
         </FinanceSection>
 
         <FinanceSection id="settings-reviews" title="Reviews" description="Whether the Monthly Review screen is available.">
-          <div className="flex flex-col items-stretch gap-3 rounded-2xl border bg-card p-4 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-4">
+          <div className="flex flex-col items-stretch gap-3 rounded-2xl border bg-card p-4 xs:flex-row xs:items-center xs:justify-between xs:gap-4">
             <div className="min-w-0">
               <p className="text-sm font-medium">Monthly review</p>
               <p className="mt-0.5 text-xs text-muted-foreground">Show the Monthly Review screen and its deterministic observations.</p>
@@ -222,7 +222,7 @@ export function FinanceSettingsForm() {
                 { label: "Monthly report email", value: monthlyReportEmailEnabled, onChange: setMonthlyReportEmailEnabled },
               ] as const
             ).map((toggle) => (
-              <div key={toggle.label} className="flex flex-col items-stretch gap-2 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between min-[380px]:gap-4">
+              <div key={toggle.label} className="flex flex-col items-stretch gap-2 xs:flex-row xs:items-center xs:justify-between xs:gap-4">
                 <p className="min-w-0 text-sm font-medium">{toggle.label}</p>
                 <div className="flex shrink-0 self-end gap-1 rounded-xl border bg-secondary p-1">
                   {[
@@ -259,7 +259,7 @@ export function FinanceSettingsForm() {
           </p>
         )}
 
-        <Button type="submit" size="sm" disabled={pending} className="min-h-11 w-full min-[380px]:w-auto">
+        <Button type="submit" size="sm" disabled={pending} className="min-h-11 w-full xs:w-auto">
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {pending ? "Saving…" : "Save changes"}
         </Button>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CalendarClock, Settings2 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { FinanceEmptyState, FinanceErrorState, FinanceMetricCard, FinanceSection, MonthSelector } from "@/components/finance/ui/finance-primitives";
+import { FinanceEmptyState, FinanceErrorState, FinanceMetricCard, FinanceMetricGrid, FinanceSection, MonthSelector } from "@/components/finance/ui/finance-primitives";
 import { ReviewSummaryCards } from "@/components/finance/review/review-summary";
 import { ReviewBudgetPerformance } from "@/components/finance/review/review-budget-performance";
 import { ReviewCategoryChanges } from "@/components/finance/review/review-category-changes";
@@ -18,11 +18,11 @@ import type { ReviewSummary } from "@/types/finance";
 function ReviewLoading() {
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Loading monthly review">
-      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
+      <FinanceMetricGrid>
         {[0, 1, 2, 3].map((card) => (
           <div key={card} className="h-28 rounded-2xl bg-secondary motion-safe:animate-pulse" />
         ))}
-      </div>
+      </FinanceMetricGrid>
       <div className="h-56 rounded-2xl bg-secondary motion-safe:animate-pulse" />
       <div className="h-56 rounded-2xl bg-secondary motion-safe:animate-pulse" />
     </div>
@@ -93,9 +93,7 @@ export function ReviewView() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">How this month went</p>
-        </div>
+        <p className="max-w-xl text-sm leading-5 text-muted-foreground">How income, spending, budgets, and savings changed.</p>
         <MonthSelector
           label={monthLabel(monthOffset)}
           onPrevious={() => setMonthOffset((offset) => offset - 1)}

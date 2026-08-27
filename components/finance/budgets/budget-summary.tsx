@@ -1,7 +1,7 @@
 "use client";
 
 import { Landmark, ReceiptText, Scale, TriangleAlert } from "lucide-react";
-import { FinanceMetricCard } from "@/components/finance/ui/finance-primitives";
+import { FinanceMetricCard, FinanceMetricGrid } from "@/components/finance/ui/finance-primitives";
 import { krw } from "@/lib/finance-format";
 import type { BudgetPerformance } from "@/types/finance";
 
@@ -12,7 +12,7 @@ export function BudgetSummary({ performance }: { performance: BudgetPerformance[
   const attentionCount = performance.filter((budget) => budget.status !== "ok").length;
 
   return (
-    <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:gap-3 lg:grid-cols-4">
+    <FinanceMetricGrid>
       <FinanceMetricCard
         label="Total budget"
         value={krw.format(totalBudgetKrw)}
@@ -40,6 +40,6 @@ export function BudgetSummary({ performance }: { performance: BudgetPerformance[
         icon={TriangleAlert}
         tone={attentionCount > 0 ? "warning" : "positive"}
       />
-    </div>
+    </FinanceMetricGrid>
   );
 }

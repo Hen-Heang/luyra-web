@@ -12,7 +12,7 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-background px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6">
+    <main className="relative flex min-h-dvh items-center justify-center overflow-x-hidden overflow-y-auto bg-background px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6">
       <div
         className="pointer-events-none absolute inset-0 opacity-70"
         aria-hidden="true"
@@ -52,14 +52,14 @@ export function AuthShell({
           </div>
         </div>
 
-        <section className="relative overflow-hidden rounded-[26px] border border-border/80 bg-card/90 p-5 shadow-2xl shadow-black/[0.08] backdrop-blur-2xl min-[380px]:rounded-[30px] min-[380px]:p-6 sm:p-8 dark:shadow-black/30">
+        <section className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/95 p-5 shadow-xl shadow-black/[0.07] xs:p-6 sm:p-8 dark:shadow-black/25">
           <div
             className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-success/40 to-transparent"
             aria-hidden="true"
           />
 
-          <div className="mb-7 text-center">
-            <h1 className="text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-[28px]">
+          <div className="mb-6 text-center sm:mb-7">
+            <h1 className="text-xl font-semibold tracking-[-0.025em] text-foreground sm:text-2xl">
               {title}
             </h1>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
