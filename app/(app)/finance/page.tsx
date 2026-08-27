@@ -1,4 +1,5 @@
 import { FinanceOverview } from "@/components/finance/finance-overview";
+import { GreetingHeader } from "@/components/layout/GreetingHeader";
 import { ensureAppUser } from "@/lib/auth/ensure-app-user";
 import { appMonth } from "@/lib/finance-cron-time";
 import { getFinanceOverviewSummary } from "@/lib/services/finance-analytics-service";
@@ -12,14 +13,19 @@ import type { FinanceOverviewSummary } from "@/types/finance";
 // so the page degrades to the previous fetch-on-mount behaviour.
 export default async function FinancePage() {
   const month = appMonth();
-  let summary: FinanceOverviewSummary | undefined;
+  const appUser = await ensureAppUser();
 
+  let summary: FinanceOverviewSummary | undefined;
   try {
-    const appUser = await ensureAppUser();
     summary = await getFinanceOverviewSummary(appUser.id, month);
   } catch {
     summary = undefined;
   }
 
-  return <FinanceOverview initialMonth={month} initialSummary={summary} />;
+  return (
+    <div className="space-y-6 lg:space-y-7">
+      <GreetingHeader user={appUser} />
+      <FinanceOverview initialMonth={month} initialSummary={summary} />
+    </div>
+  );
 }

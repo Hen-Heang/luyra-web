@@ -6,13 +6,7 @@ import { QuickAddGoal } from "@/components/today/quick-add-goal";
 import { TaskRow } from "@/components/today/task-row";
 import { GoalRow } from "@/components/today/goal-row";
 import { PageHeader } from "@/components/layout/PageHeader";
-
-function greeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
+import { greetingFor } from "@/lib/greeting";
 
 export default async function TodayPage() {
   const appUser = await ensureAppUser();
@@ -30,7 +24,7 @@ export default async function TodayPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader title={greeting()} description={dateLabel} className="pb-0" />
+      <PageHeader title={greetingFor(appUser.timezone).label} description={dateLabel} className="pb-0" />
 
       <Card>
         <CardHeader className="items-stretch justify-between gap-3 min-[520px]:flex-row min-[520px]:items-center">
