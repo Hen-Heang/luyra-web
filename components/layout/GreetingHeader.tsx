@@ -17,7 +17,7 @@ export function GreetingHeader({ user, className }: { user: AppUser; className?:
     <div className={cn("flex items-center gap-3", className)}>
       <UserAvatar
         href={accountItem.href}
-        className="size-12 rounded-full"
+        className="size-10 rounded-full"
         email={user.email}
         name={user.displayName}
         avatarUrl={user.avatarUrl}

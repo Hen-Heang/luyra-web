@@ -22,6 +22,7 @@ import {
   CategoryIcon,
   FinanceEmptyState,
   FinanceErrorState,
+  AmountText,
   FinanceMetricCard,
   FinanceMetricGrid,
   FinanceProgress,
@@ -103,8 +104,8 @@ function NetCashFlowCard({ totals }: { totals: MonthTotals }) {
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p id="net-cash-flow-title" className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Net cash flow</p>
-          <p className={cn("mt-4 [overflow-wrap:anywhere] font-mono text-[clamp(1.75rem,8vw,2.5rem)] font-semibold leading-none tracking-[-0.05em] tabular-nums", netTone)} title={signedAmount(totals.netCashFlowKrw)}>
-            {signedAmount(totals.netCashFlowKrw)}
+          <p className={cn("mt-4 [overflow-wrap:anywhere] font-mono text-[clamp(1.75rem,8vw,2.5rem)] font-semibold leading-none tracking-[-0.035em] tabular-nums", netTone)} title={signedAmount(totals.netCashFlowKrw)}>
+            <AmountText value={signedAmount(totals.netCashFlowKrw)} />
           </p>
           <p className="mt-2 text-xs text-muted-foreground">Income minus expenses</p>
         </div>
