@@ -10,7 +10,7 @@ import type { FinanceOverviewSummary } from "@/types/finance";
 // month to Asia/Seoul; the client compares it against its own current month
 // and falls back to fetching if a traveling browser disagrees. A failed
 // prefetch is swallowed on purpose — the client owns the retry and error state,
-// so the page degrades to the previous fetch-on-mount behaviour.
+// so the page degrades to the previous fetch-on-mount behavior.
 export default async function FinancePage() {
   const month = appMonth();
   const appUser = await ensureAppUser();
