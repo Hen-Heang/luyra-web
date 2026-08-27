@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { ChevronLeft, ChevronRight, CircleAlert, RefreshCw, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { splitCurrency } from "@/lib/finance-format";
 import { cn } from "@/lib/utils";
 
 type FinanceTone = "neutral" | "positive" | "expense" | "warning";
@@ -11,6 +12,26 @@ const TONE_STYLES: Record<FinanceTone, { icon: string; value: string; surface: s
   expense: { icon: "bg-destructive/10 text-destructive", value: "text-destructive", surface: "border-destructive/20" },
   warning: { icon: "bg-warning/10 text-warning", value: "text-warning", surface: "border-warning/20" },
 };
+
+/**
+ * A formatted amount with its currency symbol lifted out of the monospace run.
+ * Geist Mono carries no ₩, so inline it falls through to a CJK fallback whose
+ * glyph is twice the mono cell and whose ink overshoots its own advance — at
+ * display sizes that lands on top of the first digit. Giving the symbol its own
+ * box with normal tracking and a little trailing room absorbs the overshoot.
+ * Values with no leading symbol (percentages, counts) pass through untouched.
+ */
+export function AmountText({ value }: { value: string }) {
+  const parts = splitCurrency(value);
+  if (!parts) return <>{value}</>;
+  return (
+    <>
+      {parts.sign}
+      <span className="pr-[max(0.08em,3.5px)] font-sans tracking-normal">{parts.symbol}</span>
+      {parts.digits}
+    </>
+  );
+}
 
 export function FinanceSection({ id, title, description, action, children, className }: {
   id: string;
@@ -56,7 +77,7 @@ export function FinanceMetricCard({ label, value, detail, icon: Icon, tone = "ne
         </span>
       </div>
       <div>
-        <p className={cn("[overflow-wrap:anywhere] font-mono font-semibold leading-tight tracking-[-0.035em] tabular-nums", featured ? "text-[clamp(1.75rem,8vw,2.5rem)]" : "text-xl sm:text-2xl", valueStyles.value)} title={value}>{value}</p>
+        <p className={cn("[overflow-wrap:anywhere] font-mono font-semibold leading-tight tracking-[-0.035em] tabular-nums", featured ? "text-[clamp(1.75rem,8vw,2.5rem)]" : "text-xl sm:text-2xl", valueStyles.value)} title={value}><AmountText value={value} /></p>
         <div className="mt-1.5 text-xs text-muted-foreground sm:mt-2">{detail}</div>
       </div>
     </div>
