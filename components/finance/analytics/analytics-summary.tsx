@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDownRight, ArrowUpRight, Landmark, PiggyBank } from "lucide-react";
-import { FinanceMetricCard } from "@/components/finance/ui/finance-primitives";
+import { FinanceMetricCard, FinanceMetricGrid } from "@/components/finance/ui/finance-primitives";
 import { krw } from "@/lib/finance-format";
 import type { MonthTotals } from "@/types/finance";
 
@@ -12,7 +12,7 @@ function signedAmount(value: number): string {
 
 export function AnalyticsSummaryCards({ totals }: { totals: MonthTotals }) {
   return (
-    <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
+    <FinanceMetricGrid>
       <FinanceMetricCard label="Income" value={krw.format(totals.totalIncomeKrw)} detail={`${totals.transactionCount} transactions`} icon={ArrowUpRight} tone="positive" />
       <FinanceMetricCard label="Expenses" value={krw.format(totals.totalExpenseKrw)} detail="Recorded this month" icon={ArrowDownRight} tone="expense" />
       <FinanceMetricCard
@@ -29,6 +29,6 @@ export function AnalyticsSummaryCards({ totals }: { totals: MonthTotals }) {
         icon={PiggyBank}
         tone={totals.savingsRatePct >= 0 ? "positive" : "expense"}
       />
-    </div>
+    </FinanceMetricGrid>
   );
 }

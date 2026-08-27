@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarClock, Clock3, Repeat, Wallet } from "lucide-react";
-import { FinanceMetricCard } from "@/components/finance/ui/finance-primitives";
+import { FinanceMetricCard, FinanceMetricGrid } from "@/components/finance/ui/finance-primitives";
 import { krw } from "@/lib/finance-format";
 import type { DetectedSubscription } from "@/types/finance";
 
@@ -12,7 +12,7 @@ export function SubscriptionsSummary({ subscriptions }: { subscriptions: Detecte
   const planToCancelCount = subscriptions.filter((s) => s.status === "plan_to_cancel").length;
 
   return (
-    <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
+    <FinanceMetricGrid>
       <FinanceMetricCard label="Monthly cost" value={`${krw.format(monthlyKrw)}/mo`} detail="Estimated, excluding cancelled" icon={Wallet} />
       <FinanceMetricCard label="Yearly cost" value={krw.format(yearlyKrw)} detail="Estimated across the year" icon={CalendarClock} />
       <FinanceMetricCard label="Active" value={String(active.length)} detail="Not marked cancelled" icon={Repeat} />
@@ -23,6 +23,6 @@ export function SubscriptionsSummary({ subscriptions }: { subscriptions: Detecte
         icon={Clock3}
         tone={planToCancelCount > 0 ? "warning" : "neutral"}
       />
-    </div>
+    </FinanceMetricGrid>
   );
 }

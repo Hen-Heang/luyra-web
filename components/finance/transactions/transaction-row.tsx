@@ -58,7 +58,7 @@ export function TransactionRow({
           </p>
           <p
             className={cn(
-              "max-w-[58%] shrink-0 whitespace-nowrap text-right font-mono text-xs font-semibold tabular-nums sm:text-sm",
+              "max-w-[58%] shrink-0 whitespace-nowrap text-right font-mono text-sm font-semibold tabular-nums",
               isIncome ? "text-success" : "text-foreground"
             )}
           >

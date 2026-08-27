@@ -5,6 +5,7 @@ import { QuickAddTask } from "@/components/today/quick-add-task";
 import { QuickAddGoal } from "@/components/today/quick-add-goal";
 import { TaskRow } from "@/components/today/task-row";
 import { GoalRow } from "@/components/today/goal-row";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -29,10 +30,7 @@ export default async function TodayPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{greeting()}</h1>
-        <p className="text-sm text-muted-foreground">{dateLabel}</p>
-      </div>
+      <PageHeader title={greeting()} description={dateLabel} className="pb-0" />
 
       <Card>
         <CardHeader className="items-stretch justify-between gap-3 min-[520px]:flex-row min-[520px]:items-center">

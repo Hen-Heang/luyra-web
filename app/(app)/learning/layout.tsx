@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const TABS = [
   { href: "/learning", label: "Overview" },
@@ -15,9 +16,7 @@ export default function LearningLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Learning</h1>
-      </div>
+      <PageHeader title="Learning" className="pb-0" />
 
       <nav className="flex gap-1 overflow-x-auto border-b border-border">
         {TABS.map((tab) => (

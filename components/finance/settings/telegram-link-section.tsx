@@ -86,7 +86,7 @@ export function TelegramLinkSection() {
   if (status.linked) {
     return (
       <div className="rounded-2xl border bg-card p-4">
-        <div className="flex flex-col items-start gap-3 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
+        <div className="flex flex-col items-start gap-3 xs:flex-row xs:items-center xs:justify-between">
           <p className="flex items-center gap-1.5 text-sm font-medium text-success">
             <CheckCircle2 className="size-4" aria-hidden="true" />
             Linked{status.telegramUsername ? ` as @${status.telegramUsername}` : ""}

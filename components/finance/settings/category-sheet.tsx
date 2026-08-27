@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChipSelect } from "@/components/ui/chip-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ColorPicker, IconPicker } from "@/components/finance/settings/lookup-primitives";
 import { ApiError } from "@/lib/api/client";
 import type { CategoryType, Category } from "@/types/finance";
@@ -52,7 +52,7 @@ export function CategorySheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[90dvh] w-full gap-0 sm:max-w-lg sm:rounded-t-2xl">
+      <SheetContent side="bottom" size="form">
         <SheetHeader>
           <SheetTitle>{mode === "create" ? "New category" : "Edit category"}</SheetTitle>
           <SheetDescription>
@@ -149,7 +149,7 @@ function CategorySheetFields({
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <SheetFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending} className="min-h-11 flex-1">
           Cancel
         </Button>
@@ -157,7 +157,7 @@ function CategorySheetFields({
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {mode === "create" ? "Add category" : "Save changes"}
         </Button>
-      </div>
+      </SheetFooter>
     </form>
   );
 }

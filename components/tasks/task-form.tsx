@@ -76,7 +76,7 @@ export function TaskForm({
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
-      <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 xs:grid-cols-2">
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value as TaskPriority | "")}

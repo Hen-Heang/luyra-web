@@ -70,7 +70,7 @@ export function FlashcardReview({
       <button
         type="button"
         onClick={() => setFlipped((f) => !f)}
-        className="flex min-h-56 min-w-0 flex-col items-center justify-center gap-3 overflow-hidden rounded-lg border border-border bg-card p-4 text-center transition-colors hover:bg-accent/30 min-[380px]:p-6"
+        className="flex min-h-56 min-w-0 flex-col items-center justify-center gap-3 overflow-hidden rounded-lg border border-border bg-card p-4 text-center transition-colors hover:bg-accent/30 xs:p-6"
       >
         {!flipped ? (
           <>

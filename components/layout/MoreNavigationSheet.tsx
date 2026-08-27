@@ -20,14 +20,14 @@ export function MoreNavigationSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[85dvh] gap-0 rounded-t-lg pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <SheetHeader className="pb-1">
+      <SheetContent side="bottom" className="max-h-[85dvh] gap-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <SheetHeader className="pb-2 pr-16">
           <SheetTitle>More</SheetTitle>
           <SheetDescription className="sr-only">Everything not in the bottom navigation bar.</SheetDescription>
         </SheetHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-          <nav aria-label="More" className="space-y-0.5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+          <nav aria-label="More" className="space-y-1">
             {moreItems.map((item) => (
               <NavRow
                 key={item.id}

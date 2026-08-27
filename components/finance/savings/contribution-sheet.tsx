@@ -4,8 +4,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { CategoryIcon } from "@/components/finance/ui/finance-primitives";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { AmountField, CategoryIcon } from "@/components/finance/ui/finance-primitives";
 import { listSavingsContributions } from "@/lib/api/finance";
 import { usd } from "@/lib/finance-format";
 import type { SavingsGoal, SavingsContribution } from "@/types/finance";
@@ -29,7 +29,7 @@ export function ContributionSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[90dvh] w-full gap-0 sm:max-w-lg sm:rounded-t-2xl">
+      <SheetContent side="bottom" size="form">
         <SheetHeader>
           <SheetTitle>Add contribution</SheetTitle>
           <SheetDescription>{goal ? `Record a deposit toward ${goal.name}.` : "Record a deposit toward this goal."}</SheetDescription>
@@ -108,22 +108,18 @@ function ContributionSheetFields({
 
         <div className="space-y-1.5">
           <Label htmlFor="contribution-amount">Amount</Label>
-          <div className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3">
-            <span className="text-2xl font-semibold text-muted-foreground">$</span>
-            <input
-              id="contribution-amount"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
-              autoFocus
-              placeholder="0.00"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              required
-              className="w-full min-w-0 bg-transparent text-3xl font-bold tracking-tight tabular-nums outline-none"
-            />
-          </div>
+          <AmountField
+            symbol="$"
+            id="contribution-amount"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            autoFocus
+            placeholder="0.00"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            required
+          />
         </div>
 
         {error && (
@@ -155,7 +151,7 @@ function ContributionSheetFields({
         </div>
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <SheetFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending} className="min-h-11 flex-1">
           Cancel
         </Button>
@@ -163,7 +159,7 @@ function ContributionSheetFields({
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
           Add contribution
         </Button>
-      </div>
+      </SheetFooter>
     </form>
   );
 }

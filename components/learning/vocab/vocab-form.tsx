@@ -52,7 +52,7 @@ export function VocabForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2 rounded-lg border border-border p-3">
-      <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-[minmax(0,1fr)_8rem]">
+      <div className="grid grid-cols-1 gap-2 xs:grid-cols-[minmax(0,1fr)_8rem]">
         <Input placeholder="Korean term" value={term} onChange={(e) => setTerm(e.target.value)} required lang="ko" className="flex-1" autoFocus />
         <Input placeholder="Deck" value={category} onChange={(e) => setCategory(e.target.value)} className="w-full" />
       </div>

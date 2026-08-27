@@ -13,8 +13,7 @@ import {
 } from "@/lib/repositories/push-subscription-repository";
 import {
   isPushNotificationConfigured,
-  sendPushNotification,
-  type LuyraPushPayload,
+  sendPushToSubscriptions,
 } from "@/lib/services/push-notification-service";
 import { escapeTelegramHtml, isTelegramConfigured, sendTelegramMessage } from "@/lib/telegram/client";
 import { appDate, appMinutesOfDay, appMonth, monthStart, nextDate, nextMonthStart } from "@/lib/finance-cron-time";
@@ -227,26 +226,6 @@ function dailyLogCopy(totals: DayTotals): { title: string; lines: string[] } {
   };
 }
 
-async function sendDailyLogPush(userId: string, payload: LuyraPushPayload): Promise<number> {
-  const subscriptions = await listPushSubscriptionsForUser(userId);
-  let sent = 0;
-
-  for (const subscription of subscriptions) {
-    try {
-      // A stale endpoint deletes itself inside sendPushNotification; anything
-      // else is logged and skipped so one dead device can't stop the sweep.
-      if ((await sendPushNotification(subscription, payload)).sent) sent += 1;
-    } catch (error) {
-      console.error("Daily log reminder push failed", {
-        userId,
-        error: error instanceof Error ? error.message : "Unknown push error",
-      });
-    }
-  }
-
-  return sent;
-}
-
 /**
  * The 20:00 (Asia/Seoul) daily log check-in. Unlike runDailyReminder's midday
  * nudge this one always sends: on a day with nothing recorded it asks for the
@@ -279,21 +258,32 @@ export async function runDailyLogReminder(now: Date = new Date()): Promise<CronR
     const totals = await sumTotalsForRange(userId, today, tomorrow);
     const { title, lines } = dailyLogCopy(totals);
 
+    // The two channels are independent deliveries; nothing is gained by making
+    // one wait for the other.
     const chatId = chatIdByUser.get(userId);
-    if (chatId) {
-      const message = [`🧾 <b>${title}</b>`, "", ...lines].join("\n");
-      if (await sendTelegramMessage(chatId, message)) telegram += 1;
-    }
+    const [telegramSent, pushResult] = await Promise.all([
+      chatId
+        ? sendTelegramMessage(chatId, [`🧾 <b>${title}</b>`, "", ...lines].join("\n"))
+        : Promise.resolve(false),
+      pushUserIds.has(userId)
+        ? listPushSubscriptionsForUser(userId).then((subscriptions) =>
+            sendPushToSubscriptions(
+              subscriptions,
+              {
+                title,
+                body: lines.join(" "),
+                // One notification per day: a re-run replaces it instead of stacking.
+                tag: `daily-log-${today}`,
+                data: { url: "/finance/transactions" },
+              },
+              { reminder: "daily_log", userId }
+            )
+          )
+        : Promise.resolve(null),
+    ]);
 
-    if (pushUserIds.has(userId)) {
-      push += await sendDailyLogPush(userId, {
-        title,
-        body: lines.join(" "),
-        // One notification per day: a re-run replaces it instead of stacking.
-        tag: `daily-log-${today}`,
-        data: { url: "/finance/transactions" },
-      });
-    }
+    if (telegramSent) telegram += 1;
+    push += pushResult?.sent ?? 0;
   }
 
   return { scanned: userIds.length, notified: telegram + push, channels: { telegram, push } };

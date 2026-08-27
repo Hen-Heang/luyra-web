@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BarChart3 } from "lucide-react";
-import { FinanceEmptyState, FinanceErrorState, FinanceSection, MonthSelector } from "@/components/finance/ui/finance-primitives";
+import { FinanceEmptyState, FinanceErrorState, FinanceMetricGrid, FinanceSection, MonthSelector } from "@/components/finance/ui/finance-primitives";
 import { AnalyticsSummaryCards } from "@/components/finance/analytics/analytics-summary";
 import { CashFlowTrendChart } from "@/components/finance/analytics/cash-flow-trend-chart";
 import { CategoryDistribution } from "@/components/finance/analytics/category-distribution";
@@ -15,11 +15,11 @@ import type { AnalyticsSummary } from "@/types/finance";
 function AnalyticsLoading() {
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Loading analytics">
-      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
+      <FinanceMetricGrid>
         {[0, 1, 2, 3].map((card) => (
           <div key={card} className="h-28 rounded-2xl bg-secondary motion-safe:animate-pulse" />
         ))}
-      </div>
+      </FinanceMetricGrid>
       <div className="h-64 rounded-2xl bg-secondary motion-safe:animate-pulse" />
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="h-56 rounded-2xl bg-secondary motion-safe:animate-pulse" />
@@ -61,10 +61,7 @@ export function AnalyticsView() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Deep dive</p>
-          <p className="mt-1 text-sm text-muted-foreground">Trends, categories, and payment methods for the selected month.</p>
-        </div>
+        <p className="max-w-xl text-sm leading-5 text-muted-foreground">Trends, categories, and payment methods for the selected month.</p>
         <MonthSelector
           label={monthLabel(monthOffset)}
           onPrevious={() => setMonthOffset((offset) => offset - 1)}

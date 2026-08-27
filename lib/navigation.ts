@@ -113,17 +113,17 @@ export const primaryNavItems: NavItem[] = financeNavItems;
 
 export const allNavItems: NavItem[] = [...primaryNavItems, accountItem];
 
-/** Mobile bottom bar: the core money-flow destinations, Telegram-tab style.
- * Everything else lives in the "More" sheet. */
+/** Mobile bottom bar: four core money-flow destinations plus More.
+ * The shorter set preserves readable labels and touch targets on narrow phones. */
 export const bottomTabs: NavItem[] = [
   financeNavItems[0], // Overview
   financeNavItems[1], // Transactions
   financeNavItems[2], // Budgets
   financeNavItems[3], // Savings
-  financeNavItems[4], // Analytics
 ];
 
 export const moreItems: NavItem[] = [
+  financeNavItems[4], // Analytics
   financeNavItems[5], // Review
   financeNavItems[6], // Subscriptions
   financeNavItems[7], // Settings
@@ -157,6 +157,11 @@ export function getActiveNavItem(pathname: string): NavItem | undefined {
 
 export function getActiveBottomTabIndex(pathname: string): number {
   return bottomTabs.findIndex((item) => isNavigationItemActive({ pathname, item }));
+}
+
+/** Whether the current route lives behind the bottom bar's "More" slot. */
+export function isMoreSectionActive(pathname: string): boolean {
+  return moreItems.some((item) => isNavigationItemActive({ pathname, item }));
 }
 
 /** A route is a "detail" view when it sits below a top-level nav destination. */

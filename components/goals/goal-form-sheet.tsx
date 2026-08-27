@@ -7,7 +7,8 @@ import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
 import { createGoal, updateGoal } from "@/lib/api/goals";
 import type { Goal, GoalCategory } from "@/types/goal";
 
@@ -122,13 +123,7 @@ function GoalFormFields({
 
         <div className="space-y-1.5">
           <Label htmlFor="goal-description">Description</Label>
-          <textarea
-            id="goal-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={4}
-            className="flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
-          />
+          <Textarea id="goal-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
         </div>
 
         <div className="space-y-1.5">
@@ -191,7 +186,7 @@ function GoalFormFields({
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <SheetFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending} className="flex-1">
           Cancel
         </Button>
@@ -199,7 +194,7 @@ function GoalFormFields({
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           Save
         </Button>
-      </div>
+      </SheetFooter>
     </form>
   );
 }

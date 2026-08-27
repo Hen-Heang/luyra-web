@@ -4,8 +4,8 @@ import { useState, type FormEvent } from "react";
 import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { CategoryIcon } from "@/components/finance/ui/finance-primitives";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { AmountField, CategoryIcon } from "@/components/finance/ui/finance-primitives";
 import { cn } from "@/lib/utils";
 import type { BudgetPerformance, Category } from "@/types/finance";
 
@@ -26,7 +26,7 @@ export function BudgetSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[90dvh] w-full gap-0 sm:max-w-lg sm:rounded-t-2xl">
+      <SheetContent side="bottom" size="form">
         <SheetHeader>
           <SheetTitle>{target?.mode === "edit" ? "Edit budget" : "New budget"}</SheetTitle>
           <SheetDescription>
@@ -124,22 +124,18 @@ function BudgetSheetFields({
 
         <div className="space-y-1.5">
           <Label htmlFor="budget-amount">Monthly limit</Label>
-          <div className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3">
-            <span className="text-2xl font-semibold text-muted-foreground">₩</span>
-            <input
-              id="budget-amount"
-              type="number"
-              inputMode="numeric"
-              min="0"
-              step="1"
-              autoFocus={target.mode === "edit"}
-              placeholder="0"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              required
-              className="w-full min-w-0 bg-transparent text-3xl font-bold tracking-tight tabular-nums outline-none"
-            />
-          </div>
+          <AmountField
+            symbol="₩"
+            id="budget-amount"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            autoFocus={target.mode === "edit"}
+            placeholder="0"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            required
+          />
         </div>
 
         {error && (
@@ -149,7 +145,7 @@ function BudgetSheetFields({
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <SheetFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending} className="min-h-11 flex-1">
           Cancel
         </Button>
@@ -157,7 +153,7 @@ function BudgetSheetFields({
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {target.mode === "edit" ? "Save changes" : "Add budget"}
         </Button>
-      </div>
+      </SheetFooter>
     </form>
   );
 }
