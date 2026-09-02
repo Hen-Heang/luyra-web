@@ -156,7 +156,14 @@ export function getActiveNavItem(pathname: string): NavItem | undefined {
 }
 
 export function getActiveBottomTabIndex(pathname: string): number {
-  return bottomTabs.findIndex((item) => isNavigationItemActive({ pathname, item }));
+  // Resolve against every destination, not just the four tabs: Overview's
+  // `/finance` prefix-matches every nested finance route, so matching within
+  // `bottomTabs` alone would keep Overview lit on Budgets and Savings, and
+  // light it a second time alongside "More" on Analytics or Settings.
+  const activeItem = getActiveNavItem(pathname);
+  if (!activeItem) return -1;
+
+  return bottomTabs.findIndex((item) => item.id === activeItem.id);
 }
 
 /** Whether the current route lives behind the bottom bar's "More" slot. */

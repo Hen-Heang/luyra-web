@@ -1,16 +1,16 @@
 import { type NextRequest } from "next/server";
-import { ensureAppUser } from "@/lib/auth/ensure-app-user";
+import { ensureAppUserId } from "@/lib/auth/ensure-app-user";
 import { apiError, apiSuccess } from "@/lib/http";
 import { editGoal, removeGoal } from "@/lib/services/goal-service";
 import { updateGoalSchema } from "@/lib/validation/goal";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const appUser = await ensureAppUser();
+    const userId = await ensureAppUserId();
     const { id } = await params;
     const body = updateGoalSchema.parse(await request.json());
 
-    const goal = await editGoal(appUser.id, id, body);
+    const goal = await editGoal(userId, id, body);
     return apiSuccess(goal);
   } catch (error) {
     return apiError(error);
@@ -19,10 +19,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const appUser = await ensureAppUser();
+    const userId = await ensureAppUserId();
     const { id } = await params;
 
-    await removeGoal(appUser.id, id);
+    await removeGoal(userId, id);
     return apiSuccess({ id });
   } catch (error) {
     return apiError(error);

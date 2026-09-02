@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ensureAppUser } from "@/lib/auth/ensure-app-user";
+import { ensureAppUserId } from "@/lib/auth/ensure-app-user";
 import { apiError } from "@/lib/http";
 import { buildTransactionsCsv } from "@/lib/finance-csv";
 import { exportTransactions } from "@/lib/services/finance-export-service";
@@ -8,9 +8,9 @@ import { exportTransactions } from "@/lib/services/finance-export-service";
 // downloadable file (CSV or a JSON export document), not an API response.
 export async function GET(request: NextRequest) {
   try {
-    const appUser = await ensureAppUser();
+    const userId = await ensureAppUserId();
     const format = request.nextUrl.searchParams.get("format") === "json" ? "json" : "csv";
-    const rows = await exportTransactions(appUser.id);
+    const rows = await exportTransactions(userId);
     const dateStamp = new Date().toISOString().slice(0, 10);
 
     if (format === "json") {

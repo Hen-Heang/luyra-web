@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { z } from "zod";
-import { ensureAppUser } from "@/lib/auth/ensure-app-user";
+import { ensureAppUserId } from "@/lib/auth/ensure-app-user";
 import { apiError, apiSuccess } from "@/lib/http";
 import { sendMonthlyReportToTelegram, sendWeeklySummaryToTelegram } from "@/lib/services/finance-telegram-service";
 
@@ -17,13 +17,13 @@ const sendSchema = z
 
 export async function POST(request: NextRequest) {
   try {
-    const appUser = await ensureAppUser();
+    const userId = await ensureAppUserId();
     const body = sendSchema.parse(await request.json());
 
     const result =
       body.type === "weekly"
-        ? await sendWeeklySummaryToTelegram(appUser.id)
-        : await sendMonthlyReportToTelegram(appUser.id, body.month as string, body.monthLabel ?? (body.month as string));
+        ? await sendWeeklySummaryToTelegram(userId)
+        : await sendMonthlyReportToTelegram(userId, body.month as string, body.monthLabel ?? (body.month as string));
 
     return apiSuccess(result);
   } catch (error) {
