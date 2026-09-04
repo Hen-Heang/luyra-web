@@ -132,6 +132,20 @@ export async function findContributionsByGoal(goalId: string, userId: string): P
   return rows.map(toContribution);
 }
 
+// Across every goal, unfiltered by month — a personal finance app's full
+// contribution history is small enough to hold in memory (same reasoning as
+// findAllTransactionsForExport). Callers filter to a specific month with
+// lib/finance/savings-contributions.ts's sumContributionsForMonth rather
+// than adding a date-range query here, so that month-scoping logic stays
+// pure, unit-tested, and identical everywhere it's used.
+export async function findContributionsForUser(userId: string): Promise<{ amountUsd: number; contributionMonth: string }[]> {
+  const rows = (await sql`
+    select amount_usd, contribution_month from finance_savings_contributions where user_id = ${userId}
+  `) as { amount_usd: string; contribution_month: string }[];
+
+  return rows.map((row) => ({ amountUsd: Number(row.amount_usd), contributionMonth: row.contribution_month }));
+}
+
 // Records the contribution and adds it to the goal's running total in one
 // call — callers never update current_usd directly.
 export async function addContribution(goalId: string, userId: string, amountUsd: number): Promise<SavingsContribution> {

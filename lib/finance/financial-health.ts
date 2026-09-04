@@ -107,13 +107,19 @@ export function computeFinancialHealth(
   totalIncomeKrw: number,
   totalExpenseKrw: number,
   expenseCategories: CategoryAmount[],
-  moneyRule: MoneyRule
+  moneyRule: MoneyRule,
+  // This month's savings-goal contributions, already month-scoped (see
+  // sumContributionsForMonth) and converted to KRW by the caller. Defaults to
+  // 0 so existing callers/tests that only care about category spending don't
+  // need to thread an unrelated value through.
+  futureContributionsKrw = 0
 ): FinancialHealthSummary {
   const totals = sumByBucket(expenseCategories);
+  const futureTotalKrw = totals.futureKrw + futureContributionsKrw;
 
   const essentialPct = pctOfIncome(totals.essentialKrw, totalIncomeKrw);
   const lifestylePct = pctOfIncome(totals.lifestyleKrw, totalIncomeKrw);
-  const futurePct = pctOfIncome(totals.futureKrw, totalIncomeKrw);
+  const futurePct = pctOfIncome(futureTotalKrw, totalIncomeKrw);
 
   const essential: FinanceBucketHealth = {
     bucket: "essential",
@@ -133,7 +139,7 @@ export function computeFinancialHealth(
   };
   const future: FinanceBucketHealth = {
     bucket: "future",
-    amountKrw: totals.futureKrw,
+    amountKrw: futureTotalKrw,
     percentageOfIncome: futurePct,
     targetPercentage: moneyRule.futurePct,
     direction: "minimum",
@@ -145,6 +151,14 @@ export function computeFinancialHealth(
     essential,
     lifestyle,
     future,
+    // growthCategoryKrw and contributionsKrw are two independently-recorded
+    // signals (a `growth`-classified expense transaction vs. a manual
+    // savings-goal contribution) with no shared key in the schema — summed
+    // here on the assumption a user doesn't log the same real-world transfer
+    // in both places. Exposed separately so the UI (and the user) can see
+    // the split rather than one opaque number.
+    futureBreakdown: { growthCategoryKrw: totals.futureKrw, contributionsKrw: futureContributionsKrw },
+    unclassifiedKrw: totals.unclassifiedKrw,
     totalIncomeKrw,
     totalExpenseKrw,
     availableKrw: totalIncomeKrw - totalExpenseKrw,

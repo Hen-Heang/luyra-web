@@ -76,6 +76,20 @@ export function FinanceSettingsForm() {
     };
   }, []);
 
+  // The browser's native #hash scroll fires on initial navigation, before
+  // this client component has replaced SettingsLoading's skeleton with the
+  // real form — so a deep link like /finance/settings#settings-categories
+  // (used by the Financial Health "Unclassified spending" banner) lands on
+  // a target that doesn't exist in the DOM yet and silently does nothing.
+  // Re-attempting the scroll once loading finishes covers the fix without
+  // touching how the settings page looks.
+  useEffect(() => {
+    if (loading) return;
+    const hash = window.location.hash;
+    if (!hash) return;
+    document.querySelector(hash)?.scrollIntoView({ block: "start" });
+  }, [loading]);
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const watchPct = Number(watchThreshold);

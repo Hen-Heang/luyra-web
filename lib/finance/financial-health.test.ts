@@ -96,4 +96,47 @@ describe("computeFinancialHealth", () => {
     const health = computeFinancialHealth("2026-09", 1_000_000, 200_000, [category("Investment", "growth", 200_000)], BALANCED_RULE);
     expect(health.future.status).toBe("healthy");
   });
+
+  it("counts spending with no spending_class as unclassified, excluded from every bucket", () => {
+    const health = computeFinancialHealth(
+      "2026-09",
+      1_000_000,
+      500_000,
+      [category("Housing", "essential", 300_000), category("Mystery", null, 200_000)],
+      BALANCED_RULE
+    );
+
+    expect(health.essential.amountKrw).toBe(300_000);
+    expect(health.unclassifiedKrw).toBe(200_000);
+    expect(health.lifestyle.amountKrw).toBe(0);
+    expect(health.future.amountKrw).toBe(0);
+  });
+
+  it("adds this month's savings contributions into Future, on top of growth-category spending", () => {
+    const health = computeFinancialHealth(
+      "2026-09",
+      1_000_000,
+      300_000,
+      [category("Investment", "growth", 100_000)],
+      BALANCED_RULE,
+      150_000 // futureContributionsKrw
+    );
+
+    expect(health.futureBreakdown).toEqual({ growthCategoryKrw: 100_000, contributionsKrw: 150_000 });
+    expect(health.future.amountKrw).toBe(250_000);
+    expect(health.future.percentageOfIncome).toBe(25);
+  });
+
+  it("defaults futureContributionsKrw to 0 when the caller doesn't pass one", () => {
+    const health = computeFinancialHealth("2026-09", 1_000_000, 100_000, [category("Investment", "growth", 100_000)], BALANCED_RULE);
+    expect(health.futureBreakdown).toEqual({ growthCategoryKrw: 100_000, contributionsKrw: 0 });
+  });
+
+  it("still reports a real Future amount from contributions even with zero income", () => {
+    const health = computeFinancialHealth("2026-09", 0, 0, [], BALANCED_RULE, 273_000);
+
+    expect(health.future.amountKrw).toBe(273_000);
+    expect(health.future.percentageOfIncome).toBeNull();
+    expect(health.future.status).toBe("unavailable");
+  });
 });

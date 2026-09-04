@@ -9,11 +9,13 @@ import {
 } from "@/lib/repositories/finance-transaction-repository";
 import { findBudgetsByUser } from "@/lib/repositories/finance-budget-repository";
 import { findPreferences } from "@/lib/repositories/finance-preferences-repository";
-import { findSavingsGoalsByUser } from "@/lib/repositories/finance-savings-repository";
+import { findContributionsForUser, findSavingsGoalsByUser } from "@/lib/repositories/finance-savings-repository";
 import { computeBudgetPerformance, toBudgetPerformance, toBudgetThresholds } from "@/lib/services/finance-budget-service";
+import { getUsdToKrwRate } from "@/lib/services/finance-exchange-rate-service";
 import { computeSavingsProgress } from "@/lib/services/finance-savings-service";
 import { listDetectedSubscriptions } from "@/lib/services/finance-subscription-service";
 import { computeFinancialHealth, toMoneyRule } from "@/lib/finance/financial-health";
+import { sumContributionsForMonth } from "@/lib/finance/savings-contributions";
 import type {
   AnalyticsSummary,
   BudgetHealth,
@@ -187,26 +189,39 @@ export async function getAnalyticsSummary(userId: string, month: string): Promis
 
 export async function getFinanceOverviewSummary(userId: string, month: string): Promise<FinanceOverviewSummary> {
   const { start, end } = monthBounds(month);
-  const [totalsRaw, categories, dailyRows, budgets, recentTransactions, preferences] = await Promise.all([
-    sumTotalsForRange(userId, start, end),
-    sumExpenseByCategoryForRange(userId, start, end),
-    sumExpenseByDayForRange(userId, start, end),
-    findBudgetsByUser(userId),
-    findRecentTransactionsByUser(userId, start, end),
-    findPreferences(userId),
-  ]);
+  const [totalsRaw, categories, dailyRows, budgets, recentTransactions, preferences, contributions, exchangeRate] =
+    await Promise.all([
+      sumTotalsForRange(userId, start, end),
+      sumExpenseByCategoryForRange(userId, start, end),
+      sumExpenseByDayForRange(userId, start, end),
+      findBudgetsByUser(userId),
+      findRecentTransactionsByUser(userId, start, end),
+      findPreferences(userId),
+      findContributionsForUser(userId),
+      getUsdToKrwRate(),
+    ]);
   const totals = toMonthTotals(totalsRaw);
   const dailySpending = fillDailySpending(month, dailyRows);
   const budgetPerformance = toBudgetPerformance(budgets, categories, toBudgetThresholds(preferences));
   const budgetTotalKrw = budgetPerformance.reduce((sum, budget) => sum + budget.budgetKrw, 0);
   const moneyRule = toMoneyRule(preferences.essentialTargetPct, preferences.targetSavingsRate);
+  // Month-scoped, never the goal's cumulative total — see
+  // sumContributionsForMonth's double-counting note.
+  const futureContributionsKrw = Math.round(sumContributionsForMonth(contributions, month) * exchangeRate.rate);
 
   return {
     month,
     totals,
     savingsHealth: toSavingsRateHealth(totals, preferences.targetSavingsRate),
     budgetHealth: toBudgetHealth(budgetPerformance),
-    financialHealth: computeFinancialHealth(month, totals.totalIncomeKrw, totals.totalExpenseKrw, categories, moneyRule),
+    financialHealth: computeFinancialHealth(
+      month,
+      totals.totalIncomeKrw,
+      totals.totalExpenseKrw,
+      categories,
+      moneyRule,
+      futureContributionsKrw
+    ),
     categories,
     dailySpending,
     dailyBudget: toDailyBudgetGuide(month, totals, budgetTotalKrw, dailySpending),

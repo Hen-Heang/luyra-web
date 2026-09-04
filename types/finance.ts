@@ -283,6 +283,16 @@ export interface FinancialHealthSummary {
   essential: FinanceBucketHealth;
   lifestyle: FinanceBucketHealth;
   future: FinanceBucketHealth;
+  // future.amountKrw split into its two independently-recorded sources — see
+  // computeFinancialHealth's double-counting note. growthCategoryKrw is
+  // `growth`-classified expense spending (KRW); contributionsKrw is this
+  // month's savings-goal contributions (USD, converted to KRW).
+  futureBreakdown: { growthCategoryKrw: number; contributionsKrw: number };
+  // Expense total from categories with no spending_class set yet — counted
+  // in totalExpenseKrw but excluded from all three buckets above until the
+  // user classifies them. Surfaced so /finance can prompt for classification
+  // instead of silently under-representing a bucket.
+  unclassifiedKrw: number;
   totalIncomeKrw: number;
   totalExpenseKrw: number;
   availableKrw: number;

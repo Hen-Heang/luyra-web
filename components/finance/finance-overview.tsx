@@ -8,14 +8,19 @@ import {
   ArrowUpRight,
   CalendarDays,
   CheckCircle2,
+  CircleAlert,
   Clock3,
+  Eye,
   Gauge,
+  HelpCircle,
   Home,
   PiggyBank,
+  Plus,
   ReceiptText,
   Scale,
   Sparkles,
   Sprout,
+  Tags,
   TrendingUp,
   TriangleAlert,
   WalletCards,
@@ -45,6 +50,7 @@ import type {
   DailyBudgetGuide,
   DailySpendingPoint,
   FinanceBucketHealth,
+  FinancialHealthSummary,
   FinanceOverviewSummary,
   MonthTotals,
   SavingsRateHealth,
@@ -97,6 +103,26 @@ const BUCKET_STATUS_TEXT_CLASS: Record<FinanceBucketHealth["status"], string> = 
   unavailable: "text-muted-foreground",
 };
 
+// Shown once, next to the section title, so the three per-card badges below
+// don't have to repeat "Unavailable" three times when there's no income yet.
+const OVERALL_STATUS_META: Record<FinancialHealthSummary["overallStatus"], { label: string; icon: typeof CheckCircle2; className: string }> = {
+  good: { label: "Good", icon: CheckCircle2, className: "border-success/30 bg-success/10 text-success" },
+  watch: { label: "Watch", icon: Eye, className: "border-warning/30 bg-warning/10 text-warning" },
+  attention: { label: "Attention", icon: CircleAlert, className: "border-destructive/30 bg-destructive/10 text-destructive" },
+  unavailable: { label: "Unavailable", icon: HelpCircle, className: "border-border bg-secondary text-muted-foreground" },
+};
+
+function OverallStatusPill({ status }: { status: FinancialHealthSummary["overallStatus"] }) {
+  const meta = OVERALL_STATUS_META[status];
+  const Icon = meta.icon;
+  return (
+    <span className={cn("inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold", meta.className)}>
+      <Icon className="size-3.5" aria-hidden="true" />
+      {meta.label}
+    </span>
+  );
+}
+
 // Progress fill is the bucket's percentage-of-target, not percentage-of-income —
 // FinanceProgress clamps to 100 on its own, so "over" a maximum or comfortably
 // past a minimum both render as a full bar, matching the ASCII mock in
@@ -123,9 +149,11 @@ function FinancialHealthBucketCard({ health }: { health: FinanceBucketHealth }) 
           </span>
           <p className="truncate text-sm font-semibold">{meta.label}</p>
         </div>
-        <span className={cn("shrink-0 rounded-full border border-current/20 px-2 py-0.5 text-[11px] font-semibold", BUCKET_STATUS_TEXT_CLASS[health.status])}>
-          {status.label}
-        </span>
+        {health.status !== "unavailable" && (
+          <span className={cn("shrink-0 rounded-full border border-current/20 px-2 py-0.5 text-[11px] font-semibold", BUCKET_STATUS_TEXT_CLASS[health.status])}>
+            {status.label}
+          </span>
+        )}
       </div>
 
       <p className="mt-3 font-mono text-2xl font-semibold leading-none tabular-nums">
@@ -146,24 +174,69 @@ function FinancialHealthBucketCard({ health }: { health: FinanceBucketHealth }) 
   );
 }
 
+function UnclassifiedSpendingBanner({ amountKrw }: { amountKrw: number }) {
+  return (
+    <Link
+      href="/finance/settings#settings-categories"
+      className="flex items-center gap-3 rounded-2xl border border-warning/25 bg-warning/5 p-4 transition-colors hover:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-warning/10 text-warning">
+        <Tags className="size-4" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-foreground">{krw.format(amountKrw)} isn&rsquo;t classified yet</span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">Classify categories to complete your Essentials, Lifestyle, and Future picture.</span>
+      </span>
+      <ArrowRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+    </Link>
+  );
+}
+
+function AddIncomePrompt() {
+  return (
+    <div className="flex flex-col items-start gap-3 rounded-2xl border bg-card/60 p-4 xs:flex-row xs:items-center xs:justify-between xs:gap-4">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-foreground">No income logged for this month yet</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Add your income to see how it compares against your Essentials, Lifestyle, and Future guidelines.</p>
+      </div>
+      <Link href="/finance/transactions" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "min-h-11 shrink-0")}>
+        <Plus className="size-4" aria-hidden="true" />
+        Add income
+      </Link>
+    </div>
+  );
+}
+
 function FinancialHealthSection({ summary }: { summary: FinanceOverviewSummary }) {
   const health = summary.financialHealth;
 
   return (
-    <FinanceSection id="finance-health" title="Financial health" description="Protect essentials, prepare for what's ahead, grow your future, and enjoy the rest.">
+    <FinanceSection
+      id="finance-health"
+      title="Financial health"
+      description="Protect essentials, prepare for what's ahead, grow your future, and enjoy the rest."
+      action={<OverallStatusPill status={health.overallStatus} />}
+    >
       <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 lg:grid-cols-3">
         <FinancialHealthBucketCard health={health.essential} />
         <FinancialHealthBucketCard health={health.lifestyle} />
         <FinancialHealthBucketCard health={health.future} />
       </div>
-      {health.recommendations.length > 0 && (
-        <div className="space-y-1 rounded-2xl border bg-card/60 p-4">
-          {health.recommendations.slice(0, 2).map((note) => (
-            <p key={note} className="text-xs leading-relaxed text-muted-foreground first:text-sm first:font-medium first:text-foreground">
-              {note}
-            </p>
-          ))}
-        </div>
+
+      {health.unclassifiedKrw > 0 && <UnclassifiedSpendingBanner amountKrw={health.unclassifiedKrw} />}
+
+      {health.overallStatus === "unavailable" ? (
+        <AddIncomePrompt />
+      ) : (
+        health.recommendations.length > 0 && (
+          <div className="space-y-1 rounded-2xl border bg-card/60 p-4">
+            {health.recommendations.slice(0, 2).map((note) => (
+              <p key={note} className="text-xs leading-relaxed text-muted-foreground first:text-sm first:font-medium first:text-foreground">
+                {note}
+              </p>
+            ))}
+          </div>
+        )
       )}
     </FinanceSection>
   );
