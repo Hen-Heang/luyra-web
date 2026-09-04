@@ -13,6 +13,7 @@ import { findSavingsGoalsByUser } from "@/lib/repositories/finance-savings-repos
 import { computeBudgetPerformance, toBudgetPerformance, toBudgetThresholds } from "@/lib/services/finance-budget-service";
 import { computeSavingsProgress } from "@/lib/services/finance-savings-service";
 import { listDetectedSubscriptions } from "@/lib/services/finance-subscription-service";
+import { computeFinancialHealth, toMoneyRule } from "@/lib/finance/financial-health";
 import type {
   AnalyticsSummary,
   BudgetHealth,
@@ -198,12 +199,14 @@ export async function getFinanceOverviewSummary(userId: string, month: string): 
   const dailySpending = fillDailySpending(month, dailyRows);
   const budgetPerformance = toBudgetPerformance(budgets, categories, toBudgetThresholds(preferences));
   const budgetTotalKrw = budgetPerformance.reduce((sum, budget) => sum + budget.budgetKrw, 0);
+  const moneyRule = toMoneyRule(preferences.essentialTargetPct, preferences.targetSavingsRate);
 
   return {
     month,
     totals,
     savingsHealth: toSavingsRateHealth(totals, preferences.targetSavingsRate),
     budgetHealth: toBudgetHealth(budgetPerformance),
+    financialHealth: computeFinancialHealth(month, totals.totalIncomeKrw, totals.totalExpenseKrw, categories, moneyRule),
     categories,
     dailySpending,
     dailyBudget: toDailyBudgetGuide(month, totals, budgetTotalKrw, dailySpending),

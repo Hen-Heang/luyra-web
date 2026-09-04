@@ -10,9 +10,12 @@ import {
   CheckCircle2,
   Clock3,
   Gauge,
+  Home,
   PiggyBank,
   ReceiptText,
   Scale,
+  Sparkles,
+  Sprout,
   TrendingUp,
   TriangleAlert,
   WalletCards,
@@ -41,6 +44,7 @@ import type {
   CategoryAmount,
   DailyBudgetGuide,
   DailySpendingPoint,
+  FinanceBucketHealth,
   FinanceOverviewSummary,
   MonthTotals,
   SavingsRateHealth,
@@ -70,6 +74,100 @@ const DAILY_BUDGET_META: Record<DailyBudgetGuide["status"], { label: string; car
   watch: { label: "Spending room is tight", cardTone: "warning", metricTone: "warning" },
   over: { label: "Monthly budget exceeded", cardTone: "expense", metricTone: "expense" },
 };
+
+const BUCKET_META: Record<FinanceBucketHealth["bucket"], { label: string; icon: typeof Home }> = {
+  essential: { label: "Essentials", icon: Home },
+  lifestyle: { label: "Lifestyle", icon: Sparkles },
+  future: { label: "Future", icon: Sprout },
+};
+
+const BUCKET_STATUS_META: Record<FinanceBucketHealth["status"], { label: string; tone: "positive" | "warning" | "expense" | "neutral" }> = {
+  healthy: { label: "Healthy", tone: "positive" },
+  watch: { label: "Watch", tone: "warning" },
+  over: { label: "Over", tone: "expense" },
+  below: { label: "Below target", tone: "expense" },
+  unavailable: { label: "Unavailable", tone: "neutral" },
+};
+
+const BUCKET_STATUS_TEXT_CLASS: Record<FinanceBucketHealth["status"], string> = {
+  healthy: "text-success",
+  watch: "text-warning",
+  over: "text-destructive",
+  below: "text-destructive",
+  unavailable: "text-muted-foreground",
+};
+
+// Progress fill is the bucket's percentage-of-target, not percentage-of-income —
+// FinanceProgress clamps to 100 on its own, so "over" a maximum or comfortably
+// past a minimum both render as a full bar, matching the ASCII mock in
+// AGENTS.md's Financial Health spec (a filled bar communicates "at or past
+// the line", the status badge communicates which side of it that means).
+function bucketProgressValue(health: FinanceBucketHealth): number {
+  if (health.percentageOfIncome === null || health.targetPercentage <= 0) return 0;
+  return (health.percentageOfIncome / health.targetPercentage) * 100;
+}
+
+function FinancialHealthBucketCard({ health }: { health: FinanceBucketHealth }) {
+  const meta = BUCKET_META[health.bucket];
+  const status = BUCKET_STATUS_META[health.status];
+  const Icon = meta.icon;
+  const pctLabel = health.percentageOfIncome === null ? "—" : `${Math.round(health.percentageOfIncome)}%`;
+  const targetLabel = `${health.direction === "maximum" ? "max" : "min"} ${health.targetPercentage}%`;
+
+  return (
+    <div className="rounded-2xl border bg-card p-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-finance-chart/10 text-finance-chart">
+            <Icon className="size-4" aria-hidden="true" />
+          </span>
+          <p className="truncate text-sm font-semibold">{meta.label}</p>
+        </div>
+        <span className={cn("shrink-0 rounded-full border border-current/20 px-2 py-0.5 text-[11px] font-semibold", BUCKET_STATUS_TEXT_CLASS[health.status])}>
+          {status.label}
+        </span>
+      </div>
+
+      <p className="mt-3 font-mono text-2xl font-semibold leading-none tabular-nums">
+        {pctLabel}
+        <span className="ml-1.5 text-xs font-medium text-muted-foreground">/ {targetLabel}</span>
+      </p>
+
+      <div className="mt-3">
+        <FinanceProgress
+          value={bucketProgressValue(health)}
+          label={`${meta.label} is ${pctLabel} of income against a ${targetLabel} guideline`}
+          tone={status.tone}
+        />
+      </div>
+
+      <p className="mt-2 text-xs text-muted-foreground">{krw.format(health.amountKrw)}</p>
+    </div>
+  );
+}
+
+function FinancialHealthSection({ summary }: { summary: FinanceOverviewSummary }) {
+  const health = summary.financialHealth;
+
+  return (
+    <FinanceSection id="finance-health" title="Financial health" description="Protect essentials, prepare for what's ahead, grow your future, and enjoy the rest.">
+      <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 lg:grid-cols-3">
+        <FinancialHealthBucketCard health={health.essential} />
+        <FinancialHealthBucketCard health={health.lifestyle} />
+        <FinancialHealthBucketCard health={health.future} />
+      </div>
+      {health.recommendations.length > 0 && (
+        <div className="space-y-1 rounded-2xl border bg-card/60 p-4">
+          {health.recommendations.slice(0, 2).map((note) => (
+            <p key={note} className="text-xs leading-relaxed text-muted-foreground first:text-sm first:font-medium first:text-foreground">
+              {note}
+            </p>
+          ))}
+        </div>
+      )}
+    </FinanceSection>
+  );
+}
 
 function OverviewLoading() {
   return (
@@ -479,6 +577,8 @@ export function FinanceOverview({
 
       {summary ? (
         <>
+          <FinancialHealthSection summary={summary} />
+
           <FinanceSection id="finance-daily-budget" title="Daily budget" description="A deterministic guide based on your remaining category budgets.">
             {summary.dailyBudget ? <DailyBudgetCard guide={summary.dailyBudget} /> : (
               <div className="flex items-center gap-3 rounded-2xl border bg-card p-4">

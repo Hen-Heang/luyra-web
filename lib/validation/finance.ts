@@ -71,6 +71,8 @@ export const upsertBudgetSchema = z.object({
 });
 export type UpsertBudgetInput = z.infer<typeof upsertBudgetSchema>;
 
+export const savingsGoalPurposeSchema = z.enum(["emergency_fund", "sinking_fund", "goal", "investment", "other"]);
+
 export const createSavingsGoalSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(80),
   icon: z.string().trim().min(1).max(8).default("💰"),
@@ -79,6 +81,7 @@ export const createSavingsGoalSchema = z.object({
   currentUsd: z.number().min(0).default(0),
   deadline: z.string().date().nullable().optional(),
   note: z.string().trim().max(500).nullable().optional(),
+  purpose: savingsGoalPurposeSchema.nullable().default(null),
 });
 export type CreateSavingsGoalInput = z.infer<typeof createSavingsGoalSchema>;
 
@@ -90,6 +93,7 @@ export const updateSavingsGoalSchema = z
     targetUsd: z.number().min(0).optional(),
     deadline: z.string().date().nullable().optional(),
     note: z.string().trim().max(500).nullable().optional(),
+    purpose: savingsGoalPurposeSchema.nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",
@@ -111,6 +115,7 @@ export const updatePreferencesSchema = z
   .object({
     monthlySpendingLimitKrw: z.number().min(0).nullable().optional(),
     targetSavingsRate: z.number().min(0).max(100).optional(),
+    essentialTargetPct: z.number().min(0).max(100).optional(),
     budgetWatchThresholdPct: z.number().min(1).max(99).optional(),
     budgetNearLimitThresholdPct: z.number().min(1).max(99).optional(),
     monthlyReviewEnabled: z.boolean().optional(),
@@ -127,12 +132,23 @@ export const updatePreferencesSchema = z
       data.budgetNearLimitThresholdPct === undefined ||
       data.budgetWatchThresholdPct < data.budgetNearLimitThresholdPct,
     { message: "The watch threshold must be lower than the near-limit threshold", path: ["budgetWatchThresholdPct"] }
+  )
+  .refine(
+    (data) =>
+      data.essentialTargetPct === undefined ||
+      data.targetSavingsRate === undefined ||
+      data.essentialTargetPct + data.targetSavingsRate <= 100,
+    {
+      message: "Essentials and Future targets can't add up to more than 100%",
+      path: ["essentialTargetPct"],
+    }
   );
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
 
 export const monthQuerySchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Expected YYYY-MM");
 
 export const categoryTypeSchema = z.enum(["income", "expense", "both"]);
+export const spendingClassSchema = z.enum(["essential", "commitment", "growth", "flexible", "avoidable"]);
 
 // Icons are a single emoji (a few code points once variation selectors and
 // ZWJ sequences are counted). Colors must be hex: CategoryIcon interpolates
@@ -146,6 +162,7 @@ export const createCategorySchema = z.object({
   icon: lookupIconSchema.nullable().default(null),
   color: hexColorSchema.nullable().default(null),
   type: categoryTypeSchema.default("expense"),
+  spendingClass: spendingClassSchema.nullable().default(null),
 });
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 
@@ -155,6 +172,7 @@ export const updateCategorySchema = z
     icon: lookupIconSchema.nullable().optional(),
     color: hexColorSchema.nullable().optional(),
     type: categoryTypeSchema.optional(),
+    spendingClass: spendingClassSchema.nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",

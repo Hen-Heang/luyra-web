@@ -1,6 +1,6 @@
 import "server-only";
 import { sql } from "@/lib/db";
-import type { SavingsContribution, SavingsGoal } from "@/types/finance";
+import type { SavingsContribution, SavingsGoal, SavingsGoalPurpose } from "@/types/finance";
 import type { CreateSavingsGoalInput, UpdateSavingsGoalInput } from "@/lib/validation/finance";
 
 interface SavingsGoalRow {
@@ -12,6 +12,7 @@ interface SavingsGoalRow {
   current_usd: string;
   deadline: string | null;
   note: string | null;
+  purpose: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,12 +27,13 @@ function toSavingsGoal(row: SavingsGoalRow): SavingsGoal {
     currentUsd: Number(row.current_usd),
     deadline: row.deadline,
     note: row.note,
+    purpose: row.purpose as SavingsGoalPurpose | null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
-const SAVINGS_COLUMNS = `id, name, icon, color, target_usd, current_usd, to_char(deadline, 'YYYY-MM-DD') as deadline, note, created_at, updated_at`;
+const SAVINGS_COLUMNS = `id, name, icon, color, target_usd, current_usd, to_char(deadline, 'YYYY-MM-DD') as deadline, note, purpose, created_at, updated_at`;
 
 export async function findSavingsGoalsByUser(userId: string): Promise<SavingsGoal[]> {
   const rows = (await sql`
@@ -54,10 +56,10 @@ export async function findSavingsGoalById(id: string, userId: string): Promise<S
 
 export async function createSavingsGoal(userId: string, input: CreateSavingsGoalInput): Promise<SavingsGoal> {
   const rows = (await sql`
-    insert into finance_savings_goals (user_id, name, icon, color, target_usd, current_usd, deadline, note)
+    insert into finance_savings_goals (user_id, name, icon, color, target_usd, current_usd, deadline, note, purpose)
     values (
       ${userId}, ${input.name}, ${input.icon}, ${input.color},
-      ${input.targetUsd}, ${input.currentUsd}, ${input.deadline ?? null}, ${input.note ?? null}
+      ${input.targetUsd}, ${input.currentUsd}, ${input.deadline ?? null}, ${input.note ?? null}, ${input.purpose ?? null}
     )
     returning ${sql.unsafe(SAVINGS_COLUMNS)}
   `) as SavingsGoalRow[];
@@ -83,6 +85,7 @@ export async function updateSavingsGoal(
   if (input.targetUsd !== undefined) set("target_usd", input.targetUsd);
   if (input.deadline !== undefined) set("deadline", input.deadline);
   if (input.note !== undefined) set("note", input.note);
+  if (input.purpose !== undefined) set("purpose", input.purpose);
   sets.push("updated_at = now()");
 
   const rows = (await sql.query(

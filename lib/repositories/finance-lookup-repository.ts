@@ -1,6 +1,6 @@
 import "server-only";
 import { sql } from "@/lib/db";
-import type { Category, LookupUsage, PaymentMethod } from "@/types/finance";
+import type { Category, LookupUsage, PaymentMethod, SpendingClass } from "@/types/finance";
 import type {
   CreateCategoryInput,
   CreatePaymentMethodInput,
@@ -14,17 +14,25 @@ interface CategoryRow {
   icon: string | null;
   color: string | null;
   type: string;
+  spending_class: string | null;
 }
 
 function toCategory(row: CategoryRow): Category {
-  return { id: row.id, name: row.name, icon: row.icon, color: row.color, type: row.type as Category["type"] };
+  return {
+    id: row.id,
+    name: row.name,
+    icon: row.icon,
+    color: row.color,
+    type: row.type as Category["type"],
+    spendingClass: row.spending_class as SpendingClass | null,
+  };
 }
 
-const CATEGORY_COLUMNS = `id, name, icon, color, type`;
+const CATEGORY_COLUMNS = `id, name, icon, color, type, spending_class`;
 
 export async function findCategoriesByUser(userId: string): Promise<Category[]> {
   const rows = (await sql`
-    select id, name, icon, color, type from finance_categories
+    select id, name, icon, color, type, spending_class from finance_categories
     where user_id = ${userId}
     order by name asc
   `) as CategoryRow[];
@@ -34,7 +42,7 @@ export async function findCategoriesByUser(userId: string): Promise<Category[]> 
 
 export async function findCategoryById(id: string, userId: string): Promise<Category | null> {
   const rows = (await sql`
-    select id, name, icon, color, type from finance_categories
+    select id, name, icon, color, type, spending_class from finance_categories
     where id = ${id} and user_id = ${userId}
   `) as CategoryRow[];
 
@@ -46,7 +54,7 @@ export async function findCategoryById(id: string, userId: string): Promise<Cate
 // `excludeId` lets a rename keep its own name.
 export async function findCategoryByName(userId: string, name: string, excludeId?: string): Promise<Category | null> {
   const rows = (await sql`
-    select id, name, icon, color, type from finance_categories
+    select id, name, icon, color, type, spending_class from finance_categories
     where user_id = ${userId}
       and lower(name) = lower(${name})
       and (${excludeId ?? null}::uuid is null or id <> ${excludeId ?? null}::uuid)
@@ -58,9 +66,9 @@ export async function findCategoryByName(userId: string, name: string, excludeId
 
 export async function createCategory(userId: string, input: CreateCategoryInput): Promise<Category> {
   const rows = (await sql`
-    insert into finance_categories (user_id, name, icon, color, type)
-    values (${userId}, ${input.name}, ${input.icon}, ${input.color}, ${input.type})
-    returning id, name, icon, color, type
+    insert into finance_categories (user_id, name, icon, color, type, spending_class)
+    values (${userId}, ${input.name}, ${input.icon}, ${input.color}, ${input.type}, ${input.spendingClass ?? null})
+    returning id, name, icon, color, type, spending_class
   `) as CategoryRow[];
 
   return toCategory(rows[0]);
@@ -78,6 +86,7 @@ export async function updateCategory(id: string, userId: string, input: UpdateCa
   if (input.icon !== undefined) set("icon", input.icon);
   if (input.color !== undefined) set("color", input.color);
   if (input.type !== undefined) set("type", input.type);
+  if (input.spendingClass !== undefined) set("spending_class", input.spendingClass);
 
   if (sets.length === 0) return findCategoryById(id, userId);
 

@@ -1,6 +1,15 @@
 export type TransactionType = "income" | "expense";
 export type CategoryType = "income" | "expense" | "both";
 export type SubscriptionStatus = "keep" | "review" | "plan_to_cancel" | "cancelled";
+// finance_categories.spending_class — how a category behaves for the
+// Financial Health 3-bucket model (see lib/finance/spending-class.ts).
+// `commitment` is contextual: a recurring/fixed obligation that lands in
+// Essentials or Lifestyle depending on the category's own semantics.
+export type SpendingClass = "essential" | "commitment" | "growth" | "flexible" | "avoidable";
+// finance_savings_goals.purpose — what a savings goal is protecting or
+// building toward. Purely descriptive; it does not change how a goal is
+// tracked (still USD target/current + contributions).
+export type SavingsGoalPurpose = "emergency_fund" | "sinking_fund" | "goal" | "investment" | "other";
 // KRW is the canonical accounting currency everywhere in Finance — every sum,
 // budget, and analytic is KRW. USD is the one supported original currency a
 // transaction can be entered in; amountKrw is always populated regardless.
@@ -12,6 +21,7 @@ export interface Category {
   icon: string | null;
   color: string | null;
   type: CategoryType;
+  spendingClass: SpendingClass | null;
 }
 
 export interface PaymentMethod {
@@ -98,6 +108,7 @@ export interface SavingsGoal {
   currentUsd: number;
   deadline: string | null;
   note: string | null;
+  purpose: SavingsGoalPurpose | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -128,6 +139,11 @@ export interface DetectedSubscription {
 export interface FinancePreferences {
   monthlySpendingLimitKrw: number | null;
   targetSavingsRate: number;
+  // Essentials' max-guideline percentage of income. Lifestyle's guideline is
+  // never stored — it's always the remainder: 100 - essentialTargetPct -
+  // targetSavingsRate. That keeps the money rule single-sourced instead of
+  // three independently-editable numbers that could drift from summing to 100.
+  essentialTargetPct: number;
   budgetWatchThresholdPct: number;
   budgetNearLimitThresholdPct: number;
   monthlyReviewEnabled: boolean;
@@ -151,6 +167,7 @@ export interface CategoryAmount {
   categoryName: string;
   categoryIcon: string | null;
   categoryColor: string | null;
+  spendingClass: SpendingClass | null;
   amountKrw: number;
 }
 
@@ -226,11 +243,63 @@ export interface BudgetHealth {
   attentionCount: number;
 }
 
+// The 50/30/20-style money rule: Essentials and Lifestyle are MAXIMUM
+// guidelines, Future is a MINIMUM. lifestylePct is always the remainder
+// (100 - essentialPct - futurePct) — see FinancePreferences.essentialTargetPct.
+export interface MoneyRule {
+  essentialPct: number;
+  lifestylePct: number;
+  futurePct: number;
+}
+
+export type FinanceBucket = "essential" | "lifestyle" | "future";
+
+export interface FinanceBucketHealth {
+  bucket: FinanceBucket;
+  amountKrw: number;
+  // null when income is 0 for the month — never divide by zero, surface
+  // "unavailable" instead (see FinanceBucketHealth.status).
+  percentageOfIncome: number | null;
+  targetPercentage: number;
+  // "maximum" for Essentials/Lifestyle (stay at or under target), "minimum"
+  // for Future (stay at or above target). Drives which side of the target a
+  // "watch" or "over/below" status falls on.
+  direction: "maximum" | "minimum";
+  status: "healthy" | "watch" | "over" | "below" | "unavailable";
+}
+
+// Deterministic aggregate answering "is my money healthy this month?" —
+// computed once server-side in lib/finance/financial-health.ts and attached
+// to FinanceOverviewSummary. Never recomputed client-side.
+//
+// This is distinct from MonthTotals.savingsRatePct: savingsRatePct is
+// "income minus expenses, as a percent of income" (what's left over).
+// future.percentageOfIncome is "spending in growth-classified categories,
+// as a percent of income" (money intentionally directed at the future). A
+// user can have income left over that isn't in a `growth` category yet — the
+// two numbers are related but must never be treated as the same value.
+export interface FinancialHealthSummary {
+  month: string;
+  essential: FinanceBucketHealth;
+  lifestyle: FinanceBucketHealth;
+  future: FinanceBucketHealth;
+  totalIncomeKrw: number;
+  totalExpenseKrw: number;
+  availableKrw: number;
+  moneyRule: MoneyRule;
+  overallStatus: "good" | "watch" | "attention" | "unavailable";
+  // 1-3 short, deterministic, non-judgmental notes — see AGENTS.md's
+  // Financial Health recommendations rule. Never sent to an LLM as a
+  // question; an AI may only explain numbers already computed here.
+  recommendations: string[];
+}
+
 export interface FinanceOverviewSummary {
   month: string;
   totals: MonthTotals;
   savingsHealth: SavingsRateHealth;
   budgetHealth: BudgetHealth | null;
+  financialHealth: FinancialHealthSummary;
   categories: CategoryAmount[];
   dailySpending: DailySpendingPoint[];
   dailyBudget: DailyBudgetGuide | null;

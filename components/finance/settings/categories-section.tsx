@@ -12,6 +12,7 @@ import {
 import { DeleteLookupDialog, LookupRowActions } from "@/components/finance/settings/lookup-primitives";
 import { ApiError } from "@/lib/api/client";
 import { createCategory, deleteCategory, listCategories, updateCategory } from "@/lib/api/finance";
+import { SPENDING_CLASS_META } from "@/lib/finance/spending-class";
 import type { Category } from "@/types/finance";
 
 export function CategoriesSection() {
@@ -125,7 +126,10 @@ export function CategoriesSection() {
                 <CategoryIcon icon={category.icon} color={category.color} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{category.name}</p>
-                  <p className="text-xs text-muted-foreground">{CATEGORY_TYPE_LABELS[category.type]}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {CATEGORY_TYPE_LABELS[category.type]}
+                    {category.spendingClass ? ` · ${SPENDING_CLASS_META[category.spendingClass].label}` : " · Unclassified"}
+                  </p>
                 </div>
                 <LookupRowActions
                   name={category.name}

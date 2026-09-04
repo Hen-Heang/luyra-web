@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CategoryIcon, FinanceProgress } from "@/components/finance/ui/finance-primitives";
+import { SAVINGS_PURPOSE_LABELS } from "@/components/finance/savings/savings-goal-sheet";
 import { usd } from "@/lib/finance-format";
 import { cn } from "@/lib/utils";
 import type { SavingsGoal } from "@/types/finance";
@@ -47,6 +48,11 @@ export function SavingsGoalCard({
             <p className="truncate text-sm font-semibold">{goal.name}</p>
             {reached && <CheckCircle2 className="size-4 shrink-0 text-success" aria-label="Target reached" />}
           </div>
+          {goal.purpose && (
+            <span className="mt-1 inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {SAVINGS_PURPOSE_LABELS[goal.purpose]}
+            </span>
+          )}
           {goal.deadline && (
             <p className={cn("mt-0.5 flex items-center gap-1 text-xs", days !== null && days < 0 && !reached ? "text-destructive" : "text-muted-foreground")}>
               <CalendarClock className="size-3.5" aria-hidden="true" />

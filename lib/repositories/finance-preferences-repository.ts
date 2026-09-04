@@ -204,6 +204,7 @@ export async function findReportRecipients(): Promise<ReportRecipient[]> {
 const DEFAULT_PREFERENCES: FinancePreferences = {
   monthlySpendingLimitKrw: null,
   targetSavingsRate: 20,
+  essentialTargetPct: 50,
   budgetWatchThresholdPct: 70,
   budgetNearLimitThresholdPct: 90,
   monthlyReviewEnabled: true,
@@ -214,12 +215,13 @@ const DEFAULT_PREFERENCES: FinancePreferences = {
 
 export async function findPreferences(userId: string): Promise<FinancePreferences> {
   const rows = (await sql`
-    select monthly_spending_limit_krw, target_savings_rate, budget_warning_thresholds, monthly_review_enabled,
-      finance_report_email, weekly_report_channel_email, monthly_report_channel_email
+    select monthly_spending_limit_krw, target_savings_rate, essential_target_pct, budget_warning_thresholds,
+      monthly_review_enabled, finance_report_email, weekly_report_channel_email, monthly_report_channel_email
     from finance_preferences where user_id = ${userId}
   `) as {
     monthly_spending_limit_krw: string | null;
     target_savings_rate: string;
+    essential_target_pct: string;
     budget_warning_thresholds: BudgetWarningThresholdsRow | null;
     monthly_review_enabled: boolean;
     finance_report_email: string | null;
@@ -233,6 +235,7 @@ export async function findPreferences(userId: string): Promise<FinancePreference
   return {
     monthlySpendingLimitKrw: rows[0].monthly_spending_limit_krw !== null ? Number(rows[0].monthly_spending_limit_krw) : null,
     targetSavingsRate: Number(rows[0].target_savings_rate),
+    essentialTargetPct: Number(rows[0].essential_target_pct),
     budgetWatchThresholdPct: Number(thresholds?.first ?? DEFAULT_PREFERENCES.budgetWatchThresholdPct),
     budgetNearLimitThresholdPct: Number(thresholds?.strong ?? DEFAULT_PREFERENCES.budgetNearLimitThresholdPct),
     monthlyReviewEnabled: rows[0].monthly_review_enabled,
@@ -247,6 +250,7 @@ export async function upsertPreferences(
   input: {
     monthlySpendingLimitKrw?: number | null;
     targetSavingsRate?: number;
+    essentialTargetPct?: number;
     budgetWatchThresholdPct?: number;
     budgetNearLimitThresholdPct?: number;
     monthlyReviewEnabled?: boolean;
@@ -278,6 +282,7 @@ export async function upsertPreferences(
     };
     if (input.monthlySpendingLimitKrw !== undefined) set("monthly_spending_limit_krw", input.monthlySpendingLimitKrw);
     if (input.targetSavingsRate !== undefined) set("target_savings_rate", input.targetSavingsRate);
+    if (input.essentialTargetPct !== undefined) set("essential_target_pct", input.essentialTargetPct);
     if (nextThresholds) set("budget_warning_thresholds", JSON.stringify(nextThresholds));
     if (input.monthlyReviewEnabled !== undefined) set("monthly_review_enabled", input.monthlyReviewEnabled);
     if (input.financeReportEmail !== undefined) set("finance_report_email", input.financeReportEmail);
@@ -289,11 +294,12 @@ export async function upsertPreferences(
   } else {
     await sql`
       insert into finance_preferences (
-        user_id, monthly_spending_limit_krw, target_savings_rate, budget_warning_thresholds, monthly_review_enabled,
-        finance_report_email, weekly_report_channel_email, monthly_report_channel_email
+        user_id, monthly_spending_limit_krw, target_savings_rate, essential_target_pct, budget_warning_thresholds,
+        monthly_review_enabled, finance_report_email, weekly_report_channel_email, monthly_report_channel_email
       )
       values (
         ${userId}, ${input.monthlySpendingLimitKrw ?? null}, ${input.targetSavingsRate ?? DEFAULT_PREFERENCES.targetSavingsRate},
+        ${input.essentialTargetPct ?? DEFAULT_PREFERENCES.essentialTargetPct},
         ${JSON.stringify(
           nextThresholds ?? { first: DEFAULT_PREFERENCES.budgetWatchThresholdPct, strong: DEFAULT_PREFERENCES.budgetNearLimitThresholdPct, over: 100 }
         )},

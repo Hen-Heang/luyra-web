@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ColorPicker, IconPicker } from "@/components/finance/settings/lookup-primitives";
 import { ApiError } from "@/lib/api/client";
-import type { CategoryType, Category } from "@/types/finance";
+import { SPENDING_CLASS_META, SPENDING_CLASS_ORDER, suggestDefaultSpendingClass } from "@/lib/finance/spending-class";
+import { cn } from "@/lib/utils";
+import type { CategoryType, Category, SpendingClass } from "@/types/finance";
 
 export const CATEGORY_ICONS = ["🍜", "🛒", "🚕", "🏠", "💡", "📱", "👕", "💊", "🎬", "📚", "✈️", "💼", "🎁", "💰"] as const;
 export const CATEGORY_COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6", "#6b7280"] as const;
@@ -35,6 +37,7 @@ export interface CategoryFormValues {
   icon: string;
   color: string;
   type: CategoryType;
+  spendingClass: SpendingClass | null;
 }
 
 export function CategorySheet({
@@ -90,6 +93,13 @@ function CategorySheetFields({
   const [icon, setIcon] = useState(category?.icon ?? CATEGORY_ICONS[0]);
   const [color, setColor] = useState(category?.color ?? CATEGORY_COLORS[0]);
   const [type, setType] = useState<CategoryType>(category?.type ?? "expense");
+  // A category with no class yet is pre-filled with the deterministic default
+  // suggestion (if the name matches one) rather than left blank — the user
+  // still sees and can change the selection before saving, so this is never
+  // an invisible or irreversible assumption.
+  const [spendingClass, setSpendingClass] = useState<SpendingClass | null>(
+    category?.spendingClass ?? suggestDefaultSpendingClass(category?.name ?? "")
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -103,7 +113,7 @@ function CategorySheetFields({
     setPending(true);
     setError(null);
     try {
-      await onSave({ name: name.trim(), icon, color, type });
+      await onSave({ name: name.trim(), icon, color, type, spendingClass });
       onOpenChange(false);
     } catch (saveError) {
       // A duplicate name comes back as a 409 whose message names the existing
@@ -141,6 +151,33 @@ function CategorySheetFields({
 
         <IconPicker id="category-icon-label" label="Icon" icons={CATEGORY_ICONS} value={icon} onChange={setIcon} />
         <ColorPicker id="category-color-label" label="Color" colors={CATEGORY_COLORS} value={color} onChange={setColor} />
+
+        <div className="space-y-1.5">
+          <Label id="category-spending-class-label">Financial Health group (optional)</Label>
+          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="category-spending-class-label">
+            {SPENDING_CLASS_ORDER.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setSpendingClass(spendingClass === option ? null : option)}
+                aria-pressed={spendingClass === option}
+                className={cn(
+                  "min-h-11 rounded-full border px-4 py-2 text-xs font-bold transition-all active:scale-95",
+                  spendingClass === option
+                    ? "border-primary/40 bg-primary text-primary-foreground shadow-md"
+                    : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
+                )}
+              >
+                {SPENDING_CLASS_META[option].label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {spendingClass
+              ? SPENDING_CLASS_META[spendingClass].description
+              : "Groups this category into Essentials, Lifestyle, or Future on your Finance overview."}
+          </p>
+        </div>
 
         {error && (
           <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">

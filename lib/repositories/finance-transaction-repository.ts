@@ -1,6 +1,6 @@
 import "server-only";
 import { sql } from "@/lib/db";
-import type { CategoryAmount, Currency, PaymentMethodAmount, Transaction, TransactionType } from "@/types/finance";
+import type { CategoryAmount, Currency, PaymentMethodAmount, SpendingClass, Transaction, TransactionType } from "@/types/finance";
 import type { TransactionSort } from "@/lib/validation/finance";
 
 interface TransactionRow {
@@ -278,18 +278,19 @@ export async function sumTotalsForRange(
 export async function sumExpenseByCategoryForRange(userId: string, start: string, end: string): Promise<CategoryAmount[]> {
   const rows = (await sql`
     select t.category_id, coalesce(c.name, 'Uncategorized') as category_name,
-      c.icon as category_icon, c.color as category_color,
+      c.icon as category_icon, c.color as category_color, c.spending_class,
       sum(t.amount_krw)::numeric as amount_krw
     from finance_transactions t
     left join finance_categories c on c.id = t.category_id
     where t.user_id = ${userId} and t.type = 'expense' and t.date >= ${start} and t.date < ${end}
-    group by t.category_id, c.name, c.icon, c.color
+    group by t.category_id, c.name, c.icon, c.color, c.spending_class
     order by amount_krw desc
   `) as {
     category_id: string | null;
     category_name: string;
     category_icon: string | null;
     category_color: string | null;
+    spending_class: string | null;
     amount_krw: string;
   }[];
 
@@ -298,6 +299,7 @@ export async function sumExpenseByCategoryForRange(userId: string, start: string
     categoryName: r.category_name,
     categoryIcon: r.category_icon,
     categoryColor: r.category_color,
+    spendingClass: r.spending_class as SpendingClass | null,
     amountKrw: Number(r.amount_krw),
   }));
 }

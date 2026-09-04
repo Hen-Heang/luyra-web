@@ -9,10 +9,23 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { CreateSavingsGoalInput, UpdateSavingsGoalInput } from "@/lib/validation/finance";
-import type { SavingsGoal } from "@/types/finance";
+import type { SavingsGoal, SavingsGoalPurpose } from "@/types/finance";
 
 const ICONS = ["💰", "✈️", "🏠", "🚗", "🎓", "💻", "🎁", "🏖️"];
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+
+// Purely descriptive — see AGENTS.md's Financial Health spec, section 15/16.
+// A goal's purpose never changes how it's tracked (still USD target/current
+// + manual contributions); it only labels what the goal is protecting or
+// building toward.
+export const SAVINGS_PURPOSE_LABELS: Record<SavingsGoalPurpose, string> = {
+  emergency_fund: "Emergency fund",
+  sinking_fund: "Sinking fund",
+  goal: "Goal",
+  investment: "Investment",
+  other: "Other",
+};
+const PURPOSE_ORDER: SavingsGoalPurpose[] = ["emergency_fund", "sinking_fund", "goal", "investment", "other"];
 
 export function SavingsGoalSheet({
   mode,
@@ -67,6 +80,7 @@ function SavingsGoalSheetFields({
   const [targetUsd, setTargetUsd] = useState(goal ? String(goal.targetUsd) : "");
   const [deadline, setDeadline] = useState(goal?.deadline ?? "");
   const [note, setNote] = useState(goal?.note ?? "");
+  const [purpose, setPurpose] = useState<SavingsGoalPurpose | null>(goal?.purpose ?? null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,6 +107,7 @@ function SavingsGoalSheetFields({
         currentUsd: goal?.currentUsd ?? 0,
         deadline: deadline || null,
         note: note.trim() || null,
+        purpose,
       });
       onOpenChange(false);
     } catch {
@@ -151,6 +166,28 @@ function SavingsGoalSheetFields({
                 className="flex size-11 items-center justify-center rounded-xl transition-transform active:scale-[0.95]"
                 style={{ backgroundColor: option, outline: color === option ? "2px solid var(--foreground)" : "none", outlineOffset: 2 }}
               />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label id="goal-purpose-label">Purpose (optional)</Label>
+          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="goal-purpose-label">
+            {PURPOSE_ORDER.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setPurpose(purpose === option ? null : option)}
+                aria-pressed={purpose === option}
+                className={cn(
+                  "min-h-11 rounded-full border px-4 py-2 text-xs font-bold transition-all active:scale-95",
+                  purpose === option
+                    ? "border-primary/40 bg-primary text-primary-foreground shadow-md"
+                    : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
+                )}
+              >
+                {SAVINGS_PURPOSE_LABELS[option]}
+              </button>
             ))}
           </div>
         </div>

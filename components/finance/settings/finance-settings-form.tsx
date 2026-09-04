@@ -13,6 +13,16 @@ import { TelegramLinkSection } from "@/components/finance/settings/telegram-link
 import { MoneyCoachSection } from "@/components/finance/settings/money-coach-section";
 import { cn } from "@/lib/utils";
 import { getPreferences, updatePreferences } from "@/lib/api/finance";
+import { toMoneyRule } from "@/lib/finance/financial-health";
+
+// Preset money rules from AGENTS.md's Financial Health spec. Lifestyle is
+// never one of these numbers directly — it's always 100 - essential - future
+// (see toMoneyRule) — so a preset only needs to name the two stored values.
+const MONEY_RULE_PRESETS = [
+  { label: "Balanced", essentialTargetPct: 50, targetSavingsRate: 20 },
+  { label: "Growth", essentialTargetPct: 50, targetSavingsRate: 25 },
+  { label: "Future Focus", essentialTargetPct: 45, targetSavingsRate: 35 },
+] as const;
 
 function SettingsLoading() {
   return (
@@ -27,6 +37,7 @@ function SettingsLoading() {
 export function FinanceSettingsForm() {
   const [monthlyLimit, setMonthlyLimit] = useState("");
   const [targetRate, setTargetRate] = useState("20");
+  const [essentialTargetPct, setEssentialTargetPct] = useState("50");
   const [watchThreshold, setWatchThreshold] = useState("70");
   const [nearLimitThreshold, setNearLimitThreshold] = useState("90");
   const [monthlyReviewEnabled, setMonthlyReviewEnabled] = useState(true);
@@ -46,6 +57,7 @@ export function FinanceSettingsForm() {
         if (!active) return;
         setMonthlyLimit(preferences.monthlySpendingLimitKrw != null ? String(preferences.monthlySpendingLimitKrw) : "");
         setTargetRate(String(preferences.targetSavingsRate));
+        setEssentialTargetPct(String(preferences.essentialTargetPct));
         setWatchThreshold(String(preferences.budgetWatchThresholdPct));
         setNearLimitThreshold(String(preferences.budgetNearLimitThresholdPct));
         setMonthlyReviewEnabled(preferences.monthlyReviewEnabled);
@@ -76,6 +88,16 @@ export function FinanceSettingsForm() {
       setError("The watch threshold must be lower than the near-limit threshold.");
       return;
     }
+    const essentialPct = Number(essentialTargetPct);
+    const futurePct = Number(targetRate);
+    if (!Number.isFinite(essentialPct) || essentialPct < 0 || essentialPct > 100 || !Number.isFinite(futurePct) || futurePct < 0 || futurePct > 100) {
+      setError("Money rule percentages must be between 0 and 100.");
+      return;
+    }
+    if (essentialPct + futurePct > 100) {
+      setError("Essentials and Future targets can't add up to more than 100%.");
+      return;
+    }
     const trimmedEmail = financeReportEmail.trim();
     if (trimmedEmail !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       setError("Enter a valid email address, or leave it blank to use your account email.");
@@ -88,7 +110,8 @@ export function FinanceSettingsForm() {
     try {
       await updatePreferences({
         monthlySpendingLimitKrw: monthlyLimit.trim() === "" ? null : Number(monthlyLimit),
-        targetSavingsRate: Number(targetRate),
+        targetSavingsRate: futurePct,
+        essentialTargetPct: essentialPct,
         budgetWatchThresholdPct: watchPct,
         budgetNearLimitThresholdPct: nearLimitPct,
         monthlyReviewEnabled,
@@ -147,6 +170,59 @@ export function FinanceSettingsForm() {
                 onChange={(e) => setTargetRate(e.target.value)}
               />
             </div>
+          </div>
+        </FinanceSection>
+
+        <FinanceSection
+          id="settings-money-rule"
+          title="Money rule"
+          description="The Essentials / Lifestyle / Future guideline shown on your Finance overview. Essentials and Lifestyle are maximums; Future is a minimum — Lifestyle is always the remainder of the other two."
+        >
+          <div className="space-y-4 rounded-2xl border bg-card p-4">
+            <div className="flex flex-wrap gap-2">
+              {MONEY_RULE_PRESETS.map((preset) => {
+                const active = Number(essentialTargetPct) === preset.essentialTargetPct && Number(targetRate) === preset.targetSavingsRate;
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => {
+                      setEssentialTargetPct(String(preset.essentialTargetPct));
+                      setTargetRate(String(preset.targetSavingsRate));
+                    }}
+                    className={cn(
+                      "min-h-11 rounded-full border px-4 py-2 text-xs font-bold transition-all active:scale-95",
+                      active
+                        ? "border-primary/40 bg-primary text-primary-foreground shadow-md"
+                        : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
+                    )}
+                  >
+                    {preset.label} · {preset.essentialTargetPct}/{100 - preset.essentialTargetPct - preset.targetSavingsRate}/{preset.targetSavingsRate}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="essential-target-pct">Essentials max (%)</Label>
+                <Input
+                  id="essential-target-pct"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={essentialTargetPct}
+                  onChange={(e) => setEssentialTargetPct(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Lifestyle max (%)</Label>
+                <div className="flex min-h-9 items-center rounded-md border bg-secondary px-3 text-sm text-muted-foreground">
+                  {toMoneyRule(Number(essentialTargetPct) || 0, Number(targetRate) || 0).lifestylePct}% · derived from the other two
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Future&rsquo;s minimum uses the target savings rate above.</p>
           </div>
         </FinanceSection>
 

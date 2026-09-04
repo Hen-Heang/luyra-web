@@ -18,6 +18,16 @@ against both trees.
 > `components/finance/settings/money-coach-section.tsx`), including the
 > Apply-recommendation path. Only the AI-generated *quick transaction entry*
 > is still absent. Those rows should be refreshed.
+>
+> **Update (Financial Health phase):** the "Category spending class" row this
+> document used to carry under §3 ("No schema and no code") was wrong —
+> `finance_categories.spending_class` has been in `004_finance.sql` since the
+> original migration. It was `SCHEMA_ONLY` (§2), not missing entirely. As of
+> this phase it's fully wired: `lib/finance/spending-class.ts` maps it to the
+> Essentials/Lifestyle/Future buckets, `lib/finance/financial-health.ts`
+> computes the 50/30/20-style summary, it's exposed in the category editor
+> (`components/finance/settings/category-sheet.tsx`), and it's surfaced on
+> `/finance` as the "Financial health" section. No longer a gap.
 
 Status meanings used below:
 
@@ -78,7 +88,6 @@ touches them. Verified with a repo-wide grep across `lib/`, `app/`, and
 |---|---|---|
 | AI chat over your own data | `/api/chat`, `lib/finance/chat-tools.ts`, `components/ai/{ChatBot,ChatLauncher,DeferredChatBot}.tsx` | Luyra's AI is one-shot monthly-report commentary only. Money Flow exposes tool-calling against the user's finance data. |
 | AI quick entry | `/api/ai/parse-transaction`, `/api/ai/suggest-category`, `lib/ai/transaction-parser.ts` | Natural language to a draft transaction. Note AGENTS.md's rule: free text must never write financial data without a deterministic, confirmed path. |
-| Category spending class | `20260727_category_spending_class.sql`, `components/budget/CategoryTypesSheet.tsx`, `lib/finance/spending-class.ts` | Fixed / variable / discretionary classification that feeds budget advice. No column in Luyra. |
 | Category and payment-method management | `settings/_components/{CategoriesSection,PaymentMethodsSection}.tsx` | Luyra's `app/api/finance/categories/route.ts` and `app/api/finance/payment-methods/route.ts` export **GET only**. Users cannot create, rename, recolor, reorder, or delete either one. |
 | Review to next-month plan | `POST /api/finance/budget-plan`, `/api/finance/goal-plans`, `review/page.tsx` | Luyra's `/api/finance/review` is GET only, and `components/finance/review/review-view.tsx` has no action buttons — the review is read-only, with no way to confirm and apply next month's budget. |
 | Appearance / theme setting | `settings/_components/AppearanceSection.tsx` | Luyra has theme tokens in `app/globals.css` but no user-facing toggle anywhere. |
@@ -108,12 +117,15 @@ Luyra already has debounced search, a filter panel, and templates
 
 ## 5. Engineering hygiene
 
-- **No tests at all.** Luyra's `package.json` scripts are only
-  `dev/build/start/lint` — no test runner, no `e2e/`. Money Flow runs Vitest
-  across the whole `lib/finance/analysis` engine (roughly fifteen suites,
-  including migration regression tests) plus Playwright desktop and mobile
-  journeys. Luyra's `lib/services/finance-*.ts` layer is the natural first
-  target.
+- **Tests exist, but only for the Financial Health domain logic.** The
+  Financial Health phase added Vitest (`npm test`, `vitest.config.ts`) and
+  `lib/finance/{spending-class,financial-health}.test.ts` — pure-function
+  coverage for the bucket mapping and 50/30/20 calculation, including the
+  zero-income and boundary cases. `lib/services/finance-*.ts` (the DB-backed
+  service layer) and `lib/repositories/**` still have zero coverage, and
+  there's still no `e2e/`. Money Flow runs roughly fifteen Vitest suites
+  across `lib/finance/analysis` plus Playwright desktop and mobile journeys —
+  a useful reference for how far this could go.
 - **No route-level boundaries.** Luyra has zero `loading.tsx`, `error.tsx`,
   `not-found.tsx`, or `global-error.tsx`. Money Flow ships one per route.
   Today an API failure inside a Finance route has no boundary to catch it.
