@@ -85,3 +85,14 @@ export async function ensureAppUserId(): Promise<string> {
   }
   return (await mirrorUser(supabaseUser)).id;
 }
+
+// For pages that need both the profile and the user's data. The session is
+// verified up front (same `getUser()` check as everywhere else), then the id —
+// which *is* the verified `sub` — is handed back immediately so read-only data
+// queries can run in parallel with the `users` mirror read instead of after it.
+// Only use the id for reads here: writes still need the mirror row to exist,
+// so await `appUser` first when writing.
+export async function requireAppUserSession(): Promise<{ userId: string; appUser: Promise<AppUser> }> {
+  const supabaseUser = await requireSupabaseUser();
+  return { userId: supabaseUser.id, appUser: mirrorUser(supabaseUser) };
+}

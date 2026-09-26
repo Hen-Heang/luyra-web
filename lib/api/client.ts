@@ -8,10 +8,23 @@ export interface ApiErrorBody {
 }
 
 export class ApiError extends Error {
-  constructor(public code: string, message: string) {
+  constructor(public code: string, message: string, public status?: number) {
     super(message);
     this.name = "ApiError";
   }
+}
+
+async function readJson(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    return undefined;
+  }
+}
+
+function isApiErrorBody(body: unknown): body is ApiErrorBody {
+  const error = (body as { error?: unknown } | null | undefined)?.error;
+  return typeof error === "object" && error !== null && typeof (error as { code?: unknown }).code === "string";
 }
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -20,11 +33,20 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
 
-  const body = await response.json();
+  // A non-JSON body means something other than our route handler answered —
+  // a login redirect, a proxy/CDN error page, or a platform timeout. Surface
+  // it as a typed error with the status instead of an opaque SyntaxError.
+  const body = await readJson(response);
 
   if (!response.ok) {
-    const { code, message } = (body as ApiErrorBody).error;
-    throw new ApiError(code, message);
+    if (isApiErrorBody(body)) {
+      throw new ApiError(body.error.code, body.error.message, response.status);
+    }
+    throw new ApiError("HTTP_ERROR", `Request to ${path} failed with status ${response.status}`, response.status);
+  }
+
+  if (body === undefined || typeof body !== "object" || body === null || !("data" in body)) {
+    throw new ApiError("INVALID_RESPONSE", `Unexpected response from ${path}`, response.status);
   }
 
   return (body as { data: T }).data;
