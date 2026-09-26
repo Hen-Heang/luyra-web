@@ -23,3 +23,19 @@ export async function insertRate(baseCurrency: string, targetCurrency: string, r
     values (${baseCurrency}, ${targetCurrency}, ${rate}, ${fetchedAt})
   `;
 }
+
+// Most recent stored rate regardless of age — the stale fallback used when the
+// live provider is slow or unavailable.
+export async function findLatestRate(
+  baseCurrency: string,
+  targetCurrency: string
+): Promise<{ rate: number; fetchedAt: string } | null> {
+  const rows = (await sql`
+    select rate, fetched_at from finance_exchange_rates
+    where base_currency = ${baseCurrency} and target_currency = ${targetCurrency}
+    order by fetched_at desc
+    limit 1
+  `) as { rate: string; fetched_at: string }[];
+
+  return rows[0] ? { rate: Number(rows[0].rate), fetchedAt: rows[0].fetched_at } : null;
+}

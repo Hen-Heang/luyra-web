@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { clearOfflineApiCache } from "@/lib/pwa-cache";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,7 @@ export function ProfileMenu({
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
+    await clearOfflineApiCache();
     router.replace("/login");
     router.refresh();
   }

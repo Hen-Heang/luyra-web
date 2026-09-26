@@ -38,6 +38,7 @@ import {
   MonthSelector,
 } from "@/components/finance/ui/finance-primitives";
 import { BUDGET_STATUS_META, BUDGET_STATUS_TEXT_CLASS } from "@/components/finance/ui/budget-status";
+import { ApiError } from "@/lib/api/client";
 import { getFinanceOverview } from "@/lib/api/finance";
 import { onTransactionChanged } from "@/lib/finance-events";
 import { krw } from "@/lib/finance-format";
@@ -574,6 +575,18 @@ function RecentActivity({ transactions }: { transactions: Transaction[] }) {
   );
 }
 
+function overviewErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Your session has expired. Sign in again to load your Finance overview.";
+    // The code/status pair is what makes a report diagnosable ("500
+    // INTERNAL_ERROR" vs "504 HTTP_ERROR" from a platform timeout).
+    const detail = error.status ? `${error.status} ${error.code}` : error.code;
+    return `We couldn't load your Finance overview (${detail}). Try again in a moment.`;
+  }
+  if (error instanceof TypeError) return "We couldn't reach the server. Check your connection and try again.";
+  return "We couldn't load your Finance overview. Try again in a moment.";
+}
+
 export function FinanceOverview({
   initialMonth,
   initialSummary,
@@ -611,13 +624,10 @@ export function FinanceOverview({
       .then((data) => {
         if (active) setResult({ key: requestKey, summary: data, error: null });
       })
-      .catch(() => {
+      .catch((fetchError: unknown) => {
+        console.error("[finance] overview request failed", fetchError);
         if (active) {
-          setResult({
-            key: requestKey,
-            summary: null,
-            error: "We couldn't load your Finance overview. Try again in a moment.",
-          });
+          setResult({ key: requestKey, summary: null, error: overviewErrorMessage(fetchError) });
         }
       });
     return () => { active = false; };
