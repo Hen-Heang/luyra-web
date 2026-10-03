@@ -12,11 +12,15 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the current focus and
 
 ## Tech stack
 
-- Next.js (App Router) + React + TypeScript
-- Tailwind CSS, shadcn/ui-style components
+- Next.js 16 (App Router) + React 19 + TypeScript
+- Tailwind CSS 4, shadcn/ui-style components
 - Supabase Auth (`@supabase/ssr`, `@supabase/supabase-js`) — authentication only
 - Neon Postgres (`@neondatabase/serverless`) — application data
 - Zod for request validation
+- Vercel Workflow (`workflow`) and Vercel Cron for scheduled jobs
+- Optional integrations: Telegram, Resend email, Web Push (`web-push`), and
+  the Anthropic SDK for the AI Money Coach
+- Vitest for unit tests
 
 ## Local development
 
@@ -26,6 +30,22 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm test` | Vitest unit tests |
+
+CI (`.github/workflows/ci.yml`) runs lint and build on every pull request and
+on pushes to `main`.
+
+`package.json` has an `allowScripts` block listing the dependencies whose
+install scripts npm may run (`esbuild`, `@swc/core`, `unrs-resolver`,
+`cbor-extract`). Approvals are pinned to exact versions; if npm warns about
+unreviewed install scripts after an upgrade, review them with
+`npm install-scripts ls` and approve the new versions.
 
 ### Corporate network / TLS inspection
 
@@ -56,13 +76,22 @@ Copy `.env.example` to `.env.local` and fill in real values. Never commit
 | `DATABASE_URL` | server only | Neon connection string — never prefix with `NEXT_PUBLIC_` |
 
 `.env.example` is the authoritative list and also documents the optional
-integration keys (exchange rate, Telegram, Anthropic, Resend), each of which
-degrades gracefully when unset.
+keys, each of which degrades gracefully when unset:
+
+- `CRON_SECRET` — authorizes the scheduled `/api/cron/*` routes
+- `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` —
+  browser push notifications
+- `EXCHANGE_RATE_API_KEY` — live USD→KRW rate
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`,
+  `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` — Telegram reports and alerts
+- `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` — AI Money Coach
+- `RESEND_API_KEY`, `RESEND_FROM_EMAIL` — email reports
 
 The two `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_*` variables are no longer read by
-any route. Only `components/finance/money-flow-dashboard.tsx` and
-`money-flow-session.tsx` reference them, and nothing imports those files —
-Finance runs entirely on the native Neon API now. They can be left blank.
+any route. Only `lib/integrations/money-flow/client.ts` reads them, and it is
+used only by `components/finance/money-flow-dashboard.tsx` and
+`money-flow-session.tsx`, which nothing imports — Finance runs entirely on the
+native Neon API now. They can be left blank.
 
 ## Supabase Auth setup
 
@@ -76,9 +105,9 @@ Finance runs entirely on the native Neon API now. They can be left blank.
 ## Neon setup
 
 Using the existing Neon project (id `divine-darkness-19631415`), `main`
-branch, `neondb` database. The `users`/`tasks`/`goals` migrations in
-[db/migrations](db/migrations) are already applied there — see
-[db/README.md](db/README.md) if you need to re-apply or add a new one.
+branch, `neondb` database. Schema changes are plain SQL files in
+[db/migrations](db/migrations) (`001`–`013`), applied manually and in order —
+see [db/README.md](db/README.md) for how to apply or add one.
 
 To point a fresh checkout at it:
 
@@ -88,14 +117,21 @@ To point a fresh checkout at it:
 
 ## Deployment
 
-Luyra is not deployed yet. [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) is the
+Luyra is deployed on Vercel (project `luyra`, functions in the Seoul region
+`icn1`). Every pull request gets a preview deployment and merges to `main`
+deploy to production. [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) is the
 step-by-step guide: Vercel project settings, the environment-variable matrix
 per environment, the Neon pooled connection string, Supabase Auth redirect
 URLs, Google Identity Services origins, Telegram webhook registration, and a
 post-deploy verification checklist.
 
-Two things a public deployment still lacks — scheduled jobs (cron) and
-security headers — are described at the end of that guide, and the wider
+Scheduled jobs run on Vercel Cron, configured in [vercel.json](vercel.json):
+budget alerts (Telegram and push), spending-spike alerts, daily logging
+reminders, the weekly summary, and the monthly report. Schedules are in UTC;
+the routes do their date math in Asia/Seoul. See the "Scheduled
+notifications" section of the deployment guide.
+
+Security headers are not set yet — see the end of that guide. The wider
 feature backlog is in
 [docs/FINANCE-GAP-ANALYSIS.md](docs/FINANCE-GAP-ANALYSIS.md).
 
