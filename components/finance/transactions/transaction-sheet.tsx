@@ -15,6 +15,11 @@ import { cn } from "@/lib/utils";
 import type { CreateTransactionInput, CreateTransactionTemplateInput } from "@/lib/validation/finance";
 import type { Category, Currency, PaymentMethod, Transaction, TransactionTemplate, TransactionType } from "@/types/finance";
 
+// Rates arrive with up to 4+ decimals; the input only needs 2 (matches step="0.01").
+function formatRate(rate: number): string {
+  return String(Math.round(rate * 100) / 100);
+}
+
 function localToday(): string {
   const now = new Date();
   const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
@@ -98,7 +103,7 @@ function TransactionSheetFields({
   const [amount, setAmount] = useState(
     transaction ? String(transaction.currency === "USD" ? transaction.originalAmount : transaction.amountKrw) : ""
   );
-  const [exchangeRate, setExchangeRate] = useState(transaction?.exchangeRate != null ? String(transaction.exchangeRate) : "");
+  const [exchangeRate, setExchangeRate] = useState(transaction?.exchangeRate != null ? formatRate(transaction.exchangeRate) : "");
   const hasStoredRate = transaction?.currency === "USD" && transaction.exchangeRate != null;
   const [rateFetch, setRateFetch] = useState<{ state: "idle" | "loading" | "error"; fallback: boolean }>({
     state: hasStoredRate ? "idle" : "loading",
@@ -107,7 +112,12 @@ function TransactionSheetFields({
   const [categoryId, setCategoryId] = useState(transaction?.categoryId ?? "");
   const [description, setDescription] = useState(transaction?.description ?? "");
   const [date, setDate] = useState(transaction?.date ?? localToday());
-  const [paymentMethodId, setPaymentMethodId] = useState(transaction?.paymentMethodId ?? "");
+  // New transactions default to "Bank" — the most common way spending is paid.
+  const [paymentMethodId, setPaymentMethodId] = useState(
+    transaction
+      ? (transaction.paymentMethodId ?? "")
+      : (paymentMethods.find((method) => method.name.trim().toLowerCase() === "bank")?.id ?? "")
+  );
   const [note, setNote] = useState(transaction?.note ?? "");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -137,7 +147,7 @@ function TransactionSheetFields({
     void getExchangeRate()
       .then((result) => {
         if (!active) return;
-        setExchangeRate(String(result.rate));
+        setExchangeRate(formatRate(result.rate));
         setRateFetch({ state: "idle", fallback: result.fallback });
       })
       .catch(() => {
@@ -174,7 +184,7 @@ function TransactionSheetFields({
     setRateFetch({ state: "loading", fallback: false });
     try {
       const result = await getExchangeRate();
-      setExchangeRate(String(result.rate));
+      setExchangeRate(formatRate(result.rate));
       setRateFetch({ state: "idle", fallback: result.fallback });
     } catch {
       setRateFetch({ state: "error", fallback: false });
