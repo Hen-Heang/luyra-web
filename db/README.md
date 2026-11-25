@@ -5,7 +5,8 @@ automatically — there is no migration runner wired into the app or CI.
 
 ## Applying a migration
 
-Using `psql` against your Neon connection string:
+Using `psql` against the Supabase database (connect as `luyra_app` so the
+unqualified table names land in the `luyra` schema):
 
 ```bash
 psql "$DATABASE_URL" -f db/migrations/001_users.sql
@@ -25,7 +26,9 @@ psql "$DATABASE_URL" -f db/migrations/013_finance_spending_class_backfill.sql
 psql "$DATABASE_URL" -f db/migrations/014_finance_recurring.sql
 ```
 
-Or paste the file contents into the Neon SQL Editor in the Neon console.
+Or paste the file contents into the Supabase SQL Editor of the `money-flow`
+project — prefixed with `set search_path = luyra;`, because the editor runs as
+`postgres`, whose default schema is money-flow's own `public`.
 
 > **Two files share the number `010`.** They were written on branches that
 > merged within minutes of each other — `010_finance_report_delivery.sql`

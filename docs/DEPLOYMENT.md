@@ -4,7 +4,8 @@ Target: **Vercel**, matching the Money Flow reference deployment. Nothing in
 this repo is Vercel-specific yet, so another Node host works too — but the
 cron section below assumes Vercel Cron.
 
-Data lives in **Neon Postgres**; authentication lives in **Supabase Auth**.
+Data lives in **Supabase Postgres** (`money-flow` project, `luyra` schema);
+authentication lives in **Supabase Auth** (`hengo` project).
 Both are already provisioned — this guide connects a deployment to them, it
 does not create them.
 
@@ -13,8 +14,7 @@ does not create them.
 1. Vercel → **Add New… → Project** → import this repository.
 2. Framework preset: **Next.js** (auto-detected). Leave the build command,
    output directory, and install command at their defaults.
-3. Node.js version: **20.x or newer** — `@neondatabase/serverless` and Next 16
-   both require it.
+3. Node.js version: **20.x or newer** — Next 16 requires it.
 4. Do **not** deploy yet. Add the environment variables first (next section),
    otherwise the first build ships without them.
 
@@ -29,18 +29,14 @@ you want the value in (Production / Preview / Development).
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | browser + server | From Supabase → Project Settings → API. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | browser + server | The publishable (anon) key. Safe to expose. |
-| `DATABASE_URL` | **server only** | Neon connection string. Use the **pooled** one — see below. Never prefix with `NEXT_PUBLIC_`. |
+| `DATABASE_URL` | **server only** | Supabase transaction-pooler URL for the `luyra_app` role — see below. Never prefix with `NEXT_PUBLIC_`. |
 
-**Use Neon's pooled connection string.** Vercel functions are short-lived and
-can scale to many concurrent instances; the direct (unpooled) string will
-exhaust Postgres connections under any real traffic.
-
-```bash
-neon connection-string --project-id divine-darkness-19631415 --pooled
-```
-
-Or copy it from the Neon console → **Connect** → toggle *Connection pooling*
-on. The pooled host contains `-pooler` in its name.
+**Use the transaction pooler (port 6543).** Vercel functions are short-lived
+and can scale to many concurrent instances; a direct connection would exhaust
+Postgres connections under any real traffic. The format is in
+[README → Database setup](../README.md#database-setup). Leave `sslmode` out of
+the URL — the client verifies TLS against the Supabase CA bundled in
+`lib/db/supabase-ca.ts`, and an `sslmode` parameter would override it.
 
 ### Optional — each one degrades gracefully when unset
 
@@ -63,7 +59,7 @@ on. The pooled host contains `-pooler` in its name.
 `NEXT_PUBLIC_MONEY_FLOW_SUPABASE_PUBLISHABLE_KEY` belonged to the first,
 read-only Money Flow test slice. That code is gone and nothing reads them, so
 delete them from the Vercel project's environment variables if they are still
-set. Finance runs entirely on the native Neon API.
+set. Finance runs entirely on Luyra's own database.
 
 ## 3. Supabase Auth URLs
 
@@ -122,8 +118,9 @@ the domain in the Resend dashboard first (DNS records). Until then, leave
 ## 7. Database migrations
 
 There is no migration runner — see [db/README.md](../db/README.md). Apply any
-pending files to the Neon database **before** the deploy that depends on them,
-either with `psql` or by pasting into the Neon SQL Editor.
+pending files to the database **before** the deploy that depends on them,
+either with `psql` or in the Supabase SQL Editor (see db/README.md for the
+`search_path` prefix).
 
 > **Pending right now:**
 > `db/migrations/007_finance_savings_contributions_cascade.sql` has never been
