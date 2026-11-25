@@ -15,7 +15,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the current focus and
 - Next.js 16 (App Router) + React 19 + TypeScript
 - Tailwind CSS 4, shadcn/ui-style components
 - Supabase Auth (`@supabase/ssr`, `@supabase/supabase-js`) — authentication only
-- Neon Postgres (`@neondatabase/serverless`) — application data
+- Supabase Postgres (`pg`) — application data, in the `luyra` schema of the `money-flow` project
 - Zod for request validation
 - Vercel Workflow (`workflow`) and Vercel Cron for scheduled jobs
 - Optional integrations: Telegram, Resend email, Web Push (`web-push`), and
@@ -71,7 +71,7 @@ Copy `.env.example` to `.env.local` and fill in real values. Never commit
 | `NEXT_PUBLIC_SUPABASE_URL` | browser + server | safe to expose |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | browser + server | safe to expose |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Primary Google Identity Services login | safe to expose |
-| `DATABASE_URL` | server only | Neon connection string — never prefix with `NEXT_PUBLIC_` |
+| `DATABASE_URL` | server only | Supabase transaction-pooler URL for the `luyra_app` role — never prefix with `NEXT_PUBLIC_` |
 
 `.env.example` is the authoritative list and also documents the optional
 keys, each of which degrades gracefully when unset:
@@ -95,18 +95,26 @@ keys, each of which degrades gracefully when unset:
    legacy Money Flow data remains in its separate Supabase project while
    authentication is consolidated in a later backend phase.
 
-## Neon setup
+## Database setup
 
-Using the existing Neon project (id `divine-darkness-19631415`), `main`
-branch, `neondb` database. Schema changes are plain SQL files in
-[db/migrations](db/migrations) (`001`–`013`), applied manually and in order —
-see [db/README.md](db/README.md) for how to apply or add one.
+Application data lives in the Supabase project **`money-flow`**
+(`lqjjabfmaweztxkvfrsq`, Seoul), in its own **`luyra`** schema. (Auth is a
+different Supabase project — see above.) The app connects as the dedicated
+`luyra_app` role, whose default `search_path` is `luyra`, so queries use bare
+table names and cannot reach money-flow's own `public` tables. TLS is verified
+against the Supabase root CA bundled in `lib/db/supabase-ca.ts`.
 
-To point a fresh checkout at it:
+The data was moved here from Neon in November 2026 because the Neon free plan
+ran out of monthly compute. Schema changes are plain SQL files in
+[db/migrations](db/migrations), applied manually and in order — see
+[db/README.md](db/README.md).
 
-1. Get the pooled connection string: `neon connection-string --project-id divine-darkness-19631415 --pooled`
-   (or from the Neon console → Connect).
-2. Put it in `.env.local` as `DATABASE_URL`.
+`DATABASE_URL` format (transaction pooler; no `sslmode` parameter, it would
+override the bundled CA):
+
+```
+postgresql://luyra_app.lqjjabfmaweztxkvfrsq:<password>@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
+```
 
 ## Deployment
 
@@ -114,7 +122,7 @@ Luyra is deployed on Vercel (project `luyra`, functions in the Seoul region
 `icn1`). Every pull request gets a preview deployment and merges to `main`
 deploy to production. [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) is the
 step-by-step guide: Vercel project settings, the environment-variable matrix
-per environment, the Neon pooled connection string, Supabase Auth redirect
+per environment, the database connection string, Supabase Auth redirect
 URLs, Google Identity Services origins, Telegram webhook registration, and a
 post-deploy verification checklist.
 
